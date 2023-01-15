@@ -3,8 +3,9 @@ package repositories
 import (
 	"context"
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/018bf/example/pkg/log"
 

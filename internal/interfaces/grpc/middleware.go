@@ -2,13 +2,14 @@ package grpc
 
 import (
 	"context"
+	"strings"
+
 	"github.com/018bf/example/internal/configs"
 	"github.com/018bf/example/internal/domain/interceptors"
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/pkg/log"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc/codes"
-	"strings"
 
 	"github.com/google/uuid"
 
