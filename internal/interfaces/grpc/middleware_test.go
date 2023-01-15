@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
-	"testing"
-
 	"github.com/018bf/example/internal/configs"
 	"github.com/018bf/example/internal/domain/errs"
 	"github.com/018bf/example/internal/domain/interceptors"
@@ -14,6 +11,8 @@ import (
 	"github.com/018bf/example/internal/domain/models"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
 	"github.com/018bf/example/pkg/log"
+	"reflect"
+	"testing"
 
 	"github.com/golang/mock/gomock"
 

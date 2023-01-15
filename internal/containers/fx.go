@@ -2,7 +2,6 @@ package containers
 
 import (
 	"context"
-
 	"github.com/018bf/example/internal/interfaces/grpc"
 
 	"github.com/018bf/example/pkg/log"

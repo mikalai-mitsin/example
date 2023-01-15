@@ -5,5 +5,5 @@ import (
 )
 
 var FXModule = fx.Options(
-	fx.Provide(NewAuthInterceptor, NewUserInterceptor, NewPostInterceptor, NewCommentInterceptor),
+	fx.Provide(NewAuthInterceptor, NewUserInterceptor, NewUserSessionInterceptor, NewEquipmentInterceptor, NewSessionInterceptor, NewApproachInterceptor, NewMarkInterceptor),
 )
