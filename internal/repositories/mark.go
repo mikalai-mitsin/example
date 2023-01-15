@@ -3,17 +3,16 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"time"
-
 	sq "github.com/Masterminds/squirrel"
+	"time"
 
 	"github.com/018bf/example/pkg/log"
 
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
 
-	"github.com/018bf/example/internal/domain/errs"
 	"github.com/jmoiron/sqlx"
+	"github.com/018bf/example/internal/domain/errs"
 )
 
 type MarkRepository struct {
@@ -27,7 +26,7 @@ func NewMarkRepository(
 ) repositories.MarkRepository {
 	return &MarkRepository{
 		database: database,
-		logger:   logger,
+		logger: logger,
 	}
 }
 
@@ -69,13 +68,13 @@ func (r *MarkRepository) Get(
 	defer cancel()
 	mark := &models.Mark{}
 	q := sq.Select(
-		"marks.id",
-		"marks.name",
-		"marks.title",
-		"marks.weight",
-		"marks.updated_at",
-		"marks.created_at",
-	).
+			"marks.id",
+			"marks.name",
+			"marks.title",
+			"marks.weight",
+			"marks.updated_at",
+			"marks.created_at",
+		).
 		From("public.marks").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -97,13 +96,13 @@ func (r *MarkRepository) List(
 	var marks []*models.Mark
 	const pageSize = 10
 	q := sq.Select(
-		"marks.id",
-		"marks.name",
-		"marks.title",
-		"marks.weight",
-		"marks.updated_at",
-		"marks.created_at",
-	).
+			"marks.id",
+			"marks.name",
+			"marks.title",
+			"marks.weight",
+			"marks.updated_at",
+			"marks.created_at",
+		).
 		From("public.marks").
 		Limit(pageSize)
 	// TODO: add filtering

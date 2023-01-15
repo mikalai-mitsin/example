@@ -10,13 +10,13 @@ import (
 	"github.com/018bf/example/internal/domain/errs"
 	"github.com/018bf/example/internal/domain/models"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
-	"github.com/018bf/example/internal/domain/repositories"
 	mock_repositories "github.com/018bf/example/internal/domain/repositories/mock"
-	"github.com/018bf/example/internal/domain/usecases"
-	"github.com/018bf/example/pkg/clock"
 	mock_clock "github.com/018bf/example/pkg/clock/mock"
-	"github.com/018bf/example/pkg/log"
 	mock_log "github.com/018bf/example/pkg/log/mock"
+	"github.com/018bf/example/internal/domain/repositories"
+	"github.com/018bf/example/internal/domain/usecases"
+	"github.com/018bf/example/pkg/log"
+	"github.com/018bf/example/pkg/clock"
 	"github.com/golang/mock/gomock"
 	"syreclabs.com/go/faker"
 )
@@ -29,8 +29,8 @@ func TestNewMarkUseCase(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	type args struct {
 		markRepository repositories.MarkRepository
-		clock          clock.Clock
-		logger         log.Logger
+		clock  clock.Clock
+		logger log.Logger
 	}
 	tests := []struct {
 		name  string
@@ -44,13 +44,13 @@ func TestNewMarkUseCase(t *testing.T) {
 			},
 			args: args{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:  clockMock,
+				logger: logger,
 			},
 			want: &MarkUseCase{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:  clockMock,
+				logger: logger,
 			},
 		},
 	}
@@ -73,7 +73,7 @@ func TestMarkUseCase_Get(t *testing.T) {
 	mark := mock_models.NewMark(t)
 	type fields struct {
 		markRepository repositories.MarkRepository
-		logger         log.Logger
+		logger           log.Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -94,7 +94,7 @@ func TestMarkUseCase_Get(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				logger:         logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -110,7 +110,7 @@ func TestMarkUseCase_Get(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				logger:         logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -125,7 +125,7 @@ func TestMarkUseCase_Get(t *testing.T) {
 			tt.setup()
 			u := &MarkUseCase{
 				markRepository: tt.fields.markRepository,
-				logger:         tt.fields.logger,
+				logger:           tt.fields.logger,
 			}
 			got, err := u.Get(tt.args.ctx, tt.args.id)
 			if !errors.Is(err, tt.wantErr) {
@@ -153,7 +153,7 @@ func TestMarkUseCase_List(t *testing.T) {
 	filter := mock_models.NewMarkFilter(t)
 	type fields struct {
 		markRepository repositories.MarkRepository
-		logger         log.Logger
+		logger           log.Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -176,7 +176,7 @@ func TestMarkUseCase_List(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				logger:         logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -193,7 +193,7 @@ func TestMarkUseCase_List(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				logger:         logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -211,7 +211,7 @@ func TestMarkUseCase_List(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				logger:         logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -227,7 +227,7 @@ func TestMarkUseCase_List(t *testing.T) {
 			tt.setup()
 			u := &MarkUseCase{
 				markRepository: tt.fields.markRepository,
-				logger:         tt.fields.logger,
+				logger:           tt.fields.logger,
 			}
 			got, got1, err := u.List(tt.args.ctx, tt.args.filter)
 			if !errors.Is(err, tt.wantErr) {
@@ -251,12 +251,12 @@ func TestMarkUseCase_Create(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	clockMock := mock_clock.NewMockClock(ctrl)
 	ctx := context.Background()
-	create := mock_models.NewMarkCreate(t)
+    create := mock_models.NewMarkCreate(t)
 	now := time.Now().UTC()
 	type fields struct {
 		markRepository repositories.MarkRepository
-		clock          clock.Clock
-		logger         log.Logger
+		clock            clock.Clock
+		logger           log.Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -278,9 +278,9 @@ func TestMarkUseCase_Create(t *testing.T) {
 					Create(
 						ctx,
 						&models.Mark{
-							Name:      create.Name,
-							Title:     create.Title,
-							Weight:    create.Weight,
+							Name: create.Name,
+							Title: create.Title,
+							Weight: create.Weight,
 							UpdatedAt: now,
 							CreatedAt: now,
 						},
@@ -289,18 +289,18 @@ func TestMarkUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				create: create,
 			},
 			want: &models.Mark{
-				ID:        "",
-				Name:      create.Name,
-				Title:     create.Title,
-				Weight:    create.Weight,
+				ID: "",
+				Name: create.Name,
+				Title: create.Title,
+				Weight: create.Weight,
 				UpdatedAt: now,
 				CreatedAt: now,
 			},
@@ -314,10 +314,10 @@ func TestMarkUseCase_Create(t *testing.T) {
 					Create(
 						ctx,
 						&models.Mark{
-							ID:        "",
-							Name:      create.Name,
-							Title:     create.Title,
-							Weight:    create.Weight,
+							ID: "",
+							Name: create.Name,
+							Title: create.Title,
+							Weight: create.Weight,
 							UpdatedAt: now,
 							CreatedAt: now,
 						},
@@ -326,11 +326,11 @@ func TestMarkUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				create: create,
 			},
 			want:    nil,
@@ -351,15 +351,15 @@ func TestMarkUseCase_Create(t *testing.T) {
 		//	},
 		//	want: nil,
 		//	wantErr: errs.NewInvalidFormError().WithParam("set", "it"),
-		// },
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			u := &MarkUseCase{
 				markRepository: tt.fields.markRepository,
-				clock:          tt.fields.clock,
-				logger:         tt.fields.logger,
+				clock:            tt.fields.clock,
+				logger:           tt.fields.logger,
 			}
 			got, err := u.Create(tt.args.ctx, tt.args.create)
 			if !errors.Is(err, tt.wantErr) {
@@ -385,8 +385,8 @@ func TestMarkUseCase_Update(t *testing.T) {
 	now := mark.UpdatedAt
 	type fields struct {
 		markRepository repositories.MarkRepository
-		clock          clock.Clock
-		logger         log.Logger
+		clock            clock.Clock
+		logger           log.Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -411,11 +411,11 @@ func TestMarkUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				update: update,
 			},
 			want:    mark,
@@ -434,11 +434,11 @@ func TestMarkUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				update: update,
 			},
 			want:    nil,
@@ -451,11 +451,11 @@ func TestMarkUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				update: update,
 			},
 			want:    nil,
@@ -467,16 +467,16 @@ func TestMarkUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
 				update: &models.MarkUpdate{
-					ID: faker.Number().Number(1),
+					ID:   faker.Number().Number(1),
 				},
 			},
-			want:    nil,
+			want: nil,
 			wantErr: errs.NewInvalidFormError().WithParam("id", "must be a valid UUID"),
 		},
 	}
@@ -485,8 +485,8 @@ func TestMarkUseCase_Update(t *testing.T) {
 			tt.setup()
 			u := &MarkUseCase{
 				markRepository: tt.fields.markRepository,
-				clock:          tt.fields.clock,
-				logger:         tt.fields.logger,
+				clock:            tt.fields.clock,
+				logger:           tt.fields.logger,
 			}
 			got, err := u.Update(tt.args.ctx, tt.args.update)
 			if !errors.Is(err, tt.wantErr) {
@@ -509,7 +509,7 @@ func TestMarkUseCase_Delete(t *testing.T) {
 	mark := mock_models.NewMark(t)
 	type fields struct {
 		markRepository repositories.MarkRepository
-		logger         log.Logger
+		logger           log.Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -531,7 +531,7 @@ func TestMarkUseCase_Delete(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				logger:         logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -548,7 +548,7 @@ func TestMarkUseCase_Delete(t *testing.T) {
 			},
 			fields: fields{
 				markRepository: markRepository,
-				logger:         logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -562,7 +562,7 @@ func TestMarkUseCase_Delete(t *testing.T) {
 			tt.setup()
 			u := &MarkUseCase{
 				markRepository: tt.fields.markRepository,
-				logger:         tt.fields.logger,
+				logger:           tt.fields.logger,
 			}
 			if err := u.Delete(tt.args.ctx, tt.args.id); !errors.Is(err, tt.wantErr) {
 				t.Errorf("MarkUseCase.Delete() error = %v, wantErr %v", err, tt.wantErr)

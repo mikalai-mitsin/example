@@ -10,13 +10,13 @@ import (
 	"github.com/018bf/example/internal/domain/errs"
 	"github.com/018bf/example/internal/domain/models"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
-	"github.com/018bf/example/internal/domain/repositories"
 	mock_repositories "github.com/018bf/example/internal/domain/repositories/mock"
-	"github.com/018bf/example/internal/domain/usecases"
-	"github.com/018bf/example/pkg/clock"
 	mock_clock "github.com/018bf/example/pkg/clock/mock"
-	"github.com/018bf/example/pkg/log"
 	mock_log "github.com/018bf/example/pkg/log/mock"
+	"github.com/018bf/example/internal/domain/repositories"
+	"github.com/018bf/example/internal/domain/usecases"
+	"github.com/018bf/example/pkg/log"
+	"github.com/018bf/example/pkg/clock"
 	"github.com/golang/mock/gomock"
 	"syreclabs.com/go/faker"
 )
@@ -29,8 +29,8 @@ func TestNewEquipmentUseCase(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	type args struct {
 		equipmentRepository repositories.EquipmentRepository
-		clock               clock.Clock
-		logger              log.Logger
+		clock  clock.Clock
+		logger log.Logger
 	}
 	tests := []struct {
 		name  string
@@ -44,13 +44,13 @@ func TestNewEquipmentUseCase(t *testing.T) {
 			},
 			args: args{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:  clockMock,
+				logger: logger,
 			},
 			want: &EquipmentUseCase{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:  clockMock,
+				logger: logger,
 			},
 		},
 	}
@@ -73,7 +73,7 @@ func TestEquipmentUseCase_Get(t *testing.T) {
 	equipment := mock_models.NewEquipment(t)
 	type fields struct {
 		equipmentRepository repositories.EquipmentRepository
-		logger              log.Logger
+		logger           log.Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -94,7 +94,7 @@ func TestEquipmentUseCase_Get(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -110,7 +110,7 @@ func TestEquipmentUseCase_Get(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -125,7 +125,7 @@ func TestEquipmentUseCase_Get(t *testing.T) {
 			tt.setup()
 			u := &EquipmentUseCase{
 				equipmentRepository: tt.fields.equipmentRepository,
-				logger:              tt.fields.logger,
+				logger:           tt.fields.logger,
 			}
 			got, err := u.Get(tt.args.ctx, tt.args.id)
 			if !errors.Is(err, tt.wantErr) {
@@ -153,7 +153,7 @@ func TestEquipmentUseCase_List(t *testing.T) {
 	filter := mock_models.NewEquipmentFilter(t)
 	type fields struct {
 		equipmentRepository repositories.EquipmentRepository
-		logger              log.Logger
+		logger           log.Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -176,7 +176,7 @@ func TestEquipmentUseCase_List(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -193,7 +193,7 @@ func TestEquipmentUseCase_List(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -211,7 +211,7 @@ func TestEquipmentUseCase_List(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -227,7 +227,7 @@ func TestEquipmentUseCase_List(t *testing.T) {
 			tt.setup()
 			u := &EquipmentUseCase{
 				equipmentRepository: tt.fields.equipmentRepository,
-				logger:              tt.fields.logger,
+				logger:           tt.fields.logger,
 			}
 			got, got1, err := u.List(tt.args.ctx, tt.args.filter)
 			if !errors.Is(err, tt.wantErr) {
@@ -251,12 +251,12 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	clockMock := mock_clock.NewMockClock(ctrl)
 	ctx := context.Background()
-	create := mock_models.NewEquipmentCreate(t)
+    create := mock_models.NewEquipmentCreate(t)
 	now := time.Now().UTC()
 	type fields struct {
 		equipmentRepository repositories.EquipmentRepository
-		clock               clock.Clock
-		logger              log.Logger
+		clock            clock.Clock
+		logger           log.Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -286,15 +286,15 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				create: create,
 			},
 			want: &models.Equipment{
-				ID:        "",
+				ID: "",
 				UpdatedAt: now,
 				CreatedAt: now,
 			},
@@ -308,7 +308,7 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 					Create(
 						ctx,
 						&models.Equipment{
-							ID:        "",
+							ID: "",
 							UpdatedAt: now,
 							CreatedAt: now,
 						},
@@ -317,11 +317,11 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				create: create,
 			},
 			want:    nil,
@@ -342,15 +342,15 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 		//	},
 		//	want: nil,
 		//	wantErr: errs.NewInvalidFormError().WithParam("set", "it"),
-		// },
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			u := &EquipmentUseCase{
 				equipmentRepository: tt.fields.equipmentRepository,
-				clock:               tt.fields.clock,
-				logger:              tt.fields.logger,
+				clock:            tt.fields.clock,
+				logger:           tt.fields.logger,
 			}
 			got, err := u.Create(tt.args.ctx, tt.args.create)
 			if !errors.Is(err, tt.wantErr) {
@@ -376,8 +376,8 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 	now := equipment.UpdatedAt
 	type fields struct {
 		equipmentRepository repositories.EquipmentRepository
-		clock               clock.Clock
-		logger              log.Logger
+		clock            clock.Clock
+		logger           log.Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -402,11 +402,11 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				update: update,
 			},
 			want:    equipment,
@@ -425,11 +425,11 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				update: update,
 			},
 			want:    nil,
@@ -442,11 +442,11 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
-				ctx:    ctx,
+				ctx: ctx,
 				update: update,
 			},
 			want:    nil,
@@ -458,16 +458,16 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:            clockMock,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
 				update: &models.EquipmentUpdate{
-					ID: faker.Number().Number(1),
+					ID:   faker.Number().Number(1),
 				},
 			},
-			want:    nil,
+			want: nil,
 			wantErr: errs.NewInvalidFormError().WithParam("id", "must be a valid UUID"),
 		},
 	}
@@ -476,8 +476,8 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			tt.setup()
 			u := &EquipmentUseCase{
 				equipmentRepository: tt.fields.equipmentRepository,
-				clock:               tt.fields.clock,
-				logger:              tt.fields.logger,
+				clock:            tt.fields.clock,
+				logger:           tt.fields.logger,
 			}
 			got, err := u.Update(tt.args.ctx, tt.args.update)
 			if !errors.Is(err, tt.wantErr) {
@@ -500,7 +500,7 @@ func TestEquipmentUseCase_Delete(t *testing.T) {
 	equipment := mock_models.NewEquipment(t)
 	type fields struct {
 		equipmentRepository repositories.EquipmentRepository
-		logger              log.Logger
+		logger           log.Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -522,7 +522,7 @@ func TestEquipmentUseCase_Delete(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -539,7 +539,7 @@ func TestEquipmentUseCase_Delete(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:           logger,
 			},
 			args: args{
 				ctx: ctx,
@@ -553,7 +553,7 @@ func TestEquipmentUseCase_Delete(t *testing.T) {
 			tt.setup()
 			u := &EquipmentUseCase{
 				equipmentRepository: tt.fields.equipmentRepository,
-				logger:              tt.fields.logger,
+				logger:           tt.fields.logger,
 			}
 			if err := u.Delete(tt.args.ctx, tt.args.id); !errors.Is(err, tt.wantErr) {
 				t.Errorf("EquipmentUseCase.Delete() error = %v, wantErr %v", err, tt.wantErr)

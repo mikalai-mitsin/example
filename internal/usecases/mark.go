@@ -7,14 +7,14 @@ import (
 	"github.com/018bf/example/internal/domain/repositories"
 	"github.com/018bf/example/internal/domain/usecases"
 
-	"github.com/018bf/example/pkg/clock"
 	"github.com/018bf/example/pkg/log"
+	"github.com/018bf/example/pkg/clock"
 )
 
 type MarkUseCase struct {
 	markRepository repositories.MarkRepository
-	clock          clock.Clock
-	logger         log.Logger
+	clock clock.Clock
+	logger log.Logger
 }
 
 func NewMarkUseCase(
@@ -23,9 +23,9 @@ func NewMarkUseCase(
 	logger log.Logger,
 ) usecases.MarkUseCase {
 	return &MarkUseCase{
-		markRepository: markRepository,
-		clock:          clock,
-		logger:         logger,
+        markRepository: markRepository,
+		clock:  clock,
+		logger: logger,
 	}
 }
 
@@ -63,11 +63,11 @@ func (u *MarkUseCase) Create(
 		return nil, err
 	}
 	now := u.clock.Now().UTC()
-	mark := &models.Mark{
-		ID:        "",
-		Name:      create.Name,
-		Title:     create.Title,
-		Weight:    create.Weight,
+    mark := &models.Mark{
+		ID: "",
+		Name: create.Name,
+		Title: create.Title,
+		Weight: create.Weight,
 		UpdatedAt: now,
 		CreatedAt: now,
 	}
@@ -84,7 +84,7 @@ func (u *MarkUseCase) Update(
 	if err := update.Validate(); err != nil {
 		return nil, err
 	}
-	mark, err := u.markRepository.Get(ctx, update.ID)
+    mark, err := u.markRepository.Get(ctx, update.ID)
 	if err != nil {
 		return nil, err
 	}

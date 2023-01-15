@@ -3,17 +3,16 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"time"
-
 	sq "github.com/Masterminds/squirrel"
+	"time"
 
 	"github.com/018bf/example/pkg/log"
 
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
 
-	"github.com/018bf/example/internal/domain/errs"
 	"github.com/jmoiron/sqlx"
+	"github.com/018bf/example/internal/domain/errs"
 )
 
 type SessionRepository struct {
@@ -27,7 +26,7 @@ func NewSessionRepository(
 ) repositories.SessionRepository {
 	return &SessionRepository{
 		database: database,
-		logger:   logger,
+		logger: logger,
 	}
 }
 
@@ -63,10 +62,10 @@ func (r *SessionRepository) Get(
 	defer cancel()
 	session := &models.Session{}
 	q := sq.Select(
-		"sessions.id",
-		"sessions.updated_at",
-		"sessions.created_at",
-	).
+			"sessions.id",
+			"sessions.updated_at",
+			"sessions.created_at",
+		).
 		From("public.sessions").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -88,10 +87,10 @@ func (r *SessionRepository) List(
 	var sessions []*models.Session
 	const pageSize = 10
 	q := sq.Select(
-		"sessions.id",
-		"sessions.updated_at",
-		"sessions.created_at",
-	).
+			"sessions.id",
+			"sessions.updated_at",
+			"sessions.created_at",
+		).
 		From("public.sessions").
 		Limit(pageSize)
 	// TODO: add filtering

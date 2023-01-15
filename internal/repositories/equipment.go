@@ -3,17 +3,16 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"time"
-
 	sq "github.com/Masterminds/squirrel"
+	"time"
 
 	"github.com/018bf/example/pkg/log"
 
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
 
-	"github.com/018bf/example/internal/domain/errs"
 	"github.com/jmoiron/sqlx"
+	"github.com/018bf/example/internal/domain/errs"
 )
 
 type EquipmentRepository struct {
@@ -27,7 +26,7 @@ func NewEquipmentRepository(
 ) repositories.EquipmentRepository {
 	return &EquipmentRepository{
 		database: database,
-		logger:   logger,
+		logger: logger,
 	}
 }
 
@@ -63,10 +62,10 @@ func (r *EquipmentRepository) Get(
 	defer cancel()
 	equipment := &models.Equipment{}
 	q := sq.Select(
-		"equipment.id",
-		"equipment.updated_at",
-		"equipment.created_at",
-	).
+			"equipment.id",
+			"equipment.updated_at",
+			"equipment.created_at",
+		).
 		From("public.equipment").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -88,10 +87,10 @@ func (r *EquipmentRepository) List(
 	var equipment []*models.Equipment
 	const pageSize = 10
 	q := sq.Select(
-		"equipment.id",
-		"equipment.updated_at",
-		"equipment.created_at",
-	).
+			"equipment.id",
+			"equipment.updated_at",
+			"equipment.created_at",
+		).
 		From("public.equipment").
 		Limit(pageSize)
 	// TODO: add filtering

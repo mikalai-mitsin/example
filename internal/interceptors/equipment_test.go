@@ -3,15 +3,14 @@ package interceptors
 import (
 	"context"
 	"errors"
-	"reflect"
-	"testing"
-
 	"github.com/018bf/example/internal/domain/errs"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
 	mock_usecases "github.com/018bf/example/internal/domain/usecases/mock"
 	mock_log "github.com/018bf/example/pkg/log/mock"
 	"github.com/golang/mock/gomock"
+	"reflect"
 	"syreclabs.com/go/faker"
+	"testing"
 
 	"github.com/018bf/example/internal/domain/interceptors"
 	"github.com/018bf/example/internal/domain/models"
@@ -26,9 +25,9 @@ func TestNewEquipmentInterceptor(t *testing.T) {
 	equipmentUseCase := mock_usecases.NewMockEquipmentUseCase(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	type args struct {
-		authUseCase      usecases.AuthUseCase
+		authUseCase     usecases.AuthUseCase
 		equipmentUseCase usecases.EquipmentUseCase
-		logger           log.Logger
+		logger          log.Logger
 	}
 	tests := []struct {
 		name  string
@@ -41,13 +40,13 @@ func TestNewEquipmentInterceptor(t *testing.T) {
 			setup: func() {},
 			args: args{
 				equipmentUseCase: equipmentUseCase,
-				authUseCase:      authUseCase,
-				logger:           logger,
+				authUseCase:     authUseCase,
+				logger:          logger,
 			},
 			want: &EquipmentInterceptor{
 				equipmentUseCase: equipmentUseCase,
-				authUseCase:      authUseCase,
-				logger:           logger,
+				authUseCase:     authUseCase,
+				logger:          logger,
 			},
 		},
 	}
@@ -71,13 +70,13 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 	ctx := context.Background()
 	equipment := mock_models.NewEquipment(t)
 	type fields struct {
-		authUseCase      usecases.AuthUseCase
+		authUseCase     usecases.AuthUseCase
 		equipmentUseCase usecases.EquipmentUseCase
-		logger           log.Logger
+		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		id          string
+		ctx context.Context
+		id  string
 		requestUser *models.User
 	}
 	tests := []struct {
@@ -102,13 +101,13 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 					Return(nil)
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
+				ctx: ctx,
+				id:  equipment.ID,
 				requestUser: requestUser,
 			},
 			want:    equipment,
@@ -128,13 +127,13 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
+				ctx: ctx,
+				id:  equipment.ID,
 				requestUser: requestUser,
 			},
 			want:    nil,
@@ -148,13 +147,13 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
+				ctx: ctx,
+				id:  equipment.ID,
 				requestUser: requestUser,
 			},
 			want:    nil,
@@ -171,9 +170,9 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 					Return(nil, errs.NewEntityNotFound())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
 				ctx:         ctx,
@@ -189,8 +188,8 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 			tt.setup()
 			i := &EquipmentInterceptor{
 				equipmentUseCase: tt.fields.equipmentUseCase,
-				authUseCase:      tt.fields.authUseCase,
-				logger:           tt.fields.logger,
+				authUseCase:     tt.fields.authUseCase,
+				logger:          tt.fields.logger,
 			}
 			got, err := i.Get(tt.args.ctx, tt.args.id, tt.args.requestUser)
 			if !errors.Is(err, tt.wantErr) {
@@ -216,13 +215,13 @@ func TestEquipmentInterceptor_Create(t *testing.T) {
 	create := mock_models.NewEquipmentCreate(t)
 	type fields struct {
 		equipmentUseCase usecases.EquipmentUseCase
-		authUseCase      usecases.AuthUseCase
-		logger           log.Logger
+		authUseCase     usecases.AuthUseCase
+		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		create      *models.EquipmentCreate
-		requestUser *models.User
+		ctx    context.Context
+		create *models.EquipmentCreate
+		requestUser    *models.User
 	}
 	tests := []struct {
 		name    string
@@ -236,22 +235,22 @@ func TestEquipmentInterceptor_Create(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentCreate).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentCreate, create).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentCreate, create).
 					Return(nil)
 				equipmentUseCase.EXPECT().Create(ctx, create).Return(equipment, nil)
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				create:      create,
-				requestUser: requestUser,
+				ctx:    ctx,
+				create: create,
+				requestUser:   requestUser,
 			},
 			want:    equipment,
 			wantErr: nil,
@@ -260,21 +259,21 @@ func TestEquipmentInterceptor_Create(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentCreate).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentCreate, create).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentCreate, create).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				create:      create,
-				requestUser: requestUser,
+				ctx:    ctx,
+				create: create,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewPermissionDeniedError(),
@@ -283,13 +282,13 @@ func TestEquipmentInterceptor_Create(t *testing.T) {
 			name: "permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentCreate).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
 				ctx:         ctx,
@@ -303,24 +302,24 @@ func TestEquipmentInterceptor_Create(t *testing.T) {
 			name: "create error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentCreate).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentCreate, create).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentCreate, create).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Create(ctx, create).
 					Return(nil, errs.NewUnexpectedBehaviorError("c u"))
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				create:      create,
-				requestUser: requestUser,
+				ctx:    ctx,
+				create: create,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewUnexpectedBehaviorError("c u"),
@@ -331,8 +330,8 @@ func TestEquipmentInterceptor_Create(t *testing.T) {
 			tt.setup()
 			i := &EquipmentInterceptor{
 				equipmentUseCase: tt.fields.equipmentUseCase,
-				authUseCase:      tt.fields.authUseCase,
-				logger:           tt.fields.logger,
+				authUseCase:     tt.fields.authUseCase,
+				logger:          tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create, tt.args.requestUser)
 			if !errors.Is(err, tt.wantErr) {
@@ -358,13 +357,13 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 	update := mock_models.NewEquipmentUpdate(t)
 	type fields struct {
 		equipmentUseCase usecases.EquipmentUseCase
-		authUseCase      usecases.AuthUseCase
-		logger           log.Logger
+		authUseCase     usecases.AuthUseCase
+		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		update      *models.EquipmentUpdate
-		requestUser *models.User
+		ctx    context.Context
+		update *models.EquipmentUpdate
+		requestUser    *models.User
 	}
 	tests := []struct {
 		name    string
@@ -378,25 +377,25 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, update.ID).
 					Return(equipment, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate, equipment).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate, equipment).
 					Return(nil)
 				equipmentUseCase.EXPECT().Update(ctx, update).Return(equipment, nil)
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    equipment,
 			wantErr: nil,
@@ -405,24 +404,24 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, update.ID).
 					Return(equipment, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate, equipment).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate, equipment).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewPermissionDeniedError(),
@@ -431,21 +430,21 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 			name: "not found",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, update.ID).
 					Return(nil, errs.NewEntityNotFound())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewEntityNotFound(),
@@ -454,27 +453,27 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 			name: "update error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, update.ID).
 					Return(equipment, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate, equipment).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate, equipment).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Update(ctx, update).
 					Return(nil, errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewUnexpectedBehaviorError("d 2"),
@@ -483,18 +482,18 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 			name: "permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentUpdate).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -504,8 +503,8 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 			tt.setup()
 			i := &EquipmentInterceptor{
 				equipmentUseCase: tt.fields.equipmentUseCase,
-				authUseCase:      tt.fields.authUseCase,
-				logger:           tt.fields.logger,
+				authUseCase:     tt.fields.authUseCase,
+				logger:          tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update, tt.args.requestUser)
 			if !errors.Is(err, tt.wantErr) {
@@ -530,12 +529,12 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 	equipment := mock_models.NewEquipment(t)
 	type fields struct {
 		equipmentUseCase usecases.EquipmentUseCase
-		authUseCase      usecases.AuthUseCase
-		logger           log.Logger
+		authUseCase     usecases.AuthUseCase
+		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		id          string
+		ctx context.Context
+		id  string
 		requestUser *models.User
 	}
 	tests := []struct {
@@ -549,27 +548,27 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentDelete).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, equipment.ID).
 					Return(equipment, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentDelete, equipment).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentDelete, equipment).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Delete(ctx, equipment.ID).
 					Return(nil)
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  equipment.ID,
+				requestUser:requestUser,
 			},
 			wantErr: nil,
 		},
@@ -577,21 +576,21 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 			name: "Equipment not found",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentDelete).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, equipment.ID).
 					Return(equipment, errs.NewEntityNotFound())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  equipment.ID,
+				requestUser:requestUser,
 			},
 			wantErr: errs.NewEntityNotFound(),
 		},
@@ -599,24 +598,24 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentDelete).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, equipment.ID).
 					Return(equipment, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentDelete, equipment).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentDelete, equipment).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  equipment.ID,
+				requestUser:requestUser,
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -624,26 +623,26 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 			name: "delete error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentDelete).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, equipment.ID).
 					Return(equipment, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentDelete, equipment).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentDelete, equipment).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Delete(ctx, equipment.ID).
 					Return(errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
+				ctx: ctx,
+				id:  equipment.ID,
 				requestUser: requestUser,
 			},
 			wantErr: errs.NewUnexpectedBehaviorError("d 2"),
@@ -652,18 +651,18 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 			name: "permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentDelete).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
-				authUseCase:      authUseCase,
+				authUseCase:     authUseCase,
 				equipmentUseCase: equipmentUseCase,
-				logger:           logger,
+				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          equipment.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  equipment.ID,
+				requestUser:requestUser,
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -673,8 +672,8 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 			tt.setup()
 			i := &EquipmentInterceptor{
 				equipmentUseCase: tt.fields.equipmentUseCase,
-				authUseCase:      tt.fields.authUseCase,
-				logger:           tt.fields.logger,
+				authUseCase:     tt.fields.authUseCase,
+				logger:          tt.fields.logger,
 			}
 			if err := i.Delete(tt.args.ctx, tt.args.id, tt.args.requestUser); !errors.Is(err, tt.wantErr) {
 				t.Errorf("EquipmentInterceptor.Delete() error = %v, wantErr %v", err, tt.wantErr)
@@ -699,8 +698,8 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 	}
 	type fields struct {
 		equipmentUseCase usecases.EquipmentUseCase
-		authUseCase      usecases.AuthUseCase
-		logger           log.Logger
+		authUseCase     usecases.AuthUseCase
+		logger          log.Logger
 	}
 	type args struct {
 		ctx         context.Context
@@ -720,10 +719,10 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentList).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentList).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentList, filter).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentList, filter).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					List(ctx, filter).
@@ -731,8 +730,8 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 			},
 			fields: fields{
 				equipmentUseCase: equipmentUseCase,
-				authUseCase:      authUseCase,
-				logger:           logger,
+				authUseCase:     authUseCase,
+				logger:          logger,
 			},
 			args: args{
 				ctx:         ctx,
@@ -747,21 +746,21 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentList).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentList).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentList, filter).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentList, filter).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
 				equipmentUseCase: equipmentUseCase,
-				authUseCase:      authUseCase,
-				logger:           logger,
+				authUseCase:     authUseCase,
+				logger:          logger,
 			},
 			args: args{
 				ctx:         ctx,
 				filter:      filter,
-				requestUser: requestUser,
+				requestUser:requestUser,
 			},
 			want:    nil,
 			want1:   0,
@@ -771,18 +770,18 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 			name: "permission error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentList).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentList).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
 				equipmentUseCase: equipmentUseCase,
-				authUseCase:      authUseCase,
-				logger:           logger,
+				authUseCase:     authUseCase,
+				logger:          logger,
 			},
 			args: args{
 				ctx:         ctx,
 				filter:      filter,
-				requestUser: requestUser,
+				requestUser:requestUser,
 			},
 			want:    nil,
 			want1:   0,
@@ -792,10 +791,10 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 			name: "list error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDEquipmentList).
+					HasPermission(ctx,requestUser, models.PermissionIDEquipmentList).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDEquipmentList, filter).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDEquipmentList, filter).
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					List(ctx, filter).
@@ -803,8 +802,8 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 			},
 			fields: fields{
 				equipmentUseCase: equipmentUseCase,
-				authUseCase:      authUseCase,
-				logger:           logger,
+				authUseCase:     authUseCase,
+				logger:          logger,
 			},
 			args: args{
 				ctx:         ctx,
@@ -821,8 +820,8 @@ func TestEquipmentInterceptor_List(t *testing.T) {
 			tt.setup()
 			i := &EquipmentInterceptor{
 				equipmentUseCase: tt.fields.equipmentUseCase,
-				authUseCase:      tt.fields.authUseCase,
-				logger:           tt.fields.logger,
+				authUseCase:     tt.fields.authUseCase,
+				logger:          tt.fields.logger,
 			}
 			got, got1, err := i.List(tt.args.ctx, tt.args.filter, tt.args.requestUser)
 			if !errors.Is(err, tt.wantErr) {

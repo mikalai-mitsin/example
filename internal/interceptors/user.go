@@ -22,9 +22,9 @@ func NewUserInterceptor(
 	logger log.Logger,
 ) interceptors.UserInterceptor {
 	return &UserInterceptor{
-		userUseCase: userUseCase,
-		authUseCase: authUseCase,
-		logger:      logger,
+		userUseCase:                userUseCase,
+		authUseCase:                authUseCase,
+		logger:                     logger,
 	}
 }
 

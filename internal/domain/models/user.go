@@ -2,12 +2,11 @@ package models
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/018bf/example/internal/domain/errs"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 const (
@@ -19,14 +18,14 @@ const (
 )
 
 type User struct {
-	ID        string    `db:"id,omitempty" json:"id"`
-	FirstName string    `db:"first_name" json:"first_name"`
-	LastName  string    `db:"last_name" json:"last_name"`
-	Password  string    `db:"password" json:"password"`
-	Email     string    `db:"email" json:"email"`
-	GroupID   GroupID   `db:"group_id" json:"group_id"`
-	CreatedAt time.Time `db:"created_at,omitempty" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	ID          string    `db:"id,omitempty" json:"id"`
+	FirstName   string    `db:"first_name" json:"first_name"`
+	LastName    string    `db:"last_name" json:"last_name"`
+	Password    string    `db:"password" json:"password"`
+	Email       string    `db:"email" json:"email"`
+	GroupID     GroupID   `db:"group_id" json:"group_id"`
+	CreatedAt   time.Time `db:"created_at,omitempty" json:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
 }
 
 func (u *User) Validate() error {
@@ -63,10 +62,10 @@ func (u *User) FullName() string {
 }
 
 type UserFilter struct {
-	PageSize   *uint64  `json:"page_size"`
-	PageNumber *uint64  `json:"page_number"`
-	Search     *string  `json:"search"`
-	OrderBy    []string `json:"order_by"`
+	PageSize        *uint64    `json:"page_size"`
+	PageNumber      *uint64    `json:"page_number"`
+	Search          *string    `json:"search"`
+	OrderBy         []string   `json:"order_by"`
 }
 
 func (c *UserFilter) Validate() error {
@@ -101,11 +100,11 @@ func (u *UserCreate) Validate() error {
 }
 
 type UserUpdate struct {
-	ID        string  `json:"id"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Password  *string `json:"password"`
-	Email     *string `json:"email"`
+	ID          string     `json:"id"`
+	FirstName   *string    `json:"first_name"`
+	LastName    *string    `json:"last_name"`
+	Password    *string    `json:"password"`
+	Email       *string    `json:"email"`
 }
 
 func (u *UserUpdate) Validate() error {

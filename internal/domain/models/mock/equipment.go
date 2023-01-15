@@ -1,27 +1,27 @@
 package mock_models // nolint:stylecheck
 
 import (
-	"testing"
-	"time"
-
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/pkg/utils"
-	"github.com/google/uuid"
 	"syreclabs.com/go/faker"
+	"github.com/google/uuid"
+	"testing"
+	"time"
 )
 
 func NewEquipment(t *testing.T) *models.Equipment {
 	t.Helper()
 	return &models.Equipment{
-		ID:        uuid.New().String(),
-		UpdatedAt: faker.Time().Backward(40 * time.Hour).UTC(),
-		CreatedAt: faker.Time().Backward(40 * time.Hour).UTC(),
+		ID:         uuid.New().String(),
+		UpdatedAt:  faker.Time().Backward(40 * time.Hour).UTC(),
+		CreatedAt:  faker.Time().Backward(40 * time.Hour).UTC(),
 	}
 }
 
 func NewEquipmentCreate(t *testing.T) *models.EquipmentCreate {
 	t.Helper()
-	return &models.EquipmentCreate{}
+	return &models.EquipmentCreate{
+	}
 }
 
 func NewEquipmentUpdate(t *testing.T) *models.EquipmentUpdate {

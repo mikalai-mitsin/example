@@ -12,8 +12,8 @@ import (
 
 type ApproachInterceptor struct {
 	approachUseCase usecases.ApproachUseCase
-	authUseCase     usecases.AuthUseCase
-	logger          log.Logger
+	authUseCase usecases.AuthUseCase
+	logger log.Logger
 }
 
 func NewApproachInterceptor(
@@ -23,8 +23,8 @@ func NewApproachInterceptor(
 ) interceptors.ApproachInterceptor {
 	return &ApproachInterceptor{
 		approachUseCase: approachUseCase,
-		authUseCase:     authUseCase,
-		logger:          logger,
+		authUseCase:   authUseCase,
+		logger:                        logger,
 	}
 }
 

@@ -12,8 +12,8 @@ import (
 
 type EquipmentInterceptor struct {
 	equipmentUseCase usecases.EquipmentUseCase
-	authUseCase      usecases.AuthUseCase
-	logger           log.Logger
+	authUseCase usecases.AuthUseCase
+	logger log.Logger
 }
 
 func NewEquipmentInterceptor(
@@ -23,8 +23,8 @@ func NewEquipmentInterceptor(
 ) interceptors.EquipmentInterceptor {
 	return &EquipmentInterceptor{
 		equipmentUseCase: equipmentUseCase,
-		authUseCase:      authUseCase,
-		logger:           logger,
+		authUseCase:   authUseCase,
+		logger:                        logger,
 	}
 }
 

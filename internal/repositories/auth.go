@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"fmt"
-	"time"
-
 	"github.com/018bf/example/internal/configs"
 	"github.com/018bf/example/internal/domain/errs"
 	"github.com/018bf/example/internal/domain/models"
@@ -13,6 +11,7 @@ import (
 	"github.com/018bf/example/pkg/clock"
 	"github.com/018bf/example/pkg/log"
 	"github.com/golang-jwt/jwt/v4"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -43,8 +42,8 @@ func NewJWTAuthRepository(
 		panic(err)
 	}
 	return &JWTAuthRepository{
-		accessTTL:  time.Duration(config.Auth.AccessTTL) * time.Second,
-		refreshTTL: time.Duration(config.Auth.RefreshTTL) * time.Second,
+		accessTTL:  time.Duration(config.Auth.AccessTTL)*time.Second,
+		refreshTTL: time.Duration(config.Auth.RefreshTTL)*time.Second,
 		publicKey:  public,
 		privateKey: private,
 		clock:      clock,

@@ -12,8 +12,8 @@ import (
 
 type SessionInterceptor struct {
 	sessionUseCase usecases.SessionUseCase
-	authUseCase    usecases.AuthUseCase
-	logger         log.Logger
+	authUseCase usecases.AuthUseCase
+	logger log.Logger
 }
 
 func NewSessionInterceptor(
@@ -23,8 +23,8 @@ func NewSessionInterceptor(
 ) interceptors.SessionInterceptor {
 	return &SessionInterceptor{
 		sessionUseCase: sessionUseCase,
-		authUseCase:    authUseCase,
-		logger:         logger,
+		authUseCase:   authUseCase,
+		logger:                        logger,
 	}
 }
 

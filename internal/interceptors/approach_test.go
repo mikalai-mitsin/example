@@ -3,15 +3,14 @@ package interceptors
 import (
 	"context"
 	"errors"
-	"reflect"
-	"testing"
-
 	"github.com/018bf/example/internal/domain/errs"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
 	mock_usecases "github.com/018bf/example/internal/domain/usecases/mock"
 	mock_log "github.com/018bf/example/pkg/log/mock"
 	"github.com/golang/mock/gomock"
+	"reflect"
 	"syreclabs.com/go/faker"
+	"testing"
 
 	"github.com/018bf/example/internal/domain/interceptors"
 	"github.com/018bf/example/internal/domain/models"
@@ -76,8 +75,8 @@ func TestApproachInterceptor_Get(t *testing.T) {
 		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		id          string
+		ctx context.Context
+		id  string
 		requestUser *models.User
 	}
 	tests := []struct {
@@ -107,8 +106,8 @@ func TestApproachInterceptor_Get(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
+				ctx: ctx,
+				id:  approach.ID,
 				requestUser: requestUser,
 			},
 			want:    approach,
@@ -133,8 +132,8 @@ func TestApproachInterceptor_Get(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
+				ctx: ctx,
+				id:  approach.ID,
 				requestUser: requestUser,
 			},
 			want:    nil,
@@ -153,8 +152,8 @@ func TestApproachInterceptor_Get(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
+				ctx: ctx,
+				id:  approach.ID,
 				requestUser: requestUser,
 			},
 			want:    nil,
@@ -220,9 +219,9 @@ func TestApproachInterceptor_Create(t *testing.T) {
 		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		create      *models.ApproachCreate
-		requestUser *models.User
+		ctx    context.Context
+		create *models.ApproachCreate
+		requestUser    *models.User
 	}
 	tests := []struct {
 		name    string
@@ -236,10 +235,10 @@ func TestApproachInterceptor_Create(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachCreate).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachCreate, create).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachCreate, create).
 					Return(nil)
 				approachUseCase.EXPECT().Create(ctx, create).Return(approach, nil)
 			},
@@ -249,9 +248,9 @@ func TestApproachInterceptor_Create(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				create:      create,
-				requestUser: requestUser,
+				ctx:    ctx,
+				create: create,
+				requestUser:   requestUser,
 			},
 			want:    approach,
 			wantErr: nil,
@@ -260,10 +259,10 @@ func TestApproachInterceptor_Create(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachCreate).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachCreate, create).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachCreate, create).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -272,9 +271,9 @@ func TestApproachInterceptor_Create(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				create:      create,
-				requestUser: requestUser,
+				ctx:    ctx,
+				create: create,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewPermissionDeniedError(),
@@ -283,7 +282,7 @@ func TestApproachInterceptor_Create(t *testing.T) {
 			name: "permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachCreate).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -303,10 +302,10 @@ func TestApproachInterceptor_Create(t *testing.T) {
 			name: "create error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachCreate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachCreate).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachCreate, create).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachCreate, create).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Create(ctx, create).
@@ -318,9 +317,9 @@ func TestApproachInterceptor_Create(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				create:      create,
-				requestUser: requestUser,
+				ctx:    ctx,
+				create: create,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewUnexpectedBehaviorError("c u"),
@@ -362,9 +361,9 @@ func TestApproachInterceptor_Update(t *testing.T) {
 		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		update      *models.ApproachUpdate
-		requestUser *models.User
+		ctx    context.Context
+		update *models.ApproachUpdate
+		requestUser    *models.User
 	}
 	tests := []struct {
 		name    string
@@ -378,13 +377,13 @@ func TestApproachInterceptor_Update(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachUpdate).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, update.ID).
 					Return(approach, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachUpdate, approach).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachUpdate, approach).
 					Return(nil)
 				approachUseCase.EXPECT().Update(ctx, update).Return(approach, nil)
 			},
@@ -394,9 +393,9 @@ func TestApproachInterceptor_Update(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    approach,
 			wantErr: nil,
@@ -405,13 +404,13 @@ func TestApproachInterceptor_Update(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachUpdate).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, update.ID).
 					Return(approach, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachUpdate, approach).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachUpdate, approach).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -420,9 +419,9 @@ func TestApproachInterceptor_Update(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewPermissionDeniedError(),
@@ -431,7 +430,7 @@ func TestApproachInterceptor_Update(t *testing.T) {
 			name: "not found",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachUpdate).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, update.ID).
@@ -443,9 +442,9 @@ func TestApproachInterceptor_Update(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewEntityNotFound(),
@@ -454,13 +453,13 @@ func TestApproachInterceptor_Update(t *testing.T) {
 			name: "update error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachUpdate).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, update.ID).
 					Return(approach, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachUpdate, approach).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachUpdate, approach).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Update(ctx, update).
@@ -472,9 +471,9 @@ func TestApproachInterceptor_Update(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			want:    nil,
 			wantErr: errs.NewUnexpectedBehaviorError("d 2"),
@@ -483,7 +482,7 @@ func TestApproachInterceptor_Update(t *testing.T) {
 			name: "permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachUpdate).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachUpdate).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -492,9 +491,9 @@ func TestApproachInterceptor_Update(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				update:      update,
-				requestUser: requestUser,
+				ctx:    ctx,
+				update: update,
+				requestUser:   requestUser,
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -534,8 +533,8 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 		logger          log.Logger
 	}
 	type args struct {
-		ctx         context.Context
-		id          string
+		ctx context.Context
+		id  string
 		requestUser *models.User
 	}
 	tests := []struct {
@@ -549,13 +548,13 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachDelete).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, approach.ID).
 					Return(approach, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachDelete, approach).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachDelete, approach).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Delete(ctx, approach.ID).
@@ -567,9 +566,9 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  approach.ID,
+				requestUser:requestUser,
 			},
 			wantErr: nil,
 		},
@@ -577,7 +576,7 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 			name: "Approach not found",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachDelete).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, approach.ID).
@@ -589,9 +588,9 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  approach.ID,
+				requestUser:requestUser,
 			},
 			wantErr: errs.NewEntityNotFound(),
 		},
@@ -599,13 +598,13 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachDelete).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, approach.ID).
 					Return(approach, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachDelete, approach).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachDelete, approach).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -614,9 +613,9 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  approach.ID,
+				requestUser:requestUser,
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -624,13 +623,13 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 			name: "delete error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachDelete).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Get(ctx, approach.ID).
 					Return(approach, nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachDelete, approach).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachDelete, approach).
 					Return(nil)
 				approachUseCase.EXPECT().
 					Delete(ctx, approach.ID).
@@ -642,8 +641,8 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
+				ctx: ctx,
+				id:  approach.ID,
 				requestUser: requestUser,
 			},
 			wantErr: errs.NewUnexpectedBehaviorError("d 2"),
@@ -652,7 +651,7 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 			name: "permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachDelete).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachDelete).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -661,9 +660,9 @@ func TestApproachInterceptor_Delete(t *testing.T) {
 				logger:          logger,
 			},
 			args: args{
-				ctx:         ctx,
-				id:          approach.ID,
-				requestUser: requestUser,
+				ctx: ctx,
+				id:  approach.ID,
+				requestUser:requestUser,
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -720,10 +719,10 @@ func TestApproachInterceptor_List(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachList).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachList).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachList, filter).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachList, filter).
 					Return(nil)
 				approachUseCase.EXPECT().
 					List(ctx, filter).
@@ -747,10 +746,10 @@ func TestApproachInterceptor_List(t *testing.T) {
 			name: "object permission denied",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachList).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachList).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachList, filter).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachList, filter).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -761,7 +760,7 @@ func TestApproachInterceptor_List(t *testing.T) {
 			args: args{
 				ctx:         ctx,
 				filter:      filter,
-				requestUser: requestUser,
+				requestUser:requestUser,
 			},
 			want:    nil,
 			want1:   0,
@@ -771,7 +770,7 @@ func TestApproachInterceptor_List(t *testing.T) {
 			name: "permission error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachList).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachList).
 					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
@@ -782,7 +781,7 @@ func TestApproachInterceptor_List(t *testing.T) {
 			args: args{
 				ctx:         ctx,
 				filter:      filter,
-				requestUser: requestUser,
+				requestUser:requestUser,
 			},
 			want:    nil,
 			want1:   0,
@@ -792,10 +791,10 @@ func TestApproachInterceptor_List(t *testing.T) {
 			name: "list error",
 			setup: func() {
 				authUseCase.EXPECT().
-					HasPermission(ctx, requestUser, models.PermissionIDApproachList).
+					HasPermission(ctx,requestUser, models.PermissionIDApproachList).
 					Return(nil)
 				authUseCase.EXPECT().
-					HasObjectPermission(ctx, requestUser, models.PermissionIDApproachList, filter).
+					HasObjectPermission(ctx,requestUser, models.PermissionIDApproachList, filter).
 					Return(nil)
 				approachUseCase.EXPECT().
 					List(ctx, filter).

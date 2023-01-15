@@ -1,15 +1,15 @@
 package configs
 
 import (
-	"github.com/018bf/example/internal/domain/errs"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/018bf/example/internal/domain/errs"
 )
 
 type auth struct {
 	PublicKey  string `env:"AUTH_PUBLIC_KEY" toml:"public_key"`
 	PrivateKey string `env:"AUTH_PRIVATE_KEY" toml:"private_key"`
-	RefreshTTL int64  `env:"AUTH_REFRESH_TTL"  env-default:"172800"  toml:"refresh_ttl"`
-	AccessTTL  int64  `env:"AUTH_ACCESS_TTL"  env-default:"86400"  toml:"access_ttl"`
+	RefreshTTL int64 `env:"AUTH_REFRESH_TTL"  env-default:"172800"  toml:"refresh_ttl"`
+	AccessTTL  int64 `env:"AUTH_ACCESS_TTL"  env-default:"86400"  toml:"access_ttl"`
 }
 
 type database struct {

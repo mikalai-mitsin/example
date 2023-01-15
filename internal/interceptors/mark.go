@@ -13,7 +13,7 @@ import (
 type MarkInterceptor struct {
 	markUseCase usecases.MarkUseCase
 	authUseCase usecases.AuthUseCase
-	logger      log.Logger
+	logger log.Logger
 }
 
 func NewMarkInterceptor(
@@ -23,8 +23,8 @@ func NewMarkInterceptor(
 ) interceptors.MarkInterceptor {
 	return &MarkInterceptor{
 		markUseCase: markUseCase,
-		authUseCase: authUseCase,
-		logger:      logger,
+		authUseCase:   authUseCase,
+		logger:                        logger,
 	}
 }
 

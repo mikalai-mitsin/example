@@ -1,41 +1,40 @@
 package models
 
 import (
-	"time"
-
 	"github.com/018bf/example/internal/domain/errs"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"time"
 )
 
 type Mark struct {
-	ID        string    `json:"id" db:"id,omitempty"`
-	Name      string    `json:"name" db:"name"`
-	Title     string    `json:"title" db:"title"`
-	Weight    int       `json:"weight" db:"weight"`
+	ID        string `json:"id" db:"id,omitempty"`
+	Name string `json:"name" db:"name"`
+	Title string `json:"title" db:"title"`
+	Weight int `json:"weight" db:"weight"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at,omitempty"`
 	CreatedAt time.Time `json:"created_at" db:"created_at,omitempty"`
 }
 
 func (c *Mark) Validate() error {
-	err := validation.ValidateStruct(
-		c,
-		validation.Field(&c.ID, is.UUID),
+    err := validation.ValidateStruct(
+        c,
+        validation.Field(&c.ID, is.UUID),
 		validation.Field(&c.Name),
 		validation.Field(&c.Title),
 		validation.Field(&c.Weight),
-	)
-	if err != nil {
-		return errs.FromValidationError(err)
-	}
-	return nil
+    )
+    if err != nil {
+        return errs.FromValidationError(err)
+    }
+    return nil
 }
 
 type MarkFilter struct {
-	IDs        []string `json:"ids"`
-	PageSize   *uint64  `json:"page_size"`
-	PageNumber *uint64  `json:"page_number"`
-	OrderBy    []string `json:"order_by"`
+    IDs        []string `json:"ids"`
+    PageSize   *uint64  `json:"page_size"`
+    PageNumber *uint64  `json:"page_number"`
+    OrderBy    []string `json:"order_by"`
 }
 
 func (c *MarkFilter) Validate() error {
@@ -53,9 +52,9 @@ func (c *MarkFilter) Validate() error {
 }
 
 type MarkCreate struct {
-	Name   string `json:"name"`
-	Title  string `json:"title"`
-	Weight int    `json:"weight"`
+	Name string `json:"name"`
+	Title string `json:"title"`
+	Weight int `json:"weight"`
 }
 
 func (c *MarkCreate) Validate() error {
@@ -72,24 +71,24 @@ func (c *MarkCreate) Validate() error {
 }
 
 type MarkUpdate struct {
-	ID     string  `json:"id"`
-	Name   *string `json:"name"`
-	Title  *string `json:"title"`
-	Weight *int    `json:"weight"`
+	ID string `json:"id"`
+	Name *string `json:"name"`
+	Title *string `json:"title"`
+	Weight *int `json:"weight"`
 }
 
 func (c *MarkUpdate) Validate() error {
-	err := validation.ValidateStruct(
-		c,
-		validation.Field(&c.ID, validation.Required, is.UUID),
+    err := validation.ValidateStruct(
+        c,
+        validation.Field(&c.ID, validation.Required, is.UUID),
 		validation.Field(&c.Name),
 		validation.Field(&c.Title),
 		validation.Field(&c.Weight),
-	)
-	if err != nil {
-		return errs.FromValidationError(err)
-	}
-	return nil
+    )
+    if err != nil {
+        return errs.FromValidationError(err)
+    }
+    return nil
 }
 
 const (

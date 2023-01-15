@@ -1,27 +1,27 @@
 package mock_models // nolint:stylecheck
 
 import (
-	"testing"
-	"time"
-
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/pkg/utils"
-	"github.com/google/uuid"
 	"syreclabs.com/go/faker"
+	"github.com/google/uuid"
+	"testing"
+	"time"
 )
 
 func NewSession(t *testing.T) *models.Session {
 	t.Helper()
 	return &models.Session{
-		ID:        uuid.New().String(),
-		UpdatedAt: faker.Time().Backward(40 * time.Hour).UTC(),
-		CreatedAt: faker.Time().Backward(40 * time.Hour).UTC(),
+		ID:         uuid.New().String(),
+		UpdatedAt:  faker.Time().Backward(40 * time.Hour).UTC(),
+		CreatedAt:  faker.Time().Backward(40 * time.Hour).UTC(),
 	}
 }
 
 func NewSessionCreate(t *testing.T) *models.SessionCreate {
 	t.Helper()
-	return &models.SessionCreate{}
+	return &models.SessionCreate{
+	}
 }
 
 func NewSessionUpdate(t *testing.T) *models.SessionUpdate {
