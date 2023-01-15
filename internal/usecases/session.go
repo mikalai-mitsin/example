@@ -7,8 +7,8 @@ import (
 	"github.com/018bf/example/internal/domain/repositories"
 	"github.com/018bf/example/internal/domain/usecases"
 
-	"github.com/018bf/example/pkg/log"
 	"github.com/018bf/example/pkg/clock"
+	"github.com/018bf/example/pkg/log"
 )
 
 type SessionUseCase struct {

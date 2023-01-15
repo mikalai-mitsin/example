@@ -9,7 +9,6 @@ import (
 //nolint: lll
 //go:generate mockgen -build_flags=-mod=mod -destination mock/session_mock.go github.com/018bf/example/internal/domain/interceptors SessionInterceptor
 
-
 type SessionInterceptor interface {
 	Get(
 		ctx context.Context,

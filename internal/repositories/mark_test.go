@@ -4,15 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"reflect"
+	"testing"
+
 	"github.com/018bf/example/internal/domain/errs"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
 	"github.com/018bf/example/internal/interfaces/postgres"
 	mock_log "github.com/018bf/example/pkg/log/mock"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
-	"reflect"
 	"syreclabs.com/go/faker"
-	"testing"
 
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
@@ -170,7 +171,7 @@ func TestMarkRepository_Get(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				rows := newMarkRows(t, []*models.Mark{ mark })
+				rows := newMarkRows(t, []*models.Mark{mark})
 				mock.ExpectQuery(query).WithArgs(mark.ID).WillReturnRows(rows)
 			},
 			fields: fields{
@@ -199,7 +200,7 @@ func TestMarkRepository_Get(t *testing.T) {
 			},
 			want: nil,
 			wantErr: errs.FromPostgresError(errors.New("test error")).
-						WithParam("mark_id", mark.ID),
+				WithParam("mark_id", mark.ID),
 		},
 		{
 			name: "not found",
@@ -214,7 +215,7 @@ func TestMarkRepository_Get(t *testing.T) {
 				ctx: context.Background(),
 				id:  mark.ID,
 			},
-			want: nil,
+			want:    nil,
 			wantErr: errs.NewEntityNotFound().WithParam("mark_id", mark.ID),
 		},
 	}
@@ -297,7 +298,7 @@ func TestMarkRepository_List(t *testing.T) {
 				logger:   logger,
 			},
 			args: args{
-				ctx: ctx,
+				ctx:    ctx,
 				filter: filter,
 			},
 			want: nil,
@@ -323,7 +324,7 @@ func TestMarkRepository_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want: nil,
+			want:    nil,
 			wantErr: errs.FromPostgresError(errors.New("test error")),
 		},
 	}
@@ -620,7 +621,7 @@ func TestMarkRepository_Count(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				ctx: ctx,
+				ctx:    ctx,
 				filter: filter,
 			},
 			want:    1,
@@ -662,7 +663,7 @@ func TestMarkRepository_Count(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want: 0,
+			want:    0,
 			wantErr: errs.FromPostgresError(errors.New("test error")),
 		},
 	}
@@ -684,7 +685,6 @@ func TestMarkRepository_Count(t *testing.T) {
 		})
 	}
 }
-
 
 func newMarkRows(t *testing.T, marks []*models.Mark) *sqlmock.Rows {
 	t.Helper()

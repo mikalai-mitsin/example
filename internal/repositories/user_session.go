@@ -3,16 +3,17 @@ package repositories
 import (
 	"context"
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/018bf/example/pkg/log"
 
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/018bf/example/internal/domain/errs"
+	"github.com/jmoiron/sqlx"
 )
 
 type UserSessionRepository struct {
@@ -26,7 +27,7 @@ func NewUserSessionRepository(
 ) repositories.UserSessionRepository {
 	return &UserSessionRepository{
 		database: database,
-		logger: logger,
+		logger:   logger,
 	}
 }
 
@@ -62,10 +63,10 @@ func (r *UserSessionRepository) Get(
 	defer cancel()
 	userSession := &models.UserSession{}
 	q := sq.Select(
-			"user_sessions.id",
-			"user_sessions.updated_at",
-			"user_sessions.created_at",
-		).
+		"user_sessions.id",
+		"user_sessions.updated_at",
+		"user_sessions.created_at",
+	).
 		From("public.user_sessions").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -87,10 +88,10 @@ func (r *UserSessionRepository) List(
 	var userSessions []*models.UserSession
 	const pageSize = 10
 	q := sq.Select(
-			"user_sessions.id",
-			"user_sessions.updated_at",
-			"user_sessions.created_at",
-		).
+		"user_sessions.id",
+		"user_sessions.updated_at",
+		"user_sessions.created_at",
+	).
 		From("public.user_sessions").
 		Limit(pageSize)
 	// TODO: add filtering

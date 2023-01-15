@@ -2,18 +2,18 @@ package containers
 
 import (
 	"context"
+
 	"github.com/018bf/example/internal/interfaces/grpc"
 
 	"github.com/018bf/example/pkg/log"
 	"go.uber.org/fx/fxevent"
 
 	"github.com/018bf/example/internal/interceptors"
+	"github.com/018bf/example/internal/interfaces/postgres"
 	"github.com/018bf/example/internal/repositories"
 	"github.com/018bf/example/internal/usecases"
-	"github.com/018bf/example/internal/interfaces/postgres"
 
 	"github.com/018bf/example/pkg/clock"
-
 
 	"github.com/018bf/example/internal/configs"
 	"go.uber.org/fx"

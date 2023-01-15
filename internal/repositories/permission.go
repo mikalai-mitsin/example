@@ -3,22 +3,23 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/018bf/example/internal/domain/errs"
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"reflect"
 )
 
 type objectPermissionChecker func(model any, user *models.User) error
 
 var hasObjectPermission = map[models.PermissionID][]objectPermissionChecker{
-	models.PermissionIDUserCreate:        {objectAnybody},
-	models.PermissionIDUserList:          {objectNobody},
-	models.PermissionIDUserDetail:        {objectOwner},
-	models.PermissionIDUserUpdate:        {objectOwner},
-	models.PermissionIDUserDelete:        {objectOwner},
+	models.PermissionIDUserCreate: {objectAnybody},
+	models.PermissionIDUserList:   {objectNobody},
+	models.PermissionIDUserDetail: {objectOwner},
+	models.PermissionIDUserUpdate: {objectOwner},
+	models.PermissionIDUserDelete: {objectOwner},
 }
 
 type PermissionRepository struct {

@@ -3,16 +3,17 @@ package repositories
 import (
 	"context"
 	"errors"
+	"reflect"
+	"testing"
+
 	"github.com/018bf/example/internal/domain/errs"
 	"github.com/018bf/example/internal/domain/models"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
 	"github.com/018bf/example/internal/domain/repositories"
 	"github.com/018bf/example/internal/interfaces/postgres"
 	"github.com/018bf/example/pkg/utils"
-	"github.com/jmoiron/sqlx"
 	"github.com/DATA-DOG/go-sqlmock"
-	"reflect"
-	"testing"
+	"github.com/jmoiron/sqlx"
 )
 
 func TestPermissionRepository_objectAnybody(t *testing.T) {
@@ -473,7 +474,6 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 		})
 	}
 }
-
 
 func NewPermissionRows(t *testing.T, permission []*models.Permission) *sqlmock.Rows {
 	t.Helper()

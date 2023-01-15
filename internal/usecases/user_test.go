@@ -3,6 +3,10 @@ package usecases
 import (
 	"context"
 	"errors"
+	"reflect"
+	"strings"
+	"testing"
+
 	"github.com/018bf/example/internal/domain/errs"
 	"github.com/018bf/example/internal/domain/models"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
@@ -15,10 +19,7 @@ import (
 	mock_log "github.com/018bf/example/pkg/log/mock"
 	"github.com/018bf/example/pkg/utils"
 	"github.com/golang/mock/gomock"
-	"reflect"
-	"strings"
 	"syreclabs.com/go/faker"
-	"testing"
 )
 
 func TestNewUserUseCase(t *testing.T) {
@@ -256,7 +257,7 @@ func TestUserUseCase_Create(t *testing.T) {
 				logger:         logger,
 			},
 			args: args{
-				ctx: ctx,
+				ctx:    ctx,
 				create: userCreate,
 			},
 			want:    &models.User{Email: userCreate.Email, GroupID: models.GroupIDUser},
@@ -274,7 +275,7 @@ func TestUserUseCase_Create(t *testing.T) {
 				logger:         logger,
 			},
 			args: args{
-				ctx: ctx,
+				ctx:    ctx,
 				create: userCreate,
 			},
 			want:    nil,
@@ -298,7 +299,7 @@ func TestUserUseCase_Create(t *testing.T) {
 			wantErr: &errs.Error{
 				Code:    errs.ErrorCodeInvalidArgument,
 				Message: "The form sent is not valid, please correct the errors below.",
-				Params:  map[string]string{"email": "must be a valid email address", "password":"cannot be blank"},
+				Params:  map[string]string{"email": "must be a valid email address", "password": "cannot be blank"},
 			},
 		},
 	}

@@ -4,15 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"reflect"
+	"testing"
+
 	"github.com/018bf/example/internal/domain/errs"
 	mock_models "github.com/018bf/example/internal/domain/models/mock"
 	"github.com/018bf/example/internal/interfaces/postgres"
 	mock_log "github.com/018bf/example/pkg/log/mock"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
-	"reflect"
 	"syreclabs.com/go/faker"
-	"testing"
 
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
@@ -170,7 +171,7 @@ func TestUserSessionRepository_Get(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				rows := newUserSessionRows(t, []*models.UserSession{ userSession })
+				rows := newUserSessionRows(t, []*models.UserSession{userSession})
 				mock.ExpectQuery(query).WithArgs(userSession.ID).WillReturnRows(rows)
 			},
 			fields: fields{
@@ -199,7 +200,7 @@ func TestUserSessionRepository_Get(t *testing.T) {
 			},
 			want: nil,
 			wantErr: errs.FromPostgresError(errors.New("test error")).
-						WithParam("user_session_id", userSession.ID),
+				WithParam("user_session_id", userSession.ID),
 		},
 		{
 			name: "not found",
@@ -214,7 +215,7 @@ func TestUserSessionRepository_Get(t *testing.T) {
 				ctx: context.Background(),
 				id:  userSession.ID,
 			},
-			want: nil,
+			want:    nil,
 			wantErr: errs.NewEntityNotFound().WithParam("user_session_id", userSession.ID),
 		},
 	}
@@ -297,7 +298,7 @@ func TestUserSessionRepository_List(t *testing.T) {
 				logger:   logger,
 			},
 			args: args{
-				ctx: ctx,
+				ctx:    ctx,
 				filter: filter,
 			},
 			want: nil,
@@ -323,7 +324,7 @@ func TestUserSessionRepository_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want: nil,
+			want:    nil,
 			wantErr: errs.FromPostgresError(errors.New("test error")),
 		},
 	}
@@ -620,7 +621,7 @@ func TestUserSessionRepository_Count(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				ctx: ctx,
+				ctx:    ctx,
 				filter: filter,
 			},
 			want:    1,
@@ -662,7 +663,7 @@ func TestUserSessionRepository_Count(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want: 0,
+			want:    0,
 			wantErr: errs.FromPostgresError(errors.New("test error")),
 		},
 	}
@@ -684,7 +685,6 @@ func TestUserSessionRepository_Count(t *testing.T) {
 		})
 	}
 }
-
 
 func newUserSessionRows(t *testing.T, userSessions []*models.UserSession) *sqlmock.Rows {
 	t.Helper()

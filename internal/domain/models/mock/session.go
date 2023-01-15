@@ -1,12 +1,13 @@
 package mock_models // nolint:stylecheck
 
 import (
-	"github.com/018bf/example/internal/domain/models"
-	"github.com/018bf/example/pkg/utils"
-	"syreclabs.com/go/faker"
-	"github.com/google/uuid"
 	"testing"
 	"time"
+
+	"github.com/018bf/example/internal/domain/models"
+	"github.com/018bf/example/pkg/utils"
+	"github.com/google/uuid"
+	"syreclabs.com/go/faker"
 )
 
 func NewSession(t *testing.T) *models.Session {

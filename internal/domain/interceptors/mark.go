@@ -9,7 +9,6 @@ import (
 //nolint: lll
 //go:generate mockgen -build_flags=-mod=mod -destination mock/mark_mock.go github.com/018bf/example/internal/domain/interceptors MarkInterceptor
 
-
 type MarkInterceptor interface {
 	Get(
 		ctx context.Context,

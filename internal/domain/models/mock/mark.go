@@ -1,12 +1,13 @@
 package mock_models // nolint:stylecheck
 
 import (
-	"github.com/018bf/example/internal/domain/models"
-	"github.com/018bf/example/pkg/utils"
-	"syreclabs.com/go/faker"
-	"github.com/google/uuid"
 	"testing"
 	"time"
+
+	"github.com/018bf/example/internal/domain/models"
+	"github.com/018bf/example/pkg/utils"
+	"github.com/google/uuid"
+	"syreclabs.com/go/faker"
 )
 
 func NewMark(t *testing.T) *models.Mark {
@@ -15,7 +16,7 @@ func NewMark(t *testing.T) *models.Mark {
 		ID:         uuid.New().String(),
 		Name: faker.Lorem().String(),
 		Title: faker.Lorem().String(),
-		Weight: int(faker.RandomInt(2, 100)),
+		Weight: faker.RandomInt(2, 100),
 		UpdatedAt:  faker.Time().Backward(40 * time.Hour).UTC(),
 		CreatedAt:  faker.Time().Backward(40 * time.Hour).UTC(),
 	}
@@ -26,7 +27,7 @@ func NewMarkCreate(t *testing.T) *models.MarkCreate {
 	return &models.MarkCreate{
 		Name: faker.Lorem().String(),
 		Title: faker.Lorem().String(),
-		Weight: int(faker.RandomInt(2, 100)),
+		Weight: faker.RandomInt(2, 100),
 	}
 }
 
@@ -36,7 +37,7 @@ func NewMarkUpdate(t *testing.T) *models.MarkUpdate {
 		ID: uuid.New().String(),
 		Name:  utils.Pointer(faker.Lorem().String()),
 		Title:  utils.Pointer(faker.Lorem().String()),
-		Weight:  utils.Pointer(int(faker.RandomInt(2, 100))),
+		Weight:  utils.Pointer(faker.RandomInt(2, 100)),
 	}
 }
 

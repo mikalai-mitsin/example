@@ -3,16 +3,17 @@ package repositories
 import (
 	"context"
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/018bf/example/pkg/log"
 
 	"github.com/018bf/example/internal/domain/models"
 	"github.com/018bf/example/internal/domain/repositories"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/018bf/example/internal/domain/errs"
+	"github.com/jmoiron/sqlx"
 )
 
 type ApproachRepository struct {
@@ -26,7 +27,7 @@ func NewApproachRepository(
 ) repositories.ApproachRepository {
 	return &ApproachRepository{
 		database: database,
-		logger: logger,
+		logger:   logger,
 	}
 }
 
@@ -62,10 +63,10 @@ func (r *ApproachRepository) Get(
 	defer cancel()
 	approach := &models.Approach{}
 	q := sq.Select(
-			"approaches.id",
-			"approaches.updated_at",
-			"approaches.created_at",
-		).
+		"approaches.id",
+		"approaches.updated_at",
+		"approaches.created_at",
+	).
 		From("public.approaches").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -87,10 +88,10 @@ func (r *ApproachRepository) List(
 	var approaches []*models.Approach
 	const pageSize = 10
 	q := sq.Select(
-			"approaches.id",
-			"approaches.updated_at",
-			"approaches.created_at",
-		).
+		"approaches.id",
+		"approaches.updated_at",
+		"approaches.created_at",
+	).
 		From("public.approaches").
 		Limit(pageSize)
 	// TODO: add filtering
