@@ -149,7 +149,7 @@ func TestEquipmentRepository_Get(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
     logger := mock_log.NewMockLogger(ctrl)
-    query := "SELECT equipment.id, equipment.updated_at, equipment.created_at FROM public.equipment WHERE id = \\$1 LIMIT 1"
+    query := "SELECT equipment.id, equipment.name, equipment.repeat, equipment.weight, equipment.updated_at, equipment.created_at FROM public.equipment WHERE id = \\$1 LIMIT 1"
     equipment := mock_models.NewEquipment(t)
     ctx := context.Background()
     type fields struct {
@@ -254,7 +254,7 @@ func TestEquipmentRepository_List(t *testing.T) {
         equipment = append(equipment, mock_models.NewEquipment(t))
     }
     filter := mock_models.NewEquipmentFilter(t)
-    query := "SELECT equipment.id, equipment.updated_at, equipment.created_at FROM public.equipment"
+    query := "SELECT equipment.id, equipment.name, equipment.repeat, equipment.weight, equipment.updated_at, equipment.created_at FROM public.equipment"
     type fields struct {
         database *sqlx.DB
         logger   log.Logger
@@ -690,14 +690,18 @@ func newEquipmentRows(t *testing.T, equipment []*models.Equipment) *sqlmock.Rows
     t.Helper()
     rows := sqlmock.NewRows([]string{
         "id",
-    // TODO: add columns
+        "name",
+        "repeat",
+        "weight",
         "updated_at",
         "created_at",
     })
     for _, equipment := range equipment {
         rows.AddRow(
             equipment.ID,
-            // TODO: add values
+            equipment.Name,
+            equipment.Repeat,
+            equipment.Weight,
             equipment.UpdatedAt,
             equipment.CreatedAt,
         )

@@ -11,8 +11,8 @@ import (
 )
 
 var FXModule = fx.Options(
-	fx.Provide(NewUserSessionHandler, NewEquipmentHandler, NewSessionHandler, NewApproachHandler, NewMarkHandler),
-	fx.Provide(NewAuthMiddleware),
+	fx.Provide(NewSessionHandler, NewEquipmentHandler),
+	fx.Provide(NewAuthMiddleware, NewAuthHandler, NewUserHandler),
 	fx.Provide(NewRouter),
 	fx.Invoke(func(lifecycle fx.Lifecycle, router *gin.Engine, config *configs.Config) {
 		lifecycle.Append(fx.Hook{

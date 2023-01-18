@@ -40,10 +40,14 @@ func (r *SessionRepository) Create(
     defer cancel()
     q := sq.Insert("public.sessions").
         Columns(
+            "description",
+            "title",
             "updated_at",
             "created_at",
         ).
         Values(
+            session.Description,
+            session.Title,
             session.UpdatedAt,
             session.CreatedAt,
         ).
@@ -65,6 +69,8 @@ func (r *SessionRepository) Get(
     session := &models.Session{}
     q := sq.Select(
         "sessions.id",
+        "sessions.description",
+        "sessions.title",
         "sessions.updated_at",
         "sessions.created_at",
     ).
@@ -93,6 +99,8 @@ func (r *SessionRepository) List(
 	}
     q := sq.Select(
         "sessions.id",
+        "sessions.description",
+        "sessions.title",
         "sessions.updated_at",
         "sessions.created_at",
     ).
@@ -122,6 +130,8 @@ func (r *SessionRepository) Update(
     defer cancel()
     q := sq.Update("public.sessions").
         Where(sq.Eq{"id": session.ID}).
+        Set("sessions.description", session.Description).
+        Set("sessions.title", session.Title).
         Set("updated_at", session.UpdatedAt)
     query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
     result, err := r.database.ExecContext(ctx, query, args...)

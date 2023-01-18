@@ -278,6 +278,9 @@ func TestEquipmentUseCase_Create(t *testing.T) {
                     Create(
                         ctx,
                         &models.Equipment{
+                            Name: create.Name,
+                            Repeat: create.Repeat,
+                            Weight: create.Weight,
                             UpdatedAt: now,
                             CreatedAt: now,
                         },
@@ -295,6 +298,9 @@ func TestEquipmentUseCase_Create(t *testing.T) {
             },
             want: &models.Equipment{
                 ID: "",
+                Name: create.Name,
+                Repeat: create.Repeat,
+                Weight: create.Weight,
                 UpdatedAt: now,
                 CreatedAt: now,
             },
@@ -309,6 +315,9 @@ func TestEquipmentUseCase_Create(t *testing.T) {
                         ctx,
                         &models.Equipment{
                             ID: "",
+                            Name: create.Name,
+                            Repeat: create.Repeat,
+                            Weight: create.Weight,
                             UpdatedAt: now,
                             CreatedAt: now,
                         },

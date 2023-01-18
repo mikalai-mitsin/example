@@ -40,10 +40,16 @@ func (r *EquipmentRepository) Create(
     defer cancel()
     q := sq.Insert("public.equipment").
         Columns(
+            "name",
+            "repeat",
+            "weight",
             "updated_at",
             "created_at",
         ).
         Values(
+            equipment.Name,
+            equipment.Repeat,
+            equipment.Weight,
             equipment.UpdatedAt,
             equipment.CreatedAt,
         ).
@@ -65,6 +71,9 @@ func (r *EquipmentRepository) Get(
     equipment := &models.Equipment{}
     q := sq.Select(
         "equipment.id",
+        "equipment.name",
+        "equipment.repeat",
+        "equipment.weight",
         "equipment.updated_at",
         "equipment.created_at",
     ).
@@ -93,6 +102,9 @@ func (r *EquipmentRepository) List(
 	}
     q := sq.Select(
         "equipment.id",
+        "equipment.name",
+        "equipment.repeat",
+        "equipment.weight",
         "equipment.updated_at",
         "equipment.created_at",
     ).
@@ -122,6 +134,9 @@ func (r *EquipmentRepository) Update(
     defer cancel()
     q := sq.Update("public.equipment").
         Where(sq.Eq{"id": equipment.ID}).
+        Set("equipment.name", equipment.Name).
+        Set("equipment.repeat", equipment.Repeat).
+        Set("equipment.weight", equipment.Weight).
         Set("updated_at", equipment.UpdatedAt)
     query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
     result, err := r.database.ExecContext(ctx, query, args...)

@@ -149,7 +149,7 @@ func TestSessionRepository_Get(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
     logger := mock_log.NewMockLogger(ctrl)
-    query := "SELECT sessions.id, sessions.updated_at, sessions.created_at FROM public.sessions WHERE id = \\$1 LIMIT 1"
+    query := "SELECT sessions.id, sessions.description, sessions.title, sessions.updated_at, sessions.created_at FROM public.sessions WHERE id = \\$1 LIMIT 1"
     session := mock_models.NewSession(t)
     ctx := context.Background()
     type fields struct {
@@ -254,7 +254,7 @@ func TestSessionRepository_List(t *testing.T) {
         sessions = append(sessions, mock_models.NewSession(t))
     }
     filter := mock_models.NewSessionFilter(t)
-    query := "SELECT sessions.id, sessions.updated_at, sessions.created_at FROM public.sessions"
+    query := "SELECT sessions.id, sessions.description, sessions.title, sessions.updated_at, sessions.created_at FROM public.sessions"
     type fields struct {
         database *sqlx.DB
         logger   log.Logger
@@ -690,14 +690,16 @@ func newSessionRows(t *testing.T, sessions []*models.Session) *sqlmock.Rows {
     t.Helper()
     rows := sqlmock.NewRows([]string{
         "id",
-    // TODO: add columns
+        "description",
+        "title",
         "updated_at",
         "created_at",
     })
     for _, session := range sessions {
         rows.AddRow(
             session.ID,
-            // TODO: add values
+            session.Description,
+            session.Title,
             session.UpdatedAt,
             session.CreatedAt,
         )

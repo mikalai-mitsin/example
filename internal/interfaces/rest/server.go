@@ -16,7 +16,9 @@ const (
 
 func NewRouter(
 	logger log.Logger,
-	authMiddleware *AuthMiddleware, userSessionHandler *UserSessionHandler, equipmentHandler *EquipmentHandler, sessionHandler *SessionHandler, approachHandler *ApproachHandler, markHandler *MarkHandler,
+	authMiddleware *AuthMiddleware,
+	authHandler *AuthHandler,
+	userHandler *UserHandler, sessionHandler *SessionHandler, equipmentHandler *EquipmentHandler,
 ) *gin.Engine {
 	router := gin.Default()
 	router.Use(authMiddleware.Middleware())
@@ -29,10 +31,9 @@ func NewRouter(
 			"message": "ok",
 		})
 	})
-	userSessionHandler.Register(router)
-	equipmentHandler.Register(router)
+	authHandler.Register(router)
+	userHandler.Register(router)
 	sessionHandler.Register(router)
-	approachHandler.Register(router)
-	markHandler.Register(router)
+	equipmentHandler.Register(router)
 	return router
 }
