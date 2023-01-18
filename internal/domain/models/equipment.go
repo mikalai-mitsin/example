@@ -1,17 +1,17 @@
 package models
 
 import (
-	"time"
+    "time"
 
-	"github.com/018bf/example/internal/domain/errs"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+    "github.com/018bf/example/internal/domain/errs"
+    validation "github.com/go-ozzo/ozzo-validation/v4"
+    "github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 type Equipment struct {
-	ID        string `json:"id" db:"id,omitempty"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at,omitempty"`
-	CreatedAt time.Time `json:"created_at" db:"created_at,omitempty"`
+    ID        string `json:"id" db:"id,omitempty" form:"id"`
+    UpdatedAt time.Time `json:"updated_at" db:"updated_at,omitempty" form:"updated_at"`
+    CreatedAt time.Time `json:"created_at" db:"created_at,omitempty" form:"created_at,omitempty"`
 }
 
 func (c *Equipment) Validate() error {
@@ -26,41 +26,41 @@ func (c *Equipment) Validate() error {
 }
 
 type EquipmentFilter struct {
-    IDs        []string `json:"ids"`
-    PageSize   *uint64  `json:"page_size"`
-    PageNumber *uint64  `json:"page_number"`
-    OrderBy    []string `json:"order_by"`
+    IDs        []string `json:"ids" form:"ids"`
+    PageSize   *uint64  `json:"page_size" form:"page_size"`
+    PageNumber *uint64  `json:"page_number" form:"page_number"`
+    OrderBy    []string `json:"order_by" form:"order_by"`
 }
 
 func (c *EquipmentFilter) Validate() error {
-	err := validation.ValidateStruct(
-		c,
-		validation.Field(&c.IDs),
-		validation.Field(&c.PageSize),
-		validation.Field(&c.PageNumber),
-		validation.Field(&c.OrderBy),
-	)
-	if err != nil {
-		return errs.FromValidationError(err)
-	}
-	return nil
+    err := validation.ValidateStruct(
+        c,
+        validation.Field(&c.IDs),
+        validation.Field(&c.PageSize),
+        validation.Field(&c.PageNumber),
+        validation.Field(&c.OrderBy),
+    )
+    if err != nil {
+        return errs.FromValidationError(err)
+    }
+    return nil
 }
 
 type EquipmentCreate struct {
 }
 
 func (c *EquipmentCreate) Validate() error {
-	err := validation.ValidateStruct(
-		c,
-	)
-	if err != nil {
-		return errs.FromValidationError(err)
-	}
-	return nil
+    err := validation.ValidateStruct(
+        c,
+    )
+    if err != nil {
+        return errs.FromValidationError(err)
+    }
+    return nil
 }
 
 type EquipmentUpdate struct {
-	ID string `json:"id"`
+    ID string `json:"id"`
 }
 
 func (c *EquipmentUpdate) Validate() error {
@@ -75,9 +75,9 @@ func (c *EquipmentUpdate) Validate() error {
 }
 
 const (
-	PermissionIDEquipmentList   PermissionID = "equipment_list"
-	PermissionIDEquipmentDetail PermissionID = "equipment_detail"
-	PermissionIDEquipmentCreate PermissionID = "equipment_create"
-	PermissionIDEquipmentUpdate PermissionID = "equipment_update"
-	PermissionIDEquipmentDelete PermissionID = "equipment_delete"
+    PermissionIDEquipmentList PermissionID = "equipment_list"
+    PermissionIDEquipmentDetail PermissionID = "equipment_detail"
+    PermissionIDEquipmentCreate PermissionID = "equipment_create"
+    PermissionIDEquipmentUpdate PermissionID = "equipment_update"
+    PermissionIDEquipmentDelete PermissionID = "equipment_delete"
 )

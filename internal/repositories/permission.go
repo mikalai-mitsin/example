@@ -15,11 +15,16 @@ import (
 type objectPermissionChecker func(model any, user *models.User) error
 
 var hasObjectPermission = map[models.PermissionID][]objectPermissionChecker{
-	models.PermissionIDUserCreate: {objectAnybody},
-	models.PermissionIDUserList:   {objectNobody},
-	models.PermissionIDUserDetail: {objectOwner},
-	models.PermissionIDUserUpdate: {objectOwner},
-	models.PermissionIDUserDelete: {objectOwner},
+	models.PermissionIDUserCreate:      {objectAnybody},
+	models.PermissionIDUserList:        {objectNobody},
+	models.PermissionIDUserDetail:      {objectOwner},
+	models.PermissionIDUserUpdate:      {objectOwner},
+	models.PermissionIDUserDelete:      {objectOwner},
+	models.PermissionIDUserSessionList: {objectAnybody},
+	models.PermissionIDEquipmentList:   {objectAnybody},
+	models.PermissionIDSessionList:     {objectAnybody},
+	models.PermissionIDApproachList:    {objectAnybody},
+	models.PermissionIDMarkList:        {objectAnybody},
 }
 
 type PermissionRepository struct {
