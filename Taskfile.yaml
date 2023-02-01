@@ -3,10 +3,11 @@ tasks:
   build:
     env:
       CGO_ENABLED: 0
-    vars:
-      version: 123.1.1
     cmds:
       - go build -ldflags "-X main.version={{ .version }}" -v -o ./dist/example ./cmd/example
+    vars:
+      version:
+        sh: git describe --abbrev=0
 
   test:
     cmds:
@@ -28,12 +29,11 @@ tasks:
 
   release:
     deps:
-      - lint
-      - test
+      - task: lint
+      - task: test
     cmds:
       - git flow release start {{ .tag }}
-      - sed -i "" 's/const version = "\([0-9]*\.[0-9]*\.[0-9]*\)"/const version = "{{ .tag }}"/' ./cmd/example/main.go
-      - git-chglog --config docs/.chglog/config.yml --output docs/CHANGELOG.md --next-tag {{ .tag }}
+      - task: log
       - git add .
       - git commit -m "bumped the version number"
       - git flow release finish {{ .tag }}

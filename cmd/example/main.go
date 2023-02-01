@@ -1,14 +1,15 @@
 package main
 
 import (
-    "os"
     "github.com/018bf/example/internal/containers"
     "github.com/urfave/cli/v2"
+    "os"
 )
 
-const version = "0.1.0"
-
-var configPath = ""
+var (
+    version    = "unknown"
+    configPath = ""
+)
 
 func main() {
     app := &cli.App{
@@ -49,10 +50,10 @@ func runApp(context *cli.Context) error {
 
 // runMigrations - migrate database
 func runMigrations(context *cli.Context) error {
-	app := containers.NewMigrate(configPath)
-	err := app.Start(context.Context)
-	if err != nil {
-		return err
-	}
-	return nil
+    app := containers.NewMigrate(configPath)
+    err := app.Start(context.Context)
+    if err != nil {
+        return err
+    }
+    return nil
 }
