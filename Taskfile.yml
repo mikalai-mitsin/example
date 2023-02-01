@@ -1,0 +1,39 @@
+version: 3
+tasks:
+  build:
+    env:
+      CGO_ENABLED: 0
+    vars:
+      version: 123.1.1
+    cmds:
+      - go build -ldflags "-X main.version={{ .version }}" -v -o ./dist/example ./cmd/example
+
+  test:
+    cmds:
+      - go test -cover ./... -coverprofile ./coverage.out -coverpkg ./...
+      - defer: rm ./coverage.out
+      - go tool cover -func ./coverage.out
+
+  lint:
+    cmds:
+      - golangci-lint run ./... --timeout 5m0s
+
+  clean:
+    cmds:
+      - golangci-lint run ./... --fix
+
+  log:
+    cmds:
+      - git-chglog --config docs/.chglog/config.yml --output docs/CHANGELOG.md --next-tag {{ .tag }}
+
+  release:
+    deps:
+      - lint
+      - test
+    cmds:
+      - git flow release start {{ .tag }}
+      - sed -i "" 's/const version = "\([0-9]*\.[0-9]*\.[0-9]*\)"/const version = "{{ .tag }}"/' ./cmd/example/main.go
+      - git-chglog --config docs/.chglog/config.yml --output docs/CHANGELOG.md --next-tag {{ .tag }}
+      - git add .
+      - git commit -m "bumped the version number"
+      - git flow release finish {{ .tag }}
