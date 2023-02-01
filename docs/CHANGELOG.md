@@ -2,6 +2,9 @@
 ## [Unreleased]
 
 
+<a name="0.2.2"></a>
+## [0.2.2] - 2023-02-01
+
 <a name="0.2.1"></a>
 ## [0.2.1] - 2023-02-01
 
@@ -19,6 +22,7 @@
 - rebuild
 
 
-[Unreleased]: /compare/0.2.1...HEAD
+[Unreleased]: /compare/0.2.2...HEAD
+[0.2.2]: /compare/0.2.1...0.2.2
 [0.2.1]: /compare/0.2.0...0.2.1
 [0.2.0]: /compare/v0.1.0...0.2.0
