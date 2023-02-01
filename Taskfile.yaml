@@ -36,4 +36,4 @@ tasks:
       - task: log
       - git add .
       - git commit -m "bumped the version number"
-      - git flow release finish {{ .tag }} -m release -p
+      - git flow release finish {{ .tag }} -f docs/CHANGELOG.md -p -S
