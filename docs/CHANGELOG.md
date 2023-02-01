@@ -2,6 +2,12 @@
 ## [Unreleased]
 
 
+<a name="0.2.5"></a>
+## [0.2.5] - 2023-02-01
+### Docs
+- update style
+
+
 <a name="0.2.4"></a>
 ## [0.2.4] - 2023-02-01
 ### Build
@@ -31,7 +37,8 @@
 - rebuild
 
 
-[Unreleased]: /compare/0.2.4...HEAD
+[Unreleased]: /compare/0.2.5...HEAD
+[0.2.5]: /compare/0.2.4...0.2.5
 [0.2.4]: /compare/0.2.3...0.2.4
 [0.2.3]: /compare/0.2.2...0.2.3
 [0.2.2]: /compare/0.2.1...0.2.2
