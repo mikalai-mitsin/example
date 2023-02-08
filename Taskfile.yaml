@@ -7,7 +7,7 @@ tasks:
       - go build -ldflags "-X main.version={{ .version }}" -v -o ./dist/example ./cmd/example
     vars:
       version:
-        sh: git describe --abbrev=0
+        sh: git describe --tags --abbrev=0
 
   test:
     cmds:
