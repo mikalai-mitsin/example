@@ -5,6 +5,6 @@ breaking:
 lint:
   use:
     - BASIC
-name: buf.build/u018bf/examplepb
+
 deps:
 - buf.build/googleapis/googleapis

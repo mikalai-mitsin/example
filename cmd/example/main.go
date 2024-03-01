@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/018bf/example"
-	"github.com/018bf/example/internal/containers"
+	"github.com/018bf/example/internal/pkg/containers"
 	"github.com/urfave/cli/v2"
 )
 
@@ -43,18 +43,6 @@ func main() {
 				Action:    runGRPC,
 				ArgsUsage: "",
 			},
-			{
-				Name:      "gateway",
-				Usage:     "Run gateway-grpc server",
-				Action:    runGateway,
-				ArgsUsage: "",
-			},
-			{
-				Name:      "rest",
-				Usage:     "Run rest server",
-				Action:    runREST,
-				ArgsUsage: "",
-			},
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
@@ -72,20 +60,6 @@ func runApp(context *cli.Context) error {
 // runGRPC - run grpc api
 func runGRPC(context *cli.Context) error {
 	app := containers.NewGRPCContainer(configPath)
-	app.Run()
-	return nil
-}
-
-// runGateway - run gateway api
-func runGateway(context *cli.Context) error {
-	app := containers.NewGatewayContainer(configPath)
-	app.Run()
-	return nil
-}
-
-// runREST - run REST api
-func runREST(context *cli.Context) error {
-	app := containers.NewRESTContainer(configPath)
 	app.Run()
 	return nil
 }

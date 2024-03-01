@@ -4,64 +4,70 @@ package examplepb.v1;
 
 option go_package = "github.com/018bf/example/pkg/examplepb/v1";
 
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
 import "google/api/annotations.proto";
 
-message User {
-  string id = 1;
-  string first_name = 2;
-  string last_name = 3;
+message UserCreate {
+  string first_name = 1;
+  string last_name = 2;
+  string password = 3;
   string email = 4;
-  string photo = 5;
-  google.protobuf.Timestamp created_at = 6;
-  bool is_banned = 7;
-  google.protobuf.StringValue region_id = 8;
-}
-
-message Users {
-  repeated User items = 1;
-  uint64 count = 2;
-}
-
-message Signup {
-  string email = 1;
-  string password = 2;
-}
-
-message UserUpdate {
-  string id = 1;
-  google.protobuf.StringValue first_name = 2;
-  google.protobuf.StringValue last_name = 3;
-  google.protobuf.StringValue email = 4;
-  google.protobuf.StringValue password = 5;
-  bytes photo = 6;
-  google.protobuf.BoolValue is_banned = 7;
-  google.protobuf.StringValue region_id = 8;
-}
-
-message UserFilter {
-  google.protobuf.UInt64Value page_number = 1;
-  google.protobuf.UInt64Value page_size = 2;
-  google.protobuf.StringValue search = 3;
-  repeated string order_by = 4;
+  string group_id = 5;
 }
 
 message UserGet {
   string id = 1;
 }
 
+message UserUpdate {
+  string id = 1;
+  google.protobuf.StringValue first_name = 2;
+  google.protobuf.StringValue last_name = 3;
+  google.protobuf.StringValue password = 4;
+  google.protobuf.StringValue email = 5;
+  google.protobuf.StringValue group_id = 6;
+}
+
+message User {
+  string id = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.Timestamp created_at = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string password = 6;
+  string email = 7;
+  string group_id = 8;
+}
+
+message ListUser {
+  repeated User items = 1;
+  uint64 count = 2;
+}
+
 message UserDelete {
   string id = 1;
 }
 
+message UserFilter {
+  google.protobuf.UInt64Value page_number = 1;
+  google.protobuf.UInt64Value page_size = 2;
+  repeated string order_by = 3;
+  repeated string ids = 4;
+  google.protobuf.StringValue search = 5;
+}
+
 service UserService {
-  rpc Signup(examplepb.v1.Signup) returns (examplepb.v1.User) {
+  rpc Create(examplepb.v1.UserCreate) returns (examplepb.v1.User) {
     option (google.api.http) = {
       post: "/api/v1/users"
       body: "*"
     };
+  }
+  rpc Get(examplepb.v1.UserGet) returns (examplepb.v1.User) {
+    option (google.api.http) = {get: "/api/v1/users/{id}"};
   }
   rpc Update(examplepb.v1.UserUpdate) returns (examplepb.v1.User) {
     option (google.api.http) = {
@@ -69,13 +75,10 @@ service UserService {
       body: "*"
     };
   }
-  rpc Get(examplepb.v1.UserGet) returns (examplepb.v1.User){
-    option (google.api.http) = {get: "/api/v1/users/{id}"};
-  }
-  rpc List(examplepb.v1.UserFilter) returns (examplepb.v1.Users) {
-    option (google.api.http) = {get: "/api/v1/users"};
-  }
   rpc Delete(examplepb.v1.UserDelete) returns (google.protobuf.Empty) {
     option (google.api.http) = {delete: "/api/v1/users/{id}"};
+  }
+  rpc List(examplepb.v1.UserFilter) returns (examplepb.v1.ListUser) {
+    option (google.api.http) = {get: "/api/v1/users"};
   }
 }
