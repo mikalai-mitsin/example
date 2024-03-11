@@ -72,7 +72,7 @@ func TestEquipmentRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "INSERT INTO public.equipment (created_at,updated_at,name,repeat,weight) VALUES (?,?,?,?,?) RETURNING id"
+	query := "INSERT INTO public.equipment (created_at,updated_at,name,repeat,weight) VALUES ($1,$2,$3,$4,$5) RETURNING id"
 	equipment := mock_models.NewEquipment(t)
 	ctx := context.Background()
 	type fields struct {
@@ -162,7 +162,7 @@ func TestEquipmentRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "SELECT equipment.id, equipment.created_at, equipment.updated_at, equipment.name, equipment.repeat, equipment.weight FROM public.equipment WHERE id = ? LIMIT 1"
+	query := "SELECT equipment.id, equipment.created_at, equipment.updated_at, equipment.name, equipment.repeat, equipment.weight FROM public.equipment WHERE id = $1 LIMIT 1"
 	equipment := mock_models.NewEquipment(t)
 	ctx := context.Background()
 	type fields struct {
@@ -269,7 +269,7 @@ func TestEquipmentRepository_List(t *testing.T) {
 		listEquipment = append(listEquipment, mock_models.NewEquipment(t))
 	}
 	filter := mock_models.NewEquipmentFilter(t)
-	query := "SELECT equipment.id, equipment.created_at, equipment.updated_at, equipment.name, equipment.repeat, equipment.weight FROM public.equipment WHERE FIXME=FIXME ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	query := "SELECT equipment.id, equipment.created_at, equipment.updated_at, equipment.name, equipment.repeat, equipment.weight FROM public.equipment WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -390,7 +390,7 @@ func TestEquipmentRepository_Update(t *testing.T) {
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
 	equipment := mock_models.NewEquipment(t)
-	query := `UPDATE public.equipment SET equipment.created_at = ?, equipment.updated_at = ?, equipment.name = ?, equipment.repeat = ?, equipment.weight = ? WHERE id = ?`
+	query := `UPDATE public.equipment SET equipment.created_at = $1, equipment.updated_at = $2, equipment.name = $3, equipment.repeat = $4, equipment.weight = $5 WHERE id = $6`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
@@ -578,7 +578,7 @@ func TestEquipmentRepository_Delete(t *testing.T) {
 				logger:   logger,
 			},
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.equipment WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.equipment WHERE id = $1").
 					WithArgs(equipment.ID).
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
@@ -591,7 +591,7 @@ func TestEquipmentRepository_Delete(t *testing.T) {
 		{
 			name: "article card not found",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.equipment WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.equipment WHERE id = $1").
 					WithArgs(equipment.ID).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
@@ -608,7 +608,7 @@ func TestEquipmentRepository_Delete(t *testing.T) {
 		{
 			name: "database error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.equipment WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.equipment WHERE id = $1").
 					WithArgs(equipment.ID).
 					WillReturnError(errors.New("test error"))
 			},
@@ -626,7 +626,7 @@ func TestEquipmentRepository_Delete(t *testing.T) {
 		{
 			name: "result error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.equipment WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.equipment WHERE id = $1").
 					WithArgs(equipment.ID).
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
@@ -663,7 +663,7 @@ func TestEquipmentRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := `SELECT count\(id\) FROM public.equipment WHERE FIXME=FIXME`
+	query := "SELECT count(id) FROM public.equipment WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
 	ctx := context.Background()
 	filter := mock_models.NewEquipmentFilter(t)
 	type fields struct {

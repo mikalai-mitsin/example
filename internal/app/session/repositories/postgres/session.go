@@ -68,7 +68,7 @@ func (r *SessionRepository) Create(ctx context.Context, model *models.Session) e
 		Columns("created_at", "updated_at", "title", "description").
 		Values(dto.CreatedAt, dto.UpdatedAt, dto.Title, dto.Description).
 		Suffix("RETURNING id")
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.QueryRowxContext(ctx, query, args...).StructScan(dto); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
@@ -110,7 +110,7 @@ func (r *SessionRepository) List(
 	if len(filter.OrderBy) > 0 {
 		q = q.OrderBy(filter.OrderBy...)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
@@ -137,7 +137,7 @@ func (r *SessionRepository) Count(
 	if len(filter.IDs) > 0 {
 		q = q.Where(sq.Eq{"id": filter.IDs})
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {
 		e := errs.FromPostgresError(err)
@@ -158,7 +158,7 @@ func (r *SessionRepository) Get(ctx context.Context, id uuid.UUID) (*models.Sess
 		From("public.sessions").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("session_id", string(id))
 		return nil, e
@@ -176,7 +176,7 @@ func (r *SessionRepository) Update(ctx context.Context, model *models.Session) e
 		q = q.Set("sessions.title", dto.Title)
 		q = q.Set("sessions.description", dto.Description)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("session_id", fmt.Sprint(model.ID))
@@ -196,7 +196,7 @@ func (r *SessionRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.sessions").Where(sq.Eq{"id": id})
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("session_id", fmt.Sprint(id))

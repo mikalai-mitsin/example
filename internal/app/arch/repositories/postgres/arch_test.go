@@ -74,7 +74,7 @@ func TestArchRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "INSERT INTO public.arches (created_at,updated_at,name,title,subtitle,tags,versions,old_versions,release,tested,mark,submarine,numb) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id"
+	query := "INSERT INTO public.arches (created_at,updated_at,name,title,subtitle,tags,versions,old_versions,release,tested,mark,submarine,numb) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id"
 	arch := mock_models.NewArch(t)
 	ctx := context.Background()
 	type fields struct {
@@ -180,7 +180,7 @@ func TestArchRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches WHERE id = ? LIMIT 1"
+	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches WHERE id = $1 LIMIT 1"
 	arch := mock_models.NewArch(t)
 	ctx := context.Background()
 	type fields struct {
@@ -285,7 +285,7 @@ func TestArchRepository_List(t *testing.T) {
 		listArches = append(listArches, mock_models.NewArch(t))
 	}
 	filter := mock_models.NewArchFilter(t)
-	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches WHERE FIXME=FIXME ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -406,7 +406,7 @@ func TestArchRepository_Update(t *testing.T) {
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
 	arch := mock_models.NewArch(t)
-	query := `UPDATE public.arches SET arches.created_at = ?, arches.updated_at = ?, arches.name = ?, arches.title = ?, arches.subtitle = ?, arches.tags = ?, arches.versions = ?, arches.old_versions = ?, arches.release = ?, arches.tested = ?, arches.mark = ?, arches.submarine = ?, arches.numb = ? WHERE id = ?`
+	query := `UPDATE public.arches SET arches.created_at = $1, arches.updated_at = $2, arches.name = $3, arches.title = $4, arches.subtitle = $5, arches.tags = $6, arches.versions = $7, arches.old_versions = $8, arches.release = $9, arches.tested = $10, arches.mark = $11, arches.submarine = $12, arches.numb = $13 WHERE id = $14`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
@@ -634,7 +634,7 @@ func TestArchRepository_Delete(t *testing.T) {
 				logger:   logger,
 			},
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.arches WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.arches WHERE id = $1").
 					WithArgs(arch.ID).
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
@@ -647,7 +647,7 @@ func TestArchRepository_Delete(t *testing.T) {
 		{
 			name: "article card not found",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.arches WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.arches WHERE id = $1").
 					WithArgs(arch.ID).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
@@ -664,7 +664,7 @@ func TestArchRepository_Delete(t *testing.T) {
 		{
 			name: "database error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.arches WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.arches WHERE id = $1").
 					WithArgs(arch.ID).
 					WillReturnError(errors.New("test error"))
 			},
@@ -682,7 +682,7 @@ func TestArchRepository_Delete(t *testing.T) {
 		{
 			name: "result error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.arches WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.arches WHERE id = $1").
 					WithArgs(arch.ID).
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
@@ -719,7 +719,7 @@ func TestArchRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := `SELECT count\(id\) FROM public.arches WHERE FIXME=FIXME`
+	query := "SELECT count(id) FROM public.arches WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
 	ctx := context.Background()
 	filter := mock_models.NewArchFilter(t)
 	type fields struct {

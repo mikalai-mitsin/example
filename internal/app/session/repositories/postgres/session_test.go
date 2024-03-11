@@ -72,7 +72,7 @@ func TestSessionRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "INSERT INTO public.sessions (created_at,updated_at,title,description) VALUES (?,?,?,?) RETURNING id"
+	query := "INSERT INTO public.sessions (created_at,updated_at,title,description) VALUES ($1,$2,$3,$4) RETURNING id"
 	session := mock_models.NewSession(t)
 	ctx := context.Background()
 	type fields struct {
@@ -160,7 +160,7 @@ func TestSessionRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions WHERE id = ? LIMIT 1"
+	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions WHERE id = $1 LIMIT 1"
 	session := mock_models.NewSession(t)
 	ctx := context.Background()
 	type fields struct {
@@ -267,7 +267,7 @@ func TestSessionRepository_List(t *testing.T) {
 		listSessions = append(listSessions, mock_models.NewSession(t))
 	}
 	filter := mock_models.NewSessionFilter(t)
-	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions WHERE FIXME=FIXME ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -388,7 +388,7 @@ func TestSessionRepository_Update(t *testing.T) {
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
 	session := mock_models.NewSession(t)
-	query := `UPDATE public.sessions SET sessions.created_at = ?, sessions.updated_at = ?, sessions.title = ?, sessions.description = ? WHERE id = ?`
+	query := `UPDATE public.sessions SET sessions.created_at = $1, sessions.updated_at = $2, sessions.title = $3, sessions.description = $4 WHERE id = $5`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
@@ -571,7 +571,7 @@ func TestSessionRepository_Delete(t *testing.T) {
 				logger:   logger,
 			},
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.sessions WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.sessions WHERE id = $1").
 					WithArgs(session.ID).
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
@@ -584,7 +584,7 @@ func TestSessionRepository_Delete(t *testing.T) {
 		{
 			name: "article card not found",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.sessions WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.sessions WHERE id = $1").
 					WithArgs(session.ID).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
@@ -601,7 +601,7 @@ func TestSessionRepository_Delete(t *testing.T) {
 		{
 			name: "database error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.sessions WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.sessions WHERE id = $1").
 					WithArgs(session.ID).
 					WillReturnError(errors.New("test error"))
 			},
@@ -619,7 +619,7 @@ func TestSessionRepository_Delete(t *testing.T) {
 		{
 			name: "result error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.sessions WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.sessions WHERE id = $1").
 					WithArgs(session.ID).
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
@@ -656,7 +656,7 @@ func TestSessionRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := `SELECT count\(id\) FROM public.sessions WHERE FIXME=FIXME`
+	query := "SELECT count(id) FROM public.sessions WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
 	ctx := context.Background()
 	filter := mock_models.NewSessionFilter(t)
 	type fields struct {

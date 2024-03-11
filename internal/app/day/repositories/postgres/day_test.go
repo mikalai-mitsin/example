@@ -72,7 +72,7 @@ func TestDayRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "INSERT INTO public.days (created_at,updated_at,name,repeat,equipment_id) VALUES (?,?,?,?,?) RETURNING id"
+	query := "INSERT INTO public.days (created_at,updated_at,name,repeat,equipment_id) VALUES ($1,$2,$3,$4,$5) RETURNING id"
 	day := mock_models.NewDay(t)
 	ctx := context.Background()
 	type fields struct {
@@ -162,7 +162,7 @@ func TestDayRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "SELECT days.id, days.created_at, days.updated_at, days.name, days.repeat, days.equipment_id FROM public.days WHERE id = ? LIMIT 1"
+	query := "SELECT days.id, days.created_at, days.updated_at, days.name, days.repeat, days.equipment_id FROM public.days WHERE id = $1 LIMIT 1"
 	day := mock_models.NewDay(t)
 	ctx := context.Background()
 	type fields struct {
@@ -267,7 +267,7 @@ func TestDayRepository_List(t *testing.T) {
 		listDays = append(listDays, mock_models.NewDay(t))
 	}
 	filter := mock_models.NewDayFilter(t)
-	query := "SELECT days.id, days.created_at, days.updated_at, days.name, days.repeat, days.equipment_id FROM public.days WHERE FIXME=FIXME ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	query := "SELECT days.id, days.created_at, days.updated_at, days.name, days.repeat, days.equipment_id FROM public.days WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -388,7 +388,7 @@ func TestDayRepository_Update(t *testing.T) {
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
 	day := mock_models.NewDay(t)
-	query := `UPDATE public.days SET days.created_at = ?, days.updated_at = ?, days.name = ?, days.repeat = ?, days.equipment_id = ? WHERE id = ?`
+	query := `UPDATE public.days SET days.created_at = $1, days.updated_at = $2, days.name = $3, days.repeat = $4, days.equipment_id = $5 WHERE id = $6`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
@@ -576,7 +576,7 @@ func TestDayRepository_Delete(t *testing.T) {
 				logger:   logger,
 			},
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.days WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.days WHERE id = $1").
 					WithArgs(day.ID).
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
@@ -589,7 +589,7 @@ func TestDayRepository_Delete(t *testing.T) {
 		{
 			name: "article card not found",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.days WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.days WHERE id = $1").
 					WithArgs(day.ID).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
@@ -606,7 +606,7 @@ func TestDayRepository_Delete(t *testing.T) {
 		{
 			name: "database error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.days WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.days WHERE id = $1").
 					WithArgs(day.ID).
 					WillReturnError(errors.New("test error"))
 			},
@@ -624,7 +624,7 @@ func TestDayRepository_Delete(t *testing.T) {
 		{
 			name: "result error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.days WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.days WHERE id = $1").
 					WithArgs(day.ID).
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
@@ -661,7 +661,7 @@ func TestDayRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := `SELECT count\(id\) FROM public.days WHERE FIXME=FIXME`
+	query := "SELECT count(id) FROM public.days WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
 	ctx := context.Background()
 	filter := mock_models.NewDayFilter(t)
 	type fields struct {

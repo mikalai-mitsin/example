@@ -77,7 +77,7 @@ func (r *UserRepository) Create(ctx context.Context, model *models.User) error {
 		Columns("created_at", "updated_at", "first_name", "last_name", "password", "email", "group_id").
 		Values(dto.CreatedAt, dto.UpdatedAt, dto.FirstName, dto.LastName, dto.Password, dto.Email, dto.GroupID).
 		Suffix("RETURNING id")
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.QueryRowxContext(ctx, query, args...).StructScan(dto); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
@@ -119,7 +119,7 @@ func (r *UserRepository) List(
 	if len(filter.OrderBy) > 0 {
 		q = q.OrderBy(filter.OrderBy...)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
@@ -142,7 +142,7 @@ func (r *UserRepository) Count(ctx context.Context, filter *models.UserFilter) (
 	if len(filter.IDs) > 0 {
 		q = q.Where(sq.Eq{"id": filter.IDs})
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {
 		e := errs.FromPostgresError(err)
@@ -163,7 +163,7 @@ func (r *UserRepository) Get(ctx context.Context, id uuid.UUID) (*models.User, e
 		From("public.users").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("user_id", string(id))
 		return nil, e
@@ -184,7 +184,7 @@ func (r *UserRepository) Update(ctx context.Context, model *models.User) error {
 		q = q.Set("users.email", dto.Email)
 		q = q.Set("users.group_id", dto.GroupID)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("user_id", fmt.Sprint(model.ID))
@@ -204,7 +204,7 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.users").Where(sq.Eq{"id": id})
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("user_id", fmt.Sprint(id))
@@ -229,7 +229,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 		From("public.users").
 		Where(sq.Eq{"email": email}).
 		Limit(1)
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("user_email", email)
 		return nil, e

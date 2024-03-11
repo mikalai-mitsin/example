@@ -71,7 +71,7 @@ func (r *EquipmentRepository) Create(ctx context.Context, model *models.Equipmen
 		Columns("created_at", "updated_at", "name", "repeat", "weight").
 		Values(dto.CreatedAt, dto.UpdatedAt, dto.Name, dto.Repeat, dto.Weight).
 		Suffix("RETURNING id")
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.QueryRowxContext(ctx, query, args...).StructScan(dto); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
@@ -109,7 +109,7 @@ func (r *EquipmentRepository) List(
 	if len(filter.OrderBy) > 0 {
 		q = q.OrderBy(filter.OrderBy...)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
@@ -132,7 +132,7 @@ func (r *EquipmentRepository) Count(
 	if len(filter.IDs) > 0 {
 		q = q.Where(sq.Eq{"id": filter.IDs})
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {
 		e := errs.FromPostgresError(err)
@@ -153,7 +153,7 @@ func (r *EquipmentRepository) Get(ctx context.Context, id uuid.UUID) (*models.Eq
 		From("public.equipment").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("equipment_id", string(id))
 		return nil, e
@@ -172,7 +172,7 @@ func (r *EquipmentRepository) Update(ctx context.Context, model *models.Equipmen
 		q = q.Set("equipment.repeat", dto.Repeat)
 		q = q.Set("equipment.weight", dto.Weight)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("equipment_id", fmt.Sprint(model.ID))
@@ -192,7 +192,7 @@ func (r *EquipmentRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.equipment").Where(sq.Eq{"id": id})
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("equipment_id", fmt.Sprint(id))

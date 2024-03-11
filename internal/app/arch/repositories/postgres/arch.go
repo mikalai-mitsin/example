@@ -114,7 +114,7 @@ func (r *ArchRepository) Create(ctx context.Context, model *models.Arch) error {
 		Columns("created_at", "updated_at", "name", "title", "subtitle", "tags", "versions", "old_versions", "release", "tested", "mark", "submarine", "numb").
 		Values(dto.CreatedAt, dto.UpdatedAt, dto.Name, dto.Title, dto.Subtitle, dto.Tags, dto.Versions, dto.OldVersions, dto.Release, dto.Tested, dto.Mark, dto.Submarine, dto.Numb).
 		Suffix("RETURNING id")
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.QueryRowxContext(ctx, query, args...).StructScan(dto); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
@@ -156,7 +156,7 @@ func (r *ArchRepository) List(
 	if len(filter.OrderBy) > 0 {
 		q = q.OrderBy(filter.OrderBy...)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
@@ -179,7 +179,7 @@ func (r *ArchRepository) Count(ctx context.Context, filter *models.ArchFilter) (
 	if len(filter.IDs) > 0 {
 		q = q.Where(sq.Eq{"id": filter.IDs})
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {
 		e := errs.FromPostgresError(err)
@@ -200,7 +200,7 @@ func (r *ArchRepository) Get(ctx context.Context, id uuid.UUID) (*models.Arch, e
 		From("public.arches").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("arch_id", string(id))
 		return nil, e
@@ -227,7 +227,7 @@ func (r *ArchRepository) Update(ctx context.Context, model *models.Arch) error {
 		q = q.Set("arches.submarine", dto.Submarine)
 		q = q.Set("arches.numb", dto.Numb)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("arch_id", fmt.Sprint(model.ID))
@@ -247,7 +247,7 @@ func (r *ArchRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.arches").Where(sq.Eq{"id": id})
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("arch_id", fmt.Sprint(id))

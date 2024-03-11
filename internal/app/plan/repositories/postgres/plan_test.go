@@ -72,7 +72,7 @@ func TestPlanRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "INSERT INTO public.plans (created_at,updated_at,name,repeat,equipment_id) VALUES (?,?,?,?,?) RETURNING id"
+	query := "INSERT INTO public.plans (created_at,updated_at,name,repeat,equipment_id) VALUES ($1,$2,$3,$4,$5) RETURNING id"
 	plan := mock_models.NewPlan(t)
 	ctx := context.Background()
 	type fields struct {
@@ -162,7 +162,7 @@ func TestPlanRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
-	query := "SELECT plans.id, plans.created_at, plans.updated_at, plans.name, plans.repeat, plans.equipment_id FROM public.plans WHERE id = ? LIMIT 1"
+	query := "SELECT plans.id, plans.created_at, plans.updated_at, plans.name, plans.repeat, plans.equipment_id FROM public.plans WHERE id = $1 LIMIT 1"
 	plan := mock_models.NewPlan(t)
 	ctx := context.Background()
 	type fields struct {
@@ -267,7 +267,7 @@ func TestPlanRepository_List(t *testing.T) {
 		listPlans = append(listPlans, mock_models.NewPlan(t))
 	}
 	filter := mock_models.NewPlanFilter(t)
-	query := "SELECT plans.id, plans.created_at, plans.updated_at, plans.name, plans.repeat, plans.equipment_id FROM public.plans WHERE FIXME=FIXME ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	query := "SELECT plans.id, plans.created_at, plans.updated_at, plans.name, plans.repeat, plans.equipment_id FROM public.plans WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -388,7 +388,7 @@ func TestPlanRepository_Update(t *testing.T) {
 	defer ctrl.Finish()
 	logger := mock_log.NewMockLogger(ctrl)
 	plan := mock_models.NewPlan(t)
-	query := `UPDATE public.plans SET plans.created_at = ?, plans.updated_at = ?, plans.name = ?, plans.repeat = ?, plans.equipment_id = ? WHERE id = ?`
+	query := `UPDATE public.plans SET plans.created_at = $1, plans.updated_at = $2, plans.name = $3, plans.repeat = $4, plans.equipment_id = $5 WHERE id = $6`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
@@ -576,7 +576,7 @@ func TestPlanRepository_Delete(t *testing.T) {
 				logger:   logger,
 			},
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.plans WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.plans WHERE id = $1").
 					WithArgs(plan.ID).
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
@@ -589,7 +589,7 @@ func TestPlanRepository_Delete(t *testing.T) {
 		{
 			name: "article card not found",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.plans WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.plans WHERE id = $1").
 					WithArgs(plan.ID).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
@@ -606,7 +606,7 @@ func TestPlanRepository_Delete(t *testing.T) {
 		{
 			name: "database error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.plans WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.plans WHERE id = $1").
 					WithArgs(plan.ID).
 					WillReturnError(errors.New("test error"))
 			},
@@ -624,7 +624,7 @@ func TestPlanRepository_Delete(t *testing.T) {
 		{
 			name: "result error",
 			setup: func() {
-				mock.ExpectExec("DELETE FROM public.plans WHERE id = ?").
+				mock.ExpectExec("DELETE FROM public.plans WHERE id = $1").
 					WithArgs(plan.ID).
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
@@ -661,7 +661,7 @@ func TestPlanRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := `SELECT count\(id\) FROM public.plans WHERE FIXME=FIXME`
+	query := "SELECT count(id) FROM public.plans WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
 	ctx := context.Background()
 	filter := mock_models.NewPlanFilter(t)
 	type fields struct {

@@ -71,7 +71,7 @@ func (r *DayRepository) Create(ctx context.Context, model *models.Day) error {
 		Columns("created_at", "updated_at", "name", "repeat", "equipment_id").
 		Values(dto.CreatedAt, dto.UpdatedAt, dto.Name, dto.Repeat, dto.EquipmentID).
 		Suffix("RETURNING id")
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.QueryRowxContext(ctx, query, args...).StructScan(dto); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
@@ -105,7 +105,7 @@ func (r *DayRepository) List(ctx context.Context, filter *models.DayFilter) ([]*
 	if len(filter.OrderBy) > 0 {
 		q = q.OrderBy(filter.OrderBy...)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
@@ -124,7 +124,7 @@ func (r *DayRepository) Count(ctx context.Context, filter *models.DayFilter) (ui
 	if len(filter.IDs) > 0 {
 		q = q.Where(sq.Eq{"id": filter.IDs})
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {
 		e := errs.FromPostgresError(err)
@@ -145,7 +145,7 @@ func (r *DayRepository) Get(ctx context.Context, id uuid.UUID) (*models.Day, err
 		From("public.days").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("day_id", string(id))
 		return nil, e
@@ -164,7 +164,7 @@ func (r *DayRepository) Update(ctx context.Context, model *models.Day) error {
 		q = q.Set("days.repeat", dto.Repeat)
 		q = q.Set("days.equipment_id", dto.EquipmentID)
 	}
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("day_id", fmt.Sprint(model.ID))
@@ -184,7 +184,7 @@ func (r *DayRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.days").Where(sq.Eq{"id": id})
-	query, args := q.PlaceholderFormat(sq.Question).MustSql()
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result, err := r.database.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("day_id", fmt.Sprint(id))

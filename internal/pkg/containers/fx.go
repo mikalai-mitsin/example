@@ -59,9 +59,9 @@ func NewMigrateContainer(config string) *fx.App {
 				err := manager.Up(ctx)
 				if err != nil {
 					logger.Error("shutdown", log.Any("error", err))
-					_ = shutdowner.Shutdown()
 				}
 			}()
+			_ = shutdowner.Shutdown()
 			return nil
 		}})
 	}))
