@@ -1,0 +1,65 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+actor Admin as user
+participant "Subscription service" as service
+database "PostgreSQL" as psql
+participant "Stripe" as stripe
+
+==Create subscription plan==
+alt "Successful case"
+    user -> service: POST /api/v1/plans
+    activate service
+    service --> service: Validate
+    service -> psql: Begin transaction
+    activate psql
+    service -> stripe: Create plan
+    service <- stripe: Created plan
+    service --> service: Set Stripe ID to plan
+    service -> psql: Create plan
+    service <- psql: Ok
+    service -> psql: Commit transaction
+    service <- psql: Ok
+    deactivate psql
+    user <- service: Status 201: success
+    deactivate service
+else "Invalid form"
+    user -> service: POST /api/v1/plans
+    activate service
+    service x--> service: Validate error
+    user <- service: Status 400: Bad request
+    deactivate service
+else "Failed to create Stripe plan"
+    user -> service: POST /api/v1/plans
+    activate service
+    service --> service: Validate
+    service -> psql: Begin transaction
+    activate psql
+    service -> stripe: Create plan
+    service <- stripe: Error
+    service -> psql: Rollback transaction
+    service <- psql: Ok
+    deactivate psql
+    user <- service: Status 500: Internal service error
+    deactivate service
+else "Plan saving error"
+ user -> service: POST /api/v1/plans
+    activate service
+    service --> service: Validate
+    service -> psql: Begin transaction
+    activate psql
+    service -> stripe: Create plan
+    service <- stripe: Created plan
+    service --> service: Set Stripe ID to plan
+    service -> psql: Create plan
+    service <- psql: Error
+    service -> stripe: Delete created plan
+    service <- stripe: Ok
+    service -> psql: Rollback transaction
+    service <- psql: Ok
+    deactivate psql
+    user <- service: Status 500: Internal service error
+    deactivate service
+end
+
+@enduml
