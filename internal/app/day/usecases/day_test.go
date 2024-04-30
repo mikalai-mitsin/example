@@ -16,8 +16,8 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
 	"github.com/018bf/example/internal/pkg/uuid"
-	"github.com/golang/mock/gomock"
 	"github.com/jaswdr/faker"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNewDayUseCase(t *testing.T) {
@@ -108,7 +108,7 @@ func TestDayUseCase_Get(t *testing.T) {
 		{
 			name: "Day not found",
 			setup: func() {
-				dayRepository.EXPECT().Get(ctx, day.ID).Return(nil, errs.NewEntityNotFound())
+				dayRepository.EXPECT().Get(ctx, day.ID).Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				dayRepository: dayRepository,
@@ -119,7 +119,7 @@ func TestDayUseCase_Get(t *testing.T) {
 				id:  day.ID,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {
@@ -355,11 +355,11 @@ func TestDayUseCase_Create(t *testing.T) {
 				create: &models.DayCreate{},
 			},
 			want: nil,
-			wantErr: errs.NewInvalidFormError().WithParams(map[string]string{
-				"name":         "cannot be blank",
-				"repeat":       "cannot be blank",
-				"equipment_id": "cannot be blank",
-			}),
+			wantErr: errs.NewInvalidFormError().WithParams(
+				errs.Param{Key: "name", Value: "cannot be blank"},
+				errs.Param{Key: "repeat", Value: "cannot be blank"},
+				errs.Param{Key: "equipment_id", Value: "cannot be blank"},
+			),
 		},
 	}
 	for _, tt := range tests {
@@ -456,7 +456,9 @@ func TestDayUseCase_Update(t *testing.T) {
 		{
 			name: "Day not found",
 			setup: func() {
-				dayRepository.EXPECT().Get(ctx, update.ID).Return(nil, errs.NewEntityNotFound())
+				dayRepository.EXPECT().
+					Get(ctx, update.ID).
+					Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				dayRepository: dayRepository,
@@ -468,7 +470,7 @@ func TestDayUseCase_Update(t *testing.T) {
 				update: update,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 		{
 			name: "invalid",
@@ -553,7 +555,7 @@ func TestDayUseCase_Delete(t *testing.T) {
 			setup: func() {
 				dayRepository.EXPECT().
 					Delete(ctx, day.ID).
-					Return(errs.NewEntityNotFound())
+					Return(errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				dayRepository: dayRepository,
@@ -563,7 +565,7 @@ func TestDayUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  day.ID,
 			},
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {

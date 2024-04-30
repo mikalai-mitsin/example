@@ -2,6 +2,8 @@ package pointer
 
 import con "golang.org/x/exp/constraints"
 
+type a string
+
 func Pointer[T any](v T) *T {
 	return &v
 }
