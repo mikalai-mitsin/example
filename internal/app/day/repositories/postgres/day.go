@@ -175,7 +175,7 @@ func (r *DayRepository) Update(ctx context.Context, model *models.Day) error {
 		return errs.FromPostgresError(err).WithParam("day_id", fmt.Sprint(model.ID))
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("day_id", fmt.Sprint(model.ID))
+		e := errs.NewEntityNotFoundError().WithParam("day_id", fmt.Sprint(model.ID))
 		return e
 	}
 	return nil
@@ -196,7 +196,7 @@ func (r *DayRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return e
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("day_id", fmt.Sprint(id))
+		e := errs.NewEntityNotFoundError().WithParam("day_id", fmt.Sprint(id))
 		return e
 	}
 	return nil

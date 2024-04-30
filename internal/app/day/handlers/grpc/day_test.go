@@ -18,8 +18,8 @@ import (
 	"github.com/018bf/example/internal/pkg/pointer"
 	"github.com/018bf/example/internal/pkg/uuid"
 	examplepb "github.com/018bf/example/pkg/examplepb/v1"
-	"github.com/golang/mock/gomock"
 	"github.com/jaswdr/faker"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -215,9 +215,7 @@ func TestDayServiceServer_Delete(t *testing.T) {
 			wantErr: grpc.DecodeError(&errs.Error{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params: map[string]string{
-					"details": "i error",
-				},
+				Params:  errs.Params{{Key: "details", Value: "i error"}},
 			}),
 		},
 	}

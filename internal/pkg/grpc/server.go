@@ -104,13 +104,16 @@ func DefaultMessageProducer(
 			badRequest, ok := v.(*errdetails.BadRequest)
 			if ok {
 				for _, violation := range badRequest.GetFieldViolations() {
-					errParams[violation.GetField()] = violation.GetDescription()
+					errParams = append(
+						errParams,
+						errs.Param{Key: violation.GetField(), Value: violation.GetDescription()},
+					)
 				}
 			}
 			errorInfo, ok := v.(*errdetails.ErrorInfo)
 			if ok {
 				for key, value := range errorInfo.GetMetadata() {
-					errParams[key] = value
+					errParams = append(errParams, errs.Param{Key: key, Value: value})
 				}
 			}
 			params = append(params, zap.Object("params", errParams))
@@ -126,10 +129,13 @@ func DecodeError(err error) error {
 		switch domainError.Code {
 		case errs.ErrorCodeInvalidArgument:
 			d := &errdetails.BadRequest{}
-			for key, value := range domainError.Params {
+			for _, param := range domainError.Params {
 				d.FieldViolations = append(
 					d.FieldViolations,
-					&errdetails.BadRequest_FieldViolation{Field: key, Description: value},
+					&errdetails.BadRequest_FieldViolation{
+						Field:       param.Key,
+						Description: param.Value,
+					},
 				)
 			}
 			withDetails, err = stat.WithDetails(d)
@@ -140,7 +146,10 @@ func DecodeError(err error) error {
 			d := &errdetails.ErrorInfo{
 				Reason:   domainError.Message,
 				Domain:   "",
-				Metadata: domainError.Params,
+				Metadata: make(map[string]string),
+			}
+			for _, param := range domainError.Params {
+				d.Metadata[param.Key] = param.Value
 			}
 			withDetails, err = stat.WithDetails(d)
 			if err != nil {

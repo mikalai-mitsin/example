@@ -15,7 +15,7 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 	mockLog "github.com/018bf/example/internal/pkg/log/mock"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestAuthUseCase_Auth(t *testing.T) {
@@ -69,7 +69,7 @@ func TestAuthUseCase_Auth(t *testing.T) {
 			setup: func() {
 				authRepository.EXPECT().
 					GetSubject(ctx, models.Token("mytoken")).
-					Return("", errs.NewBadToken()).
+					Return("", errs.NewBadTokenError()).
 					Times(1)
 			},
 			fields: fields{
@@ -82,7 +82,7 @@ func TestAuthUseCase_Auth(t *testing.T) {
 				access: "mytoken",
 			},
 			want:    nil,
-			wantErr: errs.NewBadToken(),
+			wantErr: errs.NewBadTokenError(),
 		},
 		{
 			name: "user not found",
@@ -93,7 +93,7 @@ func TestAuthUseCase_Auth(t *testing.T) {
 					Times(1)
 				userRepository.EXPECT().
 					Get(ctx, user.ID).
-					Return(nil, errs.NewEntityNotFound()).
+					Return(nil, errs.NewEntityNotFoundError()).
 					Times(1)
 			},
 			fields: fields{
@@ -106,7 +106,7 @@ func TestAuthUseCase_Auth(t *testing.T) {
 				access: "mytoken",
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {
@@ -180,7 +180,7 @@ func TestAuthUseCase_CreateToken(t *testing.T) {
 			name: "user not found",
 			setup: func() {
 				userRepository.EXPECT().
-					GetByEmail(ctx, user.Email).Return(nil, errs.NewEntityNotFound()).
+					GetByEmail(ctx, user.Email).Return(nil, errs.NewEntityNotFoundError()).
 					Times(1)
 			},
 			fields: fields{
@@ -193,7 +193,7 @@ func TestAuthUseCase_CreateToken(t *testing.T) {
 				login: login,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 		{
 			name: "bad password",
@@ -310,7 +310,7 @@ func TestAuthUseCase_RefreshToken(t *testing.T) {
 			setup: func() {
 				authRepository.EXPECT().
 					RefreshToken(ctx, models.Token("my_r_token")).
-					Return(nil, errs.NewBadToken()).
+					Return(nil, errs.NewBadTokenError()).
 					Times(1)
 			},
 			fields: fields{
@@ -323,7 +323,7 @@ func TestAuthUseCase_RefreshToken(t *testing.T) {
 				refresh: "my_r_token",
 			},
 			want:    nil,
-			wantErr: errs.NewBadToken(),
+			wantErr: errs.NewBadTokenError(),
 		},
 	}
 	for _, tt := range tests {
@@ -405,7 +405,7 @@ func TestAuthUseCase_ValidateToken(t *testing.T) {
 			wantErr: &errs.Error{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params:  map[string]string{"details": "error 345"},
+				Params:  errs.Params{{Key: "details", Value: "error 345"}},
 			},
 		},
 	}
@@ -518,7 +518,7 @@ func TestAuthUseCase_HasPermission(t *testing.T) {
 			setup: func() {
 				permissionRepository.EXPECT().
 					HasPermission(ctx, userModels.PermissionIDUserList, user).
-					Return(errs.NewPermissionDenied())
+					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
 				authRepository:       authRepository,
@@ -531,7 +531,7 @@ func TestAuthUseCase_HasPermission(t *testing.T) {
 				in1:        user,
 				permission: userModels.PermissionIDUserList,
 			},
-			wantErr: errs.NewPermissionDenied(),
+			wantErr: errs.NewPermissionDeniedError(),
 		},
 	}
 	for _, tt := range tests {
@@ -585,7 +585,7 @@ func TestAuthUseCase_HasObjectPermission(t *testing.T) {
 			setup: func() {
 				permissionRepository.EXPECT().
 					HasObjectPermission(ctx, userModels.PermissionIDUserDetail, user, "user").
-					Return(errs.NewPermissionDenied())
+					Return(errs.NewPermissionDeniedError())
 			},
 			fields: fields{
 				authRepository:       authRepository,
@@ -599,7 +599,7 @@ func TestAuthUseCase_HasObjectPermission(t *testing.T) {
 				permission: userModels.PermissionIDUserDetail,
 				object:     "user",
 			},
-			wantErr: errs.NewPermissionDenied(),
+			wantErr: errs.NewPermissionDeniedError(),
 		},
 		{
 			name: "ok",

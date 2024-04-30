@@ -34,7 +34,7 @@ func (m *User) Validate() error {
 		validation.Field(&m.GroupID, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -67,7 +67,7 @@ func (m *UserFilter) Validate() error {
 		validation.Field(&m.IDs, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -90,7 +90,7 @@ func (m *UserCreate) Validate() error {
 		validation.Field(&m.GroupID, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -115,7 +115,7 @@ func (m *UserUpdate) Validate() error {
 		validation.Field(&m.GroupID),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }

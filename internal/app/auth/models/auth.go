@@ -23,7 +23,7 @@ type TokenPair struct {
 func (c *TokenPair) Validate() error {
 	err := validation.ValidateStruct(c, validation.Field(&c.Access), validation.Field(&c.Refresh))
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -40,7 +40,7 @@ func (c *Login) Validate() error {
 		validation.Field(&c.Password),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }

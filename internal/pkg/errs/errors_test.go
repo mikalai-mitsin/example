@@ -1,19 +1,68 @@
 package errs
 
 import (
+	"encoding/json"
+	"errors"
 	"reflect"
 	"testing"
 
-	"errors"
-
-	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestError_Cause(t *testing.T) {
+	cause := errors.New("test error")
+	type fields struct {
+		Code    ErrorCode
+		Message string
+		Params  Params
+		Err     error
+	}
+	type args struct {
+		tgt error
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   error
+	}{
+		{
+			name: "ok true",
+			fields: fields{
+				Code:    13,
+				Message: "Unexpected behavior.",
+				Params: Params{
+					{Key: "details", Value: "bar"},
+				},
+				Err: cause,
+			},
+			args: args{
+				tgt: cause,
+			},
+			want: cause,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e := &Error{
+				Code:    tt.fields.Code,
+				Message: tt.fields.Message,
+				Params:  tt.fields.Params,
+				Err:     tt.fields.Err,
+			}
+			got := e.Cause()
+			if !errors.Is(got, tt.want) {
+				t.Errorf("Cause() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestError_AddParam(t *testing.T) {
 	type fields struct {
 		Code    ErrorCode
 		Message string
-		Params  map[string]string
+		Params  Params
 	}
 	type args struct {
 		key   string
@@ -30,7 +79,7 @@ func TestError_AddParam(t *testing.T) {
 			fields: fields{
 				Code:    0,
 				Message: "",
-				Params:  map[string]string{},
+				Params:  Params{},
 			},
 			args: args{
 				key:   "Betty",
@@ -39,8 +88,8 @@ func TestError_AddParam(t *testing.T) {
 			want: &Error{
 				Code:    0,
 				Message: "",
-				Params: map[string]string{
-					"Betty": "Piptik",
+				Params: Params{
+					{Key: "Betty", Value: "Piptik"},
 				},
 			},
 		},
@@ -64,7 +113,7 @@ func TestError_Error(t *testing.T) {
 	type fields struct {
 		Code    ErrorCode
 		Message string
-		Params  map[string]string
+		Params  Params
 	}
 	tests := []struct {
 		name   string
@@ -76,12 +125,12 @@ func TestError_Error(t *testing.T) {
 			fields: fields{
 				Code:    16,
 				Message: "This is error.",
-				Params: map[string]string{
-					"first":  "foo",
-					"second": "bar",
+				Params: Params{
+					{"first", "foo"},
+					{"second", "bar"},
 				},
 			},
-			want: "{\"code\":16,\"message\":\"This is error.\",\"params\":{\"first\":\"foo\",\"second\":\"bar\"}}",
+			want: "{\"code\":16,\"message\":\"This is error.\",\"params\":[{\"key\":\"first\",\"value\":\"foo\"},{\"key\":\"second\",\"value\":\"bar\"}]}",
 		},
 	}
 	for _, tt := range tests {
@@ -102,7 +151,8 @@ func TestError_Is(t *testing.T) {
 	type fields struct {
 		Code    ErrorCode
 		Message string
-		Params  map[string]string
+		Params  Params
+		Cause   error
 	}
 	type args struct {
 		tgt error
@@ -118,9 +168,10 @@ func TestError_Is(t *testing.T) {
 			fields: fields{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params: map[string]string{
-					"details": "bar",
+				Params: Params{
+					{Key: "details", Value: "bar"},
 				},
+				Cause: nil,
 			},
 			args: args{
 				tgt: NewUnexpectedBehaviorError("bar"),
@@ -128,13 +179,44 @@ func TestError_Is(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "with cause true",
+			fields: fields{
+				Code:    13,
+				Message: "Unexpected behavior.",
+				Params: Params{
+					{Key: "details", Value: "bar"},
+				},
+				Cause: errors.New("test 2"),
+			},
+			args: args{
+				tgt: NewUnexpectedBehaviorError("bar").WithCause(errors.New("test 2")),
+			},
+			want: true,
+		},
+		{
+			name: "with cause false",
+			fields: fields{
+				Code:    13,
+				Message: "Unexpected behavior.",
+				Params: Params{
+					{Key: "details", Value: "bar"},
+				},
+				Cause: errors.New("test 3"),
+			},
+			args: args{
+				tgt: NewUnexpectedBehaviorError("bar").WithCause(errors.New("test 2")),
+			},
+			want: false,
+		},
+		{
 			name: "ok false",
 			fields: fields{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params: map[string]string{
-					"details": "no bar",
+				Params: Params{
+					{Key: "details", Value: "no bar"},
 				},
+				Cause: nil,
 			},
 			args: args{
 				tgt: NewUnexpectedBehaviorError("bar"),
@@ -146,8 +228,8 @@ func TestError_Is(t *testing.T) {
 			fields: fields{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params: map[string]string{
-					"details": "no bar",
+				Params: Params{
+					{"details", "no bar"},
 				},
 			},
 			args: args{
@@ -162,8 +244,9 @@ func TestError_Is(t *testing.T) {
 				Code:    tt.fields.Code,
 				Message: tt.fields.Message,
 				Params:  tt.fields.Params,
+				Err:     tt.fields.Cause,
 			}
-			if got := e.Is(tt.args.tgt); got != tt.want {
+			if got := errors.Is(e, tt.args.tgt); got != tt.want {
 				t.Errorf("Is() = %v, want %v", got, tt.want)
 			}
 		})
@@ -174,7 +257,7 @@ func TestError_SetCode(t *testing.T) {
 	type fields struct {
 		Code    ErrorCode
 		Message string
-		Params  map[string]string
+		Params  Params
 	}
 	type args struct {
 		code ErrorCode
@@ -221,7 +304,7 @@ func TestError_SetMessage(t *testing.T) {
 	type fields struct {
 		Code    ErrorCode
 		Message string
-		Params  map[string]string
+		Params  Params
 	}
 	type args struct {
 		message string
@@ -268,10 +351,10 @@ func TestError_SetParams(t *testing.T) {
 	type fields struct {
 		Code    ErrorCode
 		Message string
-		Params  map[string]string
+		Params  Params
 	}
 	type args struct {
-		params map[string]string
+		params Params
 	}
 	tests := []struct {
 		name   string
@@ -287,17 +370,17 @@ func TestError_SetParams(t *testing.T) {
 				Params:  nil,
 			},
 			args: args{
-				params: map[string]string{
-					"new": "key",
-					"ad":  "off",
+				params: Params{
+					{Key: "new", Value: "key"},
+					{Key: "ad", Value: "off"},
 				},
 			},
 			want: &Error{
 				Code:    0,
 				Message: "",
-				Params: map[string]string{
-					"new": "key",
-					"ad":  "off",
+				Params: Params{
+					{"new", "key"},
+					{"ad", "off"},
 				},
 			},
 		},
@@ -312,98 +395,6 @@ func TestError_SetParams(t *testing.T) {
 			e.SetParams(tt.args.params)
 			if !reflect.DeepEqual(e, tt.want) {
 				t.Errorf("Is() = %v, want %v", e, tt.want)
-			}
-		})
-	}
-}
-
-func TestFromValidationError(t *testing.T) {
-	type args struct {
-		err error
-	}
-	tests := []struct {
-		name string
-		args args
-		want *Error
-	}{
-		{
-			name: "ok validation error object",
-			args: args{
-				err: validation.NewError("dsa", "asd"),
-			},
-			want: &Error{
-				Code:    3,
-				Message: "asd",
-				Params:  map[string]string{},
-			},
-		},
-		{
-			name: "nil",
-			args: args{
-				err: nil,
-			},
-			want: nil,
-		},
-		{
-			name: "no validation",
-			args: args{
-				err: errors.New("no validation"),
-			},
-			want: nil,
-		},
-		{
-			name: "ok validation errors domain error",
-			args: args{
-				err: validation.Errors{
-					"first": &Error{
-						Code:    16,
-						Message: "Text of error",
-						Params:  nil,
-					},
-				},
-			},
-			want: &Error{
-				Code:    3,
-				Message: "The form sent is not valid, please correct the errors below.",
-				Params: map[string]string{
-					"first": "Text of error",
-				},
-			},
-		},
-		{
-			name: "ok validation errors error object",
-			args: args{
-				err: validation.Errors{
-					"first": &validation.ErrorObject{},
-				},
-			},
-			want: &Error{
-				Code:    3,
-				Message: "The form sent is not valid, please correct the errors below.",
-				Params: map[string]string{
-					"first": "",
-				},
-			},
-		},
-		{
-			name: "ok validation errors",
-			args: args{
-				err: validation.Errors{
-					"first":  validation.NewError("key 1", "value 1"),
-					"second": validation.NewError("key 2", "value 2"),
-				},
-			},
-			want: &Error{
-				Code:    3,
-				Message: "The form sent is not valid, please correct the errors below.",
-				Params:  map[string]string{"first": "value 1", "second": "value 2"},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := FromValidationError(tt.args.err); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FromValidationError() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -428,7 +419,7 @@ func TestNewError(t *testing.T) {
 			want: &Error{
 				Code:    16,
 				Message: "New error",
-				Params:  map[string]string{},
+				Params:  nil,
 			},
 		},
 	}
@@ -480,8 +471,8 @@ func TestNewUnexpectedBehaviorError(t *testing.T) {
 			want: &Error{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params: map[string]string{
-					"details": "test details",
+				Params: Params{
+					{Key: "details", Value: "test details"},
 				},
 			},
 		},
@@ -498,52 +489,32 @@ func TestNewUnexpectedBehaviorError(t *testing.T) {
 	}
 }
 
-func Test_renderErrorMessage(t *testing.T) {
+func TestNewUnexpectedBehaviorErrorAsJson(t *testing.T) {
 	type args struct {
-		object validation.ErrorObject
+		err *Error
 	}
 	tests := []struct {
 		name string
 		args args
-		want string
+		want []byte
 	}{
 		{
 			name: "ok",
-			args: func() args {
-				obj := validation.ErrorObject{}.
-					SetCode("12").
-					SetMessage("simple message {{.first}} {{.second}}").
-					SetParams(map[string]interface{}{
-						"first":  "foo",
-						"second": "bar",
-					})
-				return args{
-					object: obj.(validation.ErrorObject),
-				}
-			}(),
-			want: "simple message foo bar",
-		},
-		{
-			name: "bad message",
-			args: func() args {
-				obj := validation.ErrorObject{}.SetCode("12").
-					SetMessage("{{ .text | asd }}").
-					SetParams(map[string]interface{}{
-						"first":  "foo",
-						"second": "bar",
-					})
-				return args{
-					object: obj.(validation.ErrorObject),
-				}
-			}(),
-			want: "",
+			args: args{
+				err: NewUnexpectedBehaviorError("i have problem").
+					WithCause(errors.New("simple error")).
+					WithParams(Param{"user_id", "12"}).
+					WithParam("test", "json test"),
+			},
+			want: []byte(
+				`{"code":13,"message":"Unexpected behavior.","params":[{"key":"details","value":"i have problem"},{"key":"user_id","value":"12"},{"key":"test","value":"json test"}]}`,
+			),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := renderErrorMessage(tt.args.object); got != tt.want {
-				t.Errorf("renderErrorMessage() = %v, want %v", got, tt.want)
-			}
+			got, _ := json.Marshal(tt.args.err)
+			assert.Equal(t, string(tt.want), string(got))
 		})
 	}
 }

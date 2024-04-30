@@ -15,8 +15,8 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/golang/mock/gomock"
 	"github.com/jaswdr/faker"
+	"go.uber.org/mock/gomock"
 
 	"github.com/018bf/example/internal/pkg/uuid"
 )
@@ -173,7 +173,7 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, equipment.ID).
-					Return(nil, errs.NewEntityNotFound())
+					Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				authUseCase:      authUseCase,
@@ -185,7 +185,7 @@ func TestEquipmentInterceptor_Get(t *testing.T) {
 				id:  equipment.ID,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {
@@ -438,7 +438,7 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, update.ID).
-					Return(nil, errs.NewEntityNotFound())
+					Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				authUseCase:      authUseCase,
@@ -450,7 +450,7 @@ func TestEquipmentInterceptor_Update(t *testing.T) {
 				update: update,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 		{
 			name: "update error",
@@ -583,7 +583,7 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 					Return(nil)
 				equipmentUseCase.EXPECT().
 					Get(ctx, equipment.ID).
-					Return(equipment, errs.NewEntityNotFound())
+					Return(equipment, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				authUseCase:      authUseCase,
@@ -594,7 +594,7 @@ func TestEquipmentInterceptor_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  equipment.ID,
 			},
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 		{
 			name: "object permission denied",

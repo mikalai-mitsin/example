@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	examplepb "github.com/018bf/example/pkg/examplepb/v1"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestAuthServiceServer_CreateToken(t *testing.T) {
@@ -65,7 +65,7 @@ func TestAuthServiceServer_CreateToken(t *testing.T) {
 			setup: func() {
 				authInterceptor.EXPECT().
 					CreateToken(ctx, login).
-					Return(nil, errs.NewBadToken()).
+					Return(nil, errs.NewBadTokenError()).
 					Times(1)
 			},
 			fields: fields{
@@ -80,7 +80,7 @@ func TestAuthServiceServer_CreateToken(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewBadToken()),
+			wantErr: grpc.DecodeError(errs.NewBadTokenError()),
 		},
 	}
 	for _, tt := range tests {
@@ -149,7 +149,7 @@ func TestAuthServiceServer_RefreshToken(t *testing.T) {
 			setup: func() {
 				authInterceptor.EXPECT().
 					RefreshToken(ctx, token).
-					Return(nil, errs.NewBadToken()).
+					Return(nil, errs.NewBadTokenError()).
 					Times(1)
 			},
 			fields: fields{
@@ -163,7 +163,7 @@ func TestAuthServiceServer_RefreshToken(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewBadToken()),
+			wantErr: grpc.DecodeError(errs.NewBadTokenError()),
 		},
 	}
 	for _, tt := range tests {

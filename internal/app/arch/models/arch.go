@@ -45,7 +45,7 @@ func (m *Arch) Validate() error {
 		validation.Field(&m.Numb, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -68,7 +68,7 @@ func (m *ArchFilter) Validate() error {
 		validation.Field(&m.IDs, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -103,7 +103,7 @@ func (m *ArchCreate) Validate() error {
 		validation.Field(&m.Numb, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -140,7 +140,7 @@ func (m *ArchUpdate) Validate() error {
 		validation.Field(&m.Numb),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }

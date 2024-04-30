@@ -29,7 +29,7 @@ func (m *Equipment) Validate() error {
 		validation.Field(&m.Weight, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -52,7 +52,7 @@ func (m *EquipmentFilter) Validate() error {
 		validation.Field(&m.IDs, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -71,7 +71,7 @@ func (m *EquipmentCreate) Validate() error {
 		validation.Field(&m.Weight, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -92,7 +92,7 @@ func (m *EquipmentUpdate) Validate() error {
 		validation.Field(&m.Weight),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }

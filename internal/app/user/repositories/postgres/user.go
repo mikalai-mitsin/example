@@ -195,7 +195,7 @@ func (r *UserRepository) Update(ctx context.Context, model *models.User) error {
 		return errs.FromPostgresError(err).WithParam("user_id", fmt.Sprint(model.ID))
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("user_id", fmt.Sprint(model.ID))
+		e := errs.NewEntityNotFoundError().WithParam("user_id", fmt.Sprint(model.ID))
 		return e
 	}
 	return nil
@@ -216,7 +216,7 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return e
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("user_id", fmt.Sprint(id))
+		e := errs.NewEntityNotFoundError().WithParam("user_id", fmt.Sprint(id))
 		return e
 	}
 	return nil

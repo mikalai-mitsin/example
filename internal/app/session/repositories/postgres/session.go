@@ -187,7 +187,7 @@ func (r *SessionRepository) Update(ctx context.Context, model *models.Session) e
 		return errs.FromPostgresError(err).WithParam("session_id", fmt.Sprint(model.ID))
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("session_id", fmt.Sprint(model.ID))
+		e := errs.NewEntityNotFoundError().WithParam("session_id", fmt.Sprint(model.ID))
 		return e
 	}
 	return nil
@@ -208,7 +208,7 @@ func (r *SessionRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return e
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("session_id", fmt.Sprint(id))
+		e := errs.NewEntityNotFoundError().WithParam("session_id", fmt.Sprint(id))
 		return e
 	}
 	return nil

@@ -238,7 +238,7 @@ func (r *ArchRepository) Update(ctx context.Context, model *models.Arch) error {
 		return errs.FromPostgresError(err).WithParam("arch_id", fmt.Sprint(model.ID))
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("arch_id", fmt.Sprint(model.ID))
+		e := errs.NewEntityNotFoundError().WithParam("arch_id", fmt.Sprint(model.ID))
 		return e
 	}
 	return nil
@@ -259,7 +259,7 @@ func (r *ArchRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return e
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("arch_id", fmt.Sprint(id))
+		e := errs.NewEntityNotFoundError().WithParam("arch_id", fmt.Sprint(id))
 		return e
 	}
 	return nil

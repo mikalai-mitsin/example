@@ -15,8 +15,8 @@ import (
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
 	"github.com/018bf/example/internal/pkg/postgres"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/golang/mock/gomock"
 	"github.com/jaswdr/faker"
+	"go.uber.org/mock/gomock"
 
 	"github.com/018bf/example/internal/app/arch/models"
 	"github.com/018bf/example/internal/pkg/uuid"
@@ -247,7 +247,7 @@ func TestArchRepository_Get(t *testing.T) {
 				id:  arch.ID,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound().WithParam("arch_id", string(arch.ID)),
+			wantErr: errs.NewEntityNotFoundError().WithParam("arch_id", string(arch.ID)),
 		},
 	}
 	for _, tt := range tests {
@@ -353,9 +353,7 @@ func TestArchRepository_List(t *testing.T) {
 			wantErr: &errs.Error{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params: map[string]string{
-					"error": "test error",
-				},
+				Params:  errs.Params{{Key: "error", Value: "test error"}},
 			},
 		},
 		{
@@ -485,7 +483,7 @@ func TestArchRepository_Update(t *testing.T) {
 				ctx:  ctx,
 				card: arch,
 			},
-			wantErr: errs.NewEntityNotFound().WithParam("arch_id", string(arch.ID)),
+			wantErr: errs.NewEntityNotFoundError().WithParam("arch_id", string(arch.ID)),
 		},
 		{
 			name: "database error",
@@ -659,7 +657,7 @@ func TestArchRepository_Delete(t *testing.T) {
 				ctx: context.Background(),
 				id:  arch.ID,
 			},
-			wantErr: errs.NewEntityNotFound().WithParam("arch_id", string(arch.ID)),
+			wantErr: errs.NewEntityNotFoundError().WithParam("arch_id", string(arch.ID)),
 		},
 		{
 			name: "database error",
@@ -773,8 +771,11 @@ func TestArchRepository_Count(t *testing.T) {
 			wantErr: &errs.Error{
 				Code:    13,
 				Message: "Unexpected behavior.",
-				Params: map[string]string{
-					"error": "sql: Scan error on column index 0, name \"count\": converting driver.Value type string (\"one\") to a uint64: invalid syntax",
+				Params: errs.Params{
+					{
+						Key:   "error",
+						Value: "sql: Scan error on column index 0, name \"count\": converting driver.Value type string (\"one\") to a uint64: invalid syntax",
+					},
 				},
 			},
 		},

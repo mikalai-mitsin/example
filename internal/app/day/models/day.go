@@ -29,7 +29,7 @@ func (m *Day) Validate() error {
 		validation.Field(&m.EquipmentID, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -52,7 +52,7 @@ func (m *DayFilter) Validate() error {
 		validation.Field(&m.IDs, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -71,7 +71,7 @@ func (m *DayCreate) Validate() error {
 		validation.Field(&m.EquipmentID, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -92,7 +92,7 @@ func (m *DayUpdate) Validate() error {
 		validation.Field(&m.EquipmentID),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }

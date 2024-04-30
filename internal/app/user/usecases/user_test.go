@@ -16,8 +16,8 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
 	"github.com/018bf/example/internal/pkg/uuid"
-	"github.com/golang/mock/gomock"
 	"github.com/jaswdr/faker"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNewUserUseCase(t *testing.T) {
@@ -108,7 +108,7 @@ func TestUserUseCase_Get(t *testing.T) {
 		{
 			name: "User not found",
 			setup: func() {
-				userRepository.EXPECT().Get(ctx, user.ID).Return(nil, errs.NewEntityNotFound())
+				userRepository.EXPECT().Get(ctx, user.ID).Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				userRepository: userRepository,
@@ -119,7 +119,7 @@ func TestUserUseCase_Get(t *testing.T) {
 				id:  user.ID,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {
@@ -361,13 +361,13 @@ func TestUserUseCase_Create(t *testing.T) {
 				create: &models.UserCreate{},
 			},
 			want: nil,
-			wantErr: errs.NewInvalidFormError().WithParams(map[string]string{
-				"first_name": "cannot be blank",
-				"last_name":  "cannot be blank",
-				"password":   "cannot be blank",
-				"email":      "cannot be blank",
-				"group_id":   "cannot be blank",
-			}),
+			wantErr: errs.NewInvalidFormError().WithParams(
+				errs.Param{Key: "first_name", Value: "cannot be blank"},
+				errs.Param{Key: "last_name", Value: "cannot be blank"},
+				errs.Param{Key: "password", Value: "cannot be blank"},
+				errs.Param{Key: "email", Value: "cannot be blank"},
+				errs.Param{Key: "group_id", Value: "cannot be blank"},
+			),
 		},
 	}
 	for _, tt := range tests {
@@ -464,7 +464,9 @@ func TestUserUseCase_Update(t *testing.T) {
 		{
 			name: "User not found",
 			setup: func() {
-				userRepository.EXPECT().Get(ctx, update.ID).Return(nil, errs.NewEntityNotFound())
+				userRepository.EXPECT().
+					Get(ctx, update.ID).
+					Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				userRepository: userRepository,
@@ -476,7 +478,7 @@ func TestUserUseCase_Update(t *testing.T) {
 				update: update,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 		{
 			name: "invalid",
@@ -561,7 +563,7 @@ func TestUserUseCase_Delete(t *testing.T) {
 			setup: func() {
 				userRepository.EXPECT().
 					Delete(ctx, user.ID).
-					Return(errs.NewEntityNotFound())
+					Return(errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				userRepository: userRepository,
@@ -571,7 +573,7 @@ func TestUserUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  user.ID,
 			},
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {

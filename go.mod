@@ -24,9 +24,9 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/golang/mock v1.6.0
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	go.uber.org/mock v0.4.0
 	golang.org/x/sys v0.15.0 // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )
@@ -34,6 +34,7 @@ require (
 require (
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/stretchr/testify v1.8.3
 	golang.org/x/crypto v0.17.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231030173426-d783a09b4405
@@ -44,6 +45,7 @@ require (
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -52,6 +54,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.40.0 // indirect

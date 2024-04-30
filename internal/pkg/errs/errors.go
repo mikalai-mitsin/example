@@ -1,25 +1,29 @@
 package errs
 
 import (
-	"bytes"
-	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
-	"text/template"
 
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/lib/pq"
 	"go.uber.org/zap/zapcore"
 )
 
 type ErrorCode uint
-type Params map[string]string
+type Param struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+func (p Param) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString(p.Key, p.Value)
+	return nil
+}
+
+type Params []Param
 
 func (p Params) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	for key, value := range p {
-		encoder.AddString(key, value)
+	for _, param := range p {
+		encoder.AddString(param.Key, param.Value)
 	}
 	return nil
 }
@@ -48,49 +52,18 @@ type Error struct {
 	Code    ErrorCode `json:"code"`
 	Message string    `json:"message"`
 	Params  Params    `json:"params"`
+	Err     error     `json:"-"`
 }
 
-func (e *Error) WithParam(key, value string) *Error {
-	e.AddParam(key, value)
-	return e
-}
-func (e *Error) WithParams(params map[string]string) *Error {
-	for key, value := range params {
-		e.AddParam(key, value)
-	}
-	return e
-}
-func (e Error) Error() string {
-	data, _ := json.Marshal(e)
-	return string(data)
-}
-func (e *Error) Is(tgt error) bool {
-	target, ok := tgt.(*Error)
-	if !ok {
-		return false
-	}
-	return reflect.DeepEqual(e, target)
-}
-func (e *Error) SetCode(code ErrorCode) {
-	e.Code = code
-}
-func (e *Error) SetMessage(message string) {
-	e.Message = message
-}
-func (e *Error) SetParams(params map[string]string) {
-	e.Params = params
-}
-func (e *Error) AddParam(key string, value string) {
-	e.Params[key] = value
-}
 func NewError(code ErrorCode, message string) *Error {
-	return &Error{Code: code, Message: message, Params: map[string]string{}}
+	return &Error{Code: code, Message: message, Params: nil, Err: nil}
 }
 func NewUnexpectedBehaviorError(details string) *Error {
 	return &Error{
 		Code:    ErrorCodeInternal,
 		Message: "Unexpected behavior.",
-		Params:  map[string]string{"details": details},
+		Params:  []Param{{Key: "details", Value: details}},
+		Err:     nil,
 	}
 }
 func NewInvalidFormError() *Error {
@@ -103,82 +76,62 @@ func NewInvalidParameter(message string) *Error {
 	e := NewError(ErrorCodeInvalidArgument, message)
 	return e
 }
-func FromValidationError(err error) *Error {
-	var validationErrors validation.Errors
-	var validationErrorObject validation.ErrorObject
-	if errors.As(err, &validationErrors) {
-		e := NewError(
-			ErrorCodeInvalidArgument,
-			"The form sent is not valid, please correct the errors below.",
-		)
-		for key, value := range validationErrors {
-			switch t := value.(type) {
-			case validation.ErrorObject:
-				e.AddParam(key, renderErrorMessage(t))
-			case *Error:
-				e.AddParam(key, t.Message)
-			default:
-				e.AddParam(key, value.Error())
-			}
-		}
-		return e
-	}
-	if errors.As(err, &validationErrorObject) {
-		return NewInvalidParameter(renderErrorMessage(validationErrorObject))
+func NewEntityNotFoundError() *Error {
+	return &Error{Code: ErrorCodeNotFound, Message: "Entity not found.", Params: nil}
+}
+func NewBadTokenError() *Error {
+	return &Error{Code: ErrorCodePermissionDenied, Message: "Bad token.", Params: nil}
+}
+func NewPermissionDeniedError() *Error {
+	return &Error{Code: ErrorCodePermissionDenied, Message: "Permission denied.", Params: nil}
+}
+func (e *Error) Cause() error {
+	return e.Err
+}
+func (e Error) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("message", e.Message)
+	encoder.AddUint("code", uint(e.Code))
+	if err := encoder.AddObject("params", e.Params); err != nil {
+		return err
 	}
 	return nil
 }
-func renderErrorMessage(object validation.ErrorObject) string {
-	parse, err := template.New("message").Parse(object.Message())
-	if err != nil {
-		return ""
-	}
-	var tpl bytes.Buffer
-	_ = parse.Execute(&tpl, object.Params())
-	return tpl.String()
+func (e *Error) WithParam(key, value string) *Error {
+	e.AddParam(key, value)
+	return e
 }
-func FromPostgresError(err error) *Error {
-	e := &Error{
-		Code:    ErrorCodeInternal,
-		Message: "Unexpected behavior.",
-		Params:  map[string]string{"error": err.Error()},
-	}
-	var pqErr *pq.Error
-	if errors.As(err, &pqErr) {
-		e.AddParam("details", pqErr.Detail)
-		e.AddParam("message", pqErr.Message)
-		e.AddParam("postgres_code", fmt.Sprint(pqErr.Code))
-	}
-	if errors.Is(err, sql.ErrNoRows) {
-		e = NewEntityNotFound()
+func (e *Error) WithCause(err error) *Error {
+	e.Err = err
+	return e
+}
+func (e *Error) WithParams(params ...Param) *Error {
+	if len(e.Params) == 0 {
+		e.Params = params
+	} else {
+		e.Params = append(e.Params, params...)
 	}
 	return e
 }
-func NewEntityNotFound() *Error {
-	return &Error{
-		Code:    ErrorCodeNotFound,
-		Message: "Entity not found.",
-		Params:  map[string]string{},
-	}
+func (e Error) Error() string {
+	data, _ := json.Marshal(e)
+	return string(data)
 }
-func NewPermissionDeniedError() *Error {
-	return &Error{
-		Code:    ErrorCodePermissionDenied,
-		Message: "Permission denied.",
-		Params:  map[string]string{},
+func (e *Error) Is(tgt error) bool {
+	var target *Error
+	if ok := errors.As(tgt, &target); !ok {
+		return false
 	}
+	return reflect.DeepEqual(e, target)
 }
-func NewBadToken() *Error {
-	return &Error{
-		Code:    ErrorCodeUnauthenticated,
-		Message: "Bad token.",
-		Params:  map[string]string{},
-	}
+func (e *Error) SetCode(code ErrorCode) {
+	e.Code = code
 }
-func NewPermissionDenied() *Error {
-	return &Error{
-		Code:    ErrorCodePermissionDenied,
-		Message: "Permission denied.",
-		Params:  map[string]string{},
-	}
+func (e *Error) SetMessage(message string) {
+	e.Message = message
+}
+func (e *Error) SetParams(params Params) {
+	e.Params = params
+}
+func (e *Error) AddParam(key, value string) {
+	e.Params = append(e.Params, Param{Key: key, Value: value})
 }

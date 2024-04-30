@@ -179,7 +179,7 @@ func (r *PlanRepository) Update(ctx context.Context, model *models.Plan) error {
 		return errs.FromPostgresError(err).WithParam("plan_id", fmt.Sprint(model.ID))
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("plan_id", fmt.Sprint(model.ID))
+		e := errs.NewEntityNotFoundError().WithParam("plan_id", fmt.Sprint(model.ID))
 		return e
 	}
 	return nil
@@ -200,7 +200,7 @@ func (r *PlanRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return e
 	}
 	if affected == 0 {
-		e := errs.NewEntityNotFound().WithParam("plan_id", fmt.Sprint(id))
+		e := errs.NewEntityNotFoundError().WithParam("plan_id", fmt.Sprint(id))
 		return e
 	}
 	return nil

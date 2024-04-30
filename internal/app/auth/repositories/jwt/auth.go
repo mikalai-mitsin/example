@@ -104,7 +104,7 @@ func (r *AuthRepository) Validate(_ context.Context, token models.Token) error {
 	}
 	claims := jwtToken.Claims.(jwt.MapClaims)
 	if !claims.VerifyAudience(accessAudience, true) {
-		return errs.NewBadToken()
+		return errs.NewBadTokenError()
 	}
 	return nil
 }
@@ -119,7 +119,7 @@ func (r *AuthRepository) RefreshToken(
 	}
 	claims := jwtToken.Claims.(jwt.MapClaims)
 	if !claims.VerifyAudience(refreshAudience, true) {
-		return nil, errs.NewBadToken()
+		return nil, errs.NewBadTokenError()
 	}
 	pair := r.createPair(fmt.Sprint(claims["sub"]))
 	return pair, nil
@@ -128,7 +128,7 @@ func (r *AuthRepository) RefreshToken(
 func (r *AuthRepository) validate(token models.Token) (*jwt.Token, error) {
 	jwtToken, err := jwt.Parse(token.String(), r.keyFunc)
 	if err != nil {
-		e := errs.NewBadToken()
+		e := errs.NewBadTokenError()
 		return nil, e
 	}
 	return jwtToken, nil

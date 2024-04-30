@@ -27,7 +27,7 @@ func (m *Session) Validate() error {
 		validation.Field(&m.Description, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -50,7 +50,7 @@ func (m *SessionFilter) Validate() error {
 		validation.Field(&m.IDs, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -67,7 +67,7 @@ func (m *SessionCreate) Validate() error {
 		validation.Field(&m.Description, validation.Required),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }
@@ -86,7 +86,7 @@ func (m *SessionUpdate) Validate() error {
 		validation.Field(&m.Description),
 	)
 	if err != nil {
-		return errs.FromValidationError(err)
+		return errs.NewFromValidationError(err)
 	}
 	return nil
 }

@@ -16,8 +16,8 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
 	"github.com/018bf/example/internal/pkg/uuid"
-	"github.com/golang/mock/gomock"
 	"github.com/jaswdr/faker"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNewSessionUseCase(t *testing.T) {
@@ -110,7 +110,7 @@ func TestSessionUseCase_Get(t *testing.T) {
 			setup: func() {
 				sessionRepository.EXPECT().
 					Get(ctx, session.ID).
-					Return(nil, errs.NewEntityNotFound())
+					Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				sessionRepository: sessionRepository,
@@ -121,7 +121,7 @@ func TestSessionUseCase_Get(t *testing.T) {
 				id:  session.ID,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {
@@ -354,10 +354,10 @@ func TestSessionUseCase_Create(t *testing.T) {
 				create: &models.SessionCreate{},
 			},
 			want: nil,
-			wantErr: errs.NewInvalidFormError().WithParams(map[string]string{
-				"title":       "cannot be blank",
-				"description": "cannot be blank",
-			}),
+			wantErr: errs.NewInvalidFormError().WithParams(
+				errs.Param{Key: "title", Value: "cannot be blank"},
+				errs.Param{Key: "description", Value: "cannot be blank"},
+			),
 		},
 	}
 	for _, tt := range tests {
@@ -454,7 +454,9 @@ func TestSessionUseCase_Update(t *testing.T) {
 		{
 			name: "Session not found",
 			setup: func() {
-				sessionRepository.EXPECT().Get(ctx, update.ID).Return(nil, errs.NewEntityNotFound())
+				sessionRepository.EXPECT().
+					Get(ctx, update.ID).
+					Return(nil, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				sessionRepository: sessionRepository,
@@ -466,7 +468,7 @@ func TestSessionUseCase_Update(t *testing.T) {
 				update: update,
 			},
 			want:    nil,
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 		{
 			name: "invalid",
@@ -551,7 +553,7 @@ func TestSessionUseCase_Delete(t *testing.T) {
 			setup: func() {
 				sessionRepository.EXPECT().
 					Delete(ctx, session.ID).
-					Return(errs.NewEntityNotFound())
+					Return(errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				sessionRepository: sessionRepository,
@@ -561,7 +563,7 @@ func TestSessionUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  session.ID,
 			},
-			wantErr: errs.NewEntityNotFound(),
+			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {
