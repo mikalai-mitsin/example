@@ -16,6 +16,7 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
 	"github.com/018bf/example/internal/pkg/uuid"
+	mock_uuid "github.com/018bf/example/internal/pkg/uuid/mock"
 	"github.com/jaswdr/faker"
 	"go.uber.org/mock/gomock"
 )
@@ -24,12 +25,14 @@ func TestNewArchUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	clockMock := mock_clock.NewMockClock(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
+	mockLogger := mock_log.NewMockLogger(ctrl)
+	mockUUID := mock_uuid.NewMockGenerator(ctrl)
 	type args struct {
 		archRepository ArchRepository
 		clock          clock.Clock
 		logger         log.Logger
+		uuid           uuid.Generator
 	}
 	tests := []struct {
 		name  string
@@ -43,20 +46,22 @@ func TestNewArchUseCase(t *testing.T) {
 			},
 			args: args{
 				archRepository: archRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:          mockClock,
+				logger:         mockLogger,
+				uuid:           mockUUID,
 			},
 			want: &ArchUseCase{
 				archRepository: archRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:          mockClock,
+				logger:         mockLogger,
+				uuid:           mockUUID,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			if got := NewArchUseCase(tt.args.archRepository, tt.args.clock, tt.args.logger); !reflect.DeepEqual(
+			if got := NewArchUseCase(tt.args.archRepository, tt.args.clock, tt.args.logger, tt.args.uuid); !reflect.DeepEqual(
 				got,
 				tt.want,
 			) {
@@ -254,8 +259,9 @@ func TestArchUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
-	clockMock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
+	mockLogger := mock_log.NewMockLogger(ctrl)
+	mockUUID := mock_uuid.NewMockGenerator(ctrl)
 	ctx := context.Background()
 	create := mock_models.NewArchCreate(t)
 	now := time.Now().UTC()
@@ -263,6 +269,7 @@ func TestArchUseCase_Create(t *testing.T) {
 		archRepository ArchRepository
 		clock          clock.Clock
 		logger         log.Logger
+		uuid           uuid.Generator
 	}
 	type args struct {
 		ctx    context.Context
@@ -279,11 +286,13 @@ func TestArchUseCase_Create(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
+				mockUUID.EXPECT().NewUUID().Return(uuid.UUID("test"))
 				archRepository.EXPECT().
 					Create(
 						ctx,
 						&models.Arch{
+							ID:          uuid.UUID("test"),
 							Name:        create.Name,
 							Title:       create.Title,
 							Subtitle:    create.Subtitle,
@@ -303,15 +312,16 @@ func TestArchUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				archRepository: archRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:          mockClock,
+				logger:         mockLogger,
+				uuid:           mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
 				create: create,
 			},
 			want: &models.Arch{
-				ID:          "",
+				ID:          uuid.UUID("test"),
 				Name:        create.Name,
 				Title:       create.Title,
 				Subtitle:    create.Subtitle,
@@ -331,12 +341,13 @@ func TestArchUseCase_Create(t *testing.T) {
 		{
 			name: "unexpected behavior",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
+				mockUUID.EXPECT().NewUUID().Return(uuid.UUID("test 2"))
 				archRepository.EXPECT().
 					Create(
 						ctx,
 						&models.Arch{
-							ID:          "",
+							ID:          uuid.UUID("test 2"),
 							Name:        create.Name,
 							Title:       create.Title,
 							Subtitle:    create.Subtitle,
@@ -356,8 +367,9 @@ func TestArchUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				archRepository: archRepository,
-				clock:          clockMock,
-				logger:         logger,
+				clock:          mockClock,
+				logger:         mockLogger,
+				uuid:           mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
@@ -372,7 +384,9 @@ func TestArchUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				archRepository: archRepository,
-				logger:         logger,
+				logger:         mockLogger,
+				clock:          mockClock,
+				uuid:           mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
@@ -401,6 +415,7 @@ func TestArchUseCase_Create(t *testing.T) {
 				archRepository: tt.fields.archRepository,
 				clock:          tt.fields.clock,
 				logger:         tt.fields.logger,
+				uuid:           tt.fields.uuid,
 			}
 			got, err := u.Create(tt.args.ctx, tt.args.create)
 			if !errors.Is(err, tt.wantErr) {
@@ -421,7 +436,7 @@ func TestArchUseCase_Update(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	ctx := context.Background()
 	arch := mock_models.NewArch(t)
-	clockMock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
 	update := mock_models.NewArchUpdate(t)
 	now := arch.UpdatedAt
 	type fields struct {
@@ -444,7 +459,7 @@ func TestArchUseCase_Update(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
 				archRepository.EXPECT().
 					Get(ctx, update.ID).Return(arch, nil)
 				archRepository.EXPECT().
@@ -452,7 +467,7 @@ func TestArchUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				archRepository: archRepository,
-				clock:          clockMock,
+				clock:          mockClock,
 				logger:         logger,
 			},
 			args: args{
@@ -465,7 +480,7 @@ func TestArchUseCase_Update(t *testing.T) {
 		{
 			name: "update error",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
 				archRepository.EXPECT().
 					Get(ctx, update.ID).
 					Return(arch, nil)
@@ -475,7 +490,7 @@ func TestArchUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				archRepository: archRepository,
-				clock:          clockMock,
+				clock:          mockClock,
 				logger:         logger,
 			},
 			args: args{
@@ -494,7 +509,7 @@ func TestArchUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				archRepository: archRepository,
-				clock:          clockMock,
+				clock:          mockClock,
 				logger:         logger,
 			},
 			args: args{
@@ -510,7 +525,7 @@ func TestArchUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				archRepository: archRepository,
-				clock:          clockMock,
+				clock:          mockClock,
 				logger:         logger,
 			},
 			args: args{

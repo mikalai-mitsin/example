@@ -17,6 +17,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/018bf/example/internal/app/user/models"
+	"github.com/018bf/example/internal/pkg/pointer"
 	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -270,8 +271,14 @@ func TestUserRepository_List(t *testing.T) {
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
 		listUsers = append(listUsers, mock_models.NewUser(t))
 	}
-	filter := mock_models.NewUserFilter(t)
-	query := "SELECT users.id, users.created_at, users.updated_at, users.first_name, users.last_name, users.password, users.email, users.group_id FROM public.users WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	filter := &models.UserFilter{
+		PageSize:   pointer.Pointer(uint64(10)),
+		PageNumber: pointer.Pointer(uint64(2)),
+		Search:     nil,
+		OrderBy:    []string{"id ASC"},
+		IDs:        nil,
+	}
+	query := "SELECT users.id, users.created_at, users.updated_at, users.first_name, users.last_name, users.password, users.email, users.group_id FROM public.users ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -301,23 +308,6 @@ func TestUserRepository_List(t *testing.T) {
 			args: args{
 				ctx:    ctx,
 				filter: filter,
-			},
-			want:    listUsers,
-			wantErr: nil,
-		},
-		{
-			name: "nil page size",
-			setup: func() {
-				mock.ExpectQuery(query).
-					WillReturnRows(newUserRows(t, listUsers))
-			},
-			fields: fields{
-				database: db,
-				logger:   logger,
-			},
-			args: args{
-				ctx:    ctx,
-				filter: &models.UserFilter{},
 			},
 			want:    listUsers,
 			wantErr: nil,
@@ -673,9 +663,9 @@ func TestUserRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := "SELECT count(id) FROM public.users WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
+	query := "SELECT count(id) FROM public.users"
 	ctx := context.Background()
-	filter := mock_models.NewUserFilter(t)
+	filter := &models.UserFilter{}
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger

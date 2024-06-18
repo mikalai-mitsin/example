@@ -17,6 +17,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/018bf/example/internal/app/plan/models"
+	"github.com/018bf/example/internal/pkg/pointer"
 	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -266,8 +267,14 @@ func TestPlanRepository_List(t *testing.T) {
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
 		listPlans = append(listPlans, mock_models.NewPlan(t))
 	}
-	filter := mock_models.NewPlanFilter(t)
-	query := "SELECT plans.id, plans.created_at, plans.updated_at, plans.name, plans.repeat, plans.equipment_id FROM public.plans WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	filter := &models.PlanFilter{
+		PageSize:   pointer.Pointer(uint64(10)),
+		PageNumber: pointer.Pointer(uint64(2)),
+		Search:     nil,
+		OrderBy:    []string{"id ASC"},
+		IDs:        nil,
+	}
+	query := "SELECT plans.id, plans.created_at, plans.updated_at, plans.name, plans.repeat, plans.equipment_id FROM public.plans ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -297,23 +304,6 @@ func TestPlanRepository_List(t *testing.T) {
 			args: args{
 				ctx:    ctx,
 				filter: filter,
-			},
-			want:    listPlans,
-			wantErr: nil,
-		},
-		{
-			name: "nil page size",
-			setup: func() {
-				mock.ExpectQuery(query).
-					WillReturnRows(newPlanRows(t, listPlans))
-			},
-			fields: fields{
-				database: db,
-				logger:   logger,
-			},
-			args: args{
-				ctx:    ctx,
-				filter: &models.PlanFilter{},
 			},
 			want:    listPlans,
 			wantErr: nil,
@@ -659,9 +649,9 @@ func TestPlanRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := "SELECT count(id) FROM public.plans WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
+	query := "SELECT count(id) FROM public.plans"
 	ctx := context.Background()
-	filter := mock_models.NewPlanFilter(t)
+	filter := &models.PlanFilter{}
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger

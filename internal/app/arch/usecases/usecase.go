@@ -13,14 +13,16 @@ type ArchUseCase struct {
 	archRepository ArchRepository
 	clock          clock.Clock
 	logger         log.Logger
+	uuid           uuid.Generator
 }
 
 func NewArchUseCase(
 	archRepository ArchRepository,
 	clock clock.Clock,
 	logger log.Logger,
+	uuid uuid.Generator,
 ) *ArchUseCase {
-	return &ArchUseCase{archRepository: archRepository, clock: clock, logger: logger}
+	return &ArchUseCase{archRepository: archRepository, clock: clock, logger: logger, uuid: uuid}
 }
 func (u *ArchUseCase) Create(ctx context.Context, create *models.ArchCreate) (*models.Arch, error) {
 	if err := create.Validate(); err != nil {
@@ -28,7 +30,7 @@ func (u *ArchUseCase) Create(ctx context.Context, create *models.ArchCreate) (*m
 	}
 	now := u.clock.Now().UTC()
 	arch := &models.Arch{
-		ID:          "",
+		ID:          u.uuid.NewUUID(),
 		UpdatedAt:   now,
 		CreatedAt:   now,
 		Name:        create.Name,

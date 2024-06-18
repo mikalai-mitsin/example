@@ -16,6 +16,7 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
 	"github.com/018bf/example/internal/pkg/uuid"
+	mock_uuid "github.com/018bf/example/internal/pkg/uuid/mock"
 	"github.com/jaswdr/faker"
 	"go.uber.org/mock/gomock"
 )
@@ -24,12 +25,14 @@ func TestNewDayUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	dayRepository := mock_usecases.NewMockDayRepository(ctrl)
-	clockMock := mock_clock.NewMockClock(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
+	mockLogger := mock_log.NewMockLogger(ctrl)
+	mockUUID := mock_uuid.NewMockGenerator(ctrl)
 	type args struct {
 		dayRepository DayRepository
 		clock         clock.Clock
 		logger        log.Logger
+		uuid          uuid.Generator
 	}
 	tests := []struct {
 		name  string
@@ -43,20 +46,22 @@ func TestNewDayUseCase(t *testing.T) {
 			},
 			args: args{
 				dayRepository: dayRepository,
-				clock:         clockMock,
-				logger:        logger,
+				clock:         mockClock,
+				logger:        mockLogger,
+				uuid:          mockUUID,
 			},
 			want: &DayUseCase{
 				dayRepository: dayRepository,
-				clock:         clockMock,
-				logger:        logger,
+				clock:         mockClock,
+				logger:        mockLogger,
+				uuid:          mockUUID,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			if got := NewDayUseCase(tt.args.dayRepository, tt.args.clock, tt.args.logger); !reflect.DeepEqual(
+			if got := NewDayUseCase(tt.args.dayRepository, tt.args.clock, tt.args.logger, tt.args.uuid); !reflect.DeepEqual(
 				got,
 				tt.want,
 			) {
@@ -254,8 +259,9 @@ func TestDayUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	dayRepository := mock_usecases.NewMockDayRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
-	clockMock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
+	mockLogger := mock_log.NewMockLogger(ctrl)
+	mockUUID := mock_uuid.NewMockGenerator(ctrl)
 	ctx := context.Background()
 	create := mock_models.NewDayCreate(t)
 	now := time.Now().UTC()
@@ -263,6 +269,7 @@ func TestDayUseCase_Create(t *testing.T) {
 		dayRepository DayRepository
 		clock         clock.Clock
 		logger        log.Logger
+		uuid          uuid.Generator
 	}
 	type args struct {
 		ctx    context.Context
@@ -279,11 +286,13 @@ func TestDayUseCase_Create(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
+				mockUUID.EXPECT().NewUUID().Return(uuid.UUID("test"))
 				dayRepository.EXPECT().
 					Create(
 						ctx,
 						&models.Day{
+							ID:          uuid.UUID("test"),
 							Name:        create.Name,
 							Repeat:      create.Repeat,
 							EquipmentID: create.EquipmentID,
@@ -295,15 +304,16 @@ func TestDayUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				dayRepository: dayRepository,
-				clock:         clockMock,
-				logger:        logger,
+				clock:         mockClock,
+				logger:        mockLogger,
+				uuid:          mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
 				create: create,
 			},
 			want: &models.Day{
-				ID:          "",
+				ID:          uuid.UUID("test"),
 				Name:        create.Name,
 				Repeat:      create.Repeat,
 				EquipmentID: create.EquipmentID,
@@ -315,12 +325,13 @@ func TestDayUseCase_Create(t *testing.T) {
 		{
 			name: "unexpected behavior",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
+				mockUUID.EXPECT().NewUUID().Return(uuid.UUID("test 2"))
 				dayRepository.EXPECT().
 					Create(
 						ctx,
 						&models.Day{
-							ID:          "",
+							ID:          uuid.UUID("test 2"),
 							Name:        create.Name,
 							Repeat:      create.Repeat,
 							EquipmentID: create.EquipmentID,
@@ -332,8 +343,9 @@ func TestDayUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				dayRepository: dayRepository,
-				clock:         clockMock,
-				logger:        logger,
+				clock:         mockClock,
+				logger:        mockLogger,
+				uuid:          mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
@@ -348,7 +360,9 @@ func TestDayUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				dayRepository: dayRepository,
-				logger:        logger,
+				logger:        mockLogger,
+				clock:         mockClock,
+				uuid:          mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
@@ -369,6 +383,7 @@ func TestDayUseCase_Create(t *testing.T) {
 				dayRepository: tt.fields.dayRepository,
 				clock:         tt.fields.clock,
 				logger:        tt.fields.logger,
+				uuid:          tt.fields.uuid,
 			}
 			got, err := u.Create(tt.args.ctx, tt.args.create)
 			if !errors.Is(err, tt.wantErr) {
@@ -389,7 +404,7 @@ func TestDayUseCase_Update(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	ctx := context.Background()
 	day := mock_models.NewDay(t)
-	clockMock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
 	update := mock_models.NewDayUpdate(t)
 	now := day.UpdatedAt
 	type fields struct {
@@ -412,7 +427,7 @@ func TestDayUseCase_Update(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
 				dayRepository.EXPECT().
 					Get(ctx, update.ID).Return(day, nil)
 				dayRepository.EXPECT().
@@ -420,7 +435,7 @@ func TestDayUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				dayRepository: dayRepository,
-				clock:         clockMock,
+				clock:         mockClock,
 				logger:        logger,
 			},
 			args: args{
@@ -433,7 +448,7 @@ func TestDayUseCase_Update(t *testing.T) {
 		{
 			name: "update error",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
 				dayRepository.EXPECT().
 					Get(ctx, update.ID).
 					Return(day, nil)
@@ -443,7 +458,7 @@ func TestDayUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				dayRepository: dayRepository,
-				clock:         clockMock,
+				clock:         mockClock,
 				logger:        logger,
 			},
 			args: args{
@@ -462,7 +477,7 @@ func TestDayUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				dayRepository: dayRepository,
-				clock:         clockMock,
+				clock:         mockClock,
 				logger:        logger,
 			},
 			args: args{
@@ -478,7 +493,7 @@ func TestDayUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				dayRepository: dayRepository,
-				clock:         clockMock,
+				clock:         mockClock,
 				logger:        logger,
 			},
 			args: args{

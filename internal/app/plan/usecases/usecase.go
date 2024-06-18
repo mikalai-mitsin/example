@@ -13,14 +13,16 @@ type PlanUseCase struct {
 	planRepository PlanRepository
 	clock          clock.Clock
 	logger         log.Logger
+	uuid           uuid.Generator
 }
 
 func NewPlanUseCase(
 	planRepository PlanRepository,
 	clock clock.Clock,
 	logger log.Logger,
+	uuid uuid.Generator,
 ) *PlanUseCase {
-	return &PlanUseCase{planRepository: planRepository, clock: clock, logger: logger}
+	return &PlanUseCase{planRepository: planRepository, clock: clock, logger: logger, uuid: uuid}
 }
 func (u *PlanUseCase) Create(ctx context.Context, create *models.PlanCreate) (*models.Plan, error) {
 	if err := create.Validate(); err != nil {
@@ -28,7 +30,7 @@ func (u *PlanUseCase) Create(ctx context.Context, create *models.PlanCreate) (*m
 	}
 	now := u.clock.Now().UTC()
 	plan := &models.Plan{
-		ID:          "",
+		ID:          u.uuid.NewUUID(),
 		UpdatedAt:   now,
 		CreatedAt:   now,
 		Name:        create.Name,

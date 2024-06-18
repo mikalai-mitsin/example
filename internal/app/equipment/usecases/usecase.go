@@ -13,14 +13,21 @@ type EquipmentUseCase struct {
 	equipmentRepository EquipmentRepository
 	clock               clock.Clock
 	logger              log.Logger
+	uuid                uuid.Generator
 }
 
 func NewEquipmentUseCase(
 	equipmentRepository EquipmentRepository,
 	clock clock.Clock,
 	logger log.Logger,
+	uuid uuid.Generator,
 ) *EquipmentUseCase {
-	return &EquipmentUseCase{equipmentRepository: equipmentRepository, clock: clock, logger: logger}
+	return &EquipmentUseCase{
+		equipmentRepository: equipmentRepository,
+		clock:               clock,
+		logger:              logger,
+		uuid:                uuid,
+	}
 }
 
 func (u *EquipmentUseCase) Create(
@@ -32,7 +39,7 @@ func (u *EquipmentUseCase) Create(
 	}
 	now := u.clock.Now().UTC()
 	equipment := &models.Equipment{
-		ID:        "",
+		ID:        u.uuid.NewUUID(),
 		UpdatedAt: now,
 		CreatedAt: now,
 		Name:      create.Name,

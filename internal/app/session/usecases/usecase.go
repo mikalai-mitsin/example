@@ -13,14 +13,21 @@ type SessionUseCase struct {
 	sessionRepository SessionRepository
 	clock             clock.Clock
 	logger            log.Logger
+	uuid              uuid.Generator
 }
 
 func NewSessionUseCase(
 	sessionRepository SessionRepository,
 	clock clock.Clock,
 	logger log.Logger,
+	uuid uuid.Generator,
 ) *SessionUseCase {
-	return &SessionUseCase{sessionRepository: sessionRepository, clock: clock, logger: logger}
+	return &SessionUseCase{
+		sessionRepository: sessionRepository,
+		clock:             clock,
+		logger:            logger,
+		uuid:              uuid,
+	}
 }
 
 func (u *SessionUseCase) Create(
@@ -32,7 +39,7 @@ func (u *SessionUseCase) Create(
 	}
 	now := u.clock.Now().UTC()
 	session := &models.Session{
-		ID:          "",
+		ID:          u.uuid.NewUUID(),
 		UpdatedAt:   now,
 		CreatedAt:   now,
 		Title:       create.Title,

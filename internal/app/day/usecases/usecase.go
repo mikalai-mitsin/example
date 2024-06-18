@@ -13,10 +13,16 @@ type DayUseCase struct {
 	dayRepository DayRepository
 	clock         clock.Clock
 	logger        log.Logger
+	uuid          uuid.Generator
 }
 
-func NewDayUseCase(dayRepository DayRepository, clock clock.Clock, logger log.Logger) *DayUseCase {
-	return &DayUseCase{dayRepository: dayRepository, clock: clock, logger: logger}
+func NewDayUseCase(
+	dayRepository DayRepository,
+	clock clock.Clock,
+	logger log.Logger,
+	uuid uuid.Generator,
+) *DayUseCase {
+	return &DayUseCase{dayRepository: dayRepository, clock: clock, logger: logger, uuid: uuid}
 }
 func (u *DayUseCase) Create(ctx context.Context, create *models.DayCreate) (*models.Day, error) {
 	if err := create.Validate(); err != nil {
@@ -24,7 +30,7 @@ func (u *DayUseCase) Create(ctx context.Context, create *models.DayCreate) (*mod
 	}
 	now := u.clock.Now().UTC()
 	day := &models.Day{
-		ID:          "",
+		ID:          u.uuid.NewUUID(),
 		UpdatedAt:   now,
 		CreatedAt:   now,
 		Name:        create.Name,

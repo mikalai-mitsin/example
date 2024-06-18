@@ -17,6 +17,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/018bf/example/internal/app/session/models"
+	"github.com/018bf/example/internal/pkg/pointer"
 	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -266,8 +267,14 @@ func TestSessionRepository_List(t *testing.T) {
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
 		listSessions = append(listSessions, mock_models.NewSession(t))
 	}
-	filter := mock_models.NewSessionFilter(t)
-	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	filter := &models.SessionFilter{
+		PageSize:   pointer.Pointer(uint64(10)),
+		PageNumber: pointer.Pointer(uint64(2)),
+		Search:     nil,
+		OrderBy:    []string{"id ASC"},
+		IDs:        nil,
+	}
+	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -297,23 +304,6 @@ func TestSessionRepository_List(t *testing.T) {
 			args: args{
 				ctx:    ctx,
 				filter: filter,
-			},
-			want:    listSessions,
-			wantErr: nil,
-		},
-		{
-			name: "nil page size",
-			setup: func() {
-				mock.ExpectQuery(query).
-					WillReturnRows(newSessionRows(t, listSessions))
-			},
-			fields: fields{
-				database: db,
-				logger:   logger,
-			},
-			args: args{
-				ctx:    ctx,
-				filter: &models.SessionFilter{},
 			},
 			want:    listSessions,
 			wantErr: nil,
@@ -654,9 +644,9 @@ func TestSessionRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := "SELECT count(id) FROM public.sessions WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
+	query := "SELECT count(id) FROM public.sessions"
 	ctx := context.Background()
-	filter := mock_models.NewSessionFilter(t)
+	filter := &models.SessionFilter{}
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger

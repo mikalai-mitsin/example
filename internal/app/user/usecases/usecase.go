@@ -13,14 +13,16 @@ type UserUseCase struct {
 	userRepository UserRepository
 	clock          clock.Clock
 	logger         log.Logger
+	uuid           uuid.Generator
 }
 
 func NewUserUseCase(
 	userRepository UserRepository,
 	clock clock.Clock,
 	logger log.Logger,
+	uuid uuid.Generator,
 ) *UserUseCase {
-	return &UserUseCase{userRepository: userRepository, clock: clock, logger: logger}
+	return &UserUseCase{userRepository: userRepository, clock: clock, logger: logger, uuid: uuid}
 }
 func (u *UserUseCase) Create(ctx context.Context, create *models.UserCreate) (*models.User, error) {
 	if err := create.Validate(); err != nil {
@@ -28,7 +30,7 @@ func (u *UserUseCase) Create(ctx context.Context, create *models.UserCreate) (*m
 	}
 	now := u.clock.Now().UTC()
 	user := &models.User{
-		ID:        "",
+		ID:        u.uuid.NewUUID(),
 		UpdatedAt: now,
 		CreatedAt: now,
 		FirstName: create.FirstName,

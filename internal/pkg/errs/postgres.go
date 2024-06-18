@@ -21,6 +21,7 @@ func FromPostgresError(err error) *Error {
 			e = NewInvalidFormError().WithCause(err)
 		}
 	}
+	e.AddParam("error", err.Error())
 	if errors.Is(err, sql.ErrNoRows) {
 		e = NewEntityNotFoundError()
 	}

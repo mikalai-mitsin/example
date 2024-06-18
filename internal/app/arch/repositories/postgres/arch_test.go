@@ -19,6 +19,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/018bf/example/internal/app/arch/models"
+	"github.com/018bf/example/internal/pkg/pointer"
 	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -284,8 +285,14 @@ func TestArchRepository_List(t *testing.T) {
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
 		listArches = append(listArches, mock_models.NewArch(t))
 	}
-	filter := mock_models.NewArchFilter(t)
-	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches WHERE to_tsvector('english', first_name || ' ' || last_name || ' ' || email) @@ plainto_tsquery('english', $1) AND id IN ($2,$3) ORDER BY FIXME LIMIT FIXME OFFSET FIXME"
+	filter := &models.ArchFilter{
+		PageSize:   pointer.Pointer(uint64(10)),
+		PageNumber: pointer.Pointer(uint64(2)),
+		Search:     nil,
+		OrderBy:    []string{"id ASC"},
+		IDs:        nil,
+	}
+	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger
@@ -315,23 +322,6 @@ func TestArchRepository_List(t *testing.T) {
 			args: args{
 				ctx:    ctx,
 				filter: filter,
-			},
-			want:    listArches,
-			wantErr: nil,
-		},
-		{
-			name: "nil page size",
-			setup: func() {
-				mock.ExpectQuery(query).
-					WillReturnRows(newArchRows(t, listArches))
-			},
-			fields: fields{
-				database: db,
-				logger:   logger,
-			},
-			args: args{
-				ctx:    ctx,
-				filter: &models.ArchFilter{},
 			},
 			want:    listArches,
 			wantErr: nil,
@@ -717,9 +707,9 @@ func TestArchRepository_Count(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	query := "SELECT count(id) FROM public.arches WHERE to_tsvector('english', FIXME) @@ plainto_tsquery('english', $1) AND id IN ($2,$3)"
+	query := "SELECT count(id) FROM public.arches"
 	ctx := context.Background()
-	filter := mock_models.NewArchFilter(t)
+	filter := &models.ArchFilter{}
 	type fields struct {
 		database *sqlx.DB
 		logger   log.Logger

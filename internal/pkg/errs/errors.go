@@ -9,24 +9,6 @@ import (
 )
 
 type ErrorCode uint
-type Param struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-func (p Param) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	encoder.AddString(p.Key, p.Value)
-	return nil
-}
-
-type Params []Param
-
-func (p Params) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	for _, param := range p {
-		encoder.AddString(param.Key, param.Value)
-	}
-	return nil
-}
 
 const (
 	ErrorCodeOK ErrorCode = iota
@@ -46,7 +28,27 @@ const (
 	ErrorCodeUnavailable
 	ErrorCodeDataLoss
 	ErrorCodeUnauthenticated
+	ErrorCodeClosedRequest
 )
+
+type Param struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+func (p Param) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString(p.Key, p.Value)
+	return nil
+}
+
+type Params []Param
+
+func (p Params) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	for _, param := range p {
+		encoder.AddString(param.Key, param.Value)
+	}
+	return nil
+}
 
 type Error struct {
 	Code    ErrorCode `json:"code"`
@@ -59,12 +61,9 @@ func NewError(code ErrorCode, message string) *Error {
 	return &Error{Code: code, Message: message, Params: nil, Err: nil}
 }
 func NewUnexpectedBehaviorError(details string) *Error {
-	return &Error{
-		Code:    ErrorCodeInternal,
-		Message: "Unexpected behavior.",
-		Params:  []Param{{Key: "details", Value: details}},
-		Err:     nil,
-	}
+	err := NewError(ErrorCodeInternal, "Unexpected behavior.")
+	err.AddParam("details", details)
+	return err
 }
 func NewInvalidFormError() *Error {
 	return NewError(
@@ -73,17 +72,22 @@ func NewInvalidFormError() *Error {
 	)
 }
 func NewInvalidParameter(message string) *Error {
-	e := NewError(ErrorCodeInvalidArgument, message)
-	return e
+	return NewError(ErrorCodeInvalidArgument, message)
 }
 func NewEntityNotFoundError() *Error {
-	return &Error{Code: ErrorCodeNotFound, Message: "Entity not found.", Params: nil}
+	return NewError(ErrorCodeNotFound, "Entity not found.")
 }
 func NewBadTokenError() *Error {
-	return &Error{Code: ErrorCodePermissionDenied, Message: "Bad token.", Params: nil}
+	return NewError(ErrorCodePermissionDenied, "Bad token.")
 }
 func NewPermissionDeniedError() *Error {
-	return &Error{Code: ErrorCodePermissionDenied, Message: "Permission denied.", Params: nil}
+	return NewError(ErrorCodePermissionDenied, "Permission denied.")
+}
+func NewSubscriptionAlreadyCancelledError() *Error {
+	return NewError(ErrorCodeFailedPrecondition, "Subscription is already cancelled.")
+}
+func NewInactivePlanError() *Error {
+	return NewError(ErrorCodeFailedPrecondition, "This plan is inactive.")
 }
 func (e *Error) Cause() error {
 	return e.Err
@@ -121,10 +125,17 @@ func (e *Error) Is(tgt error) bool {
 	if ok := errors.As(tgt, &target); !ok {
 		return false
 	}
-	return reflect.DeepEqual(e, target)
+	target.Err = nil
+	err := *e
+	err.Err = nil
+	eq := reflect.DeepEqual(&err, target)
+	return eq
 }
 func (e *Error) SetCode(code ErrorCode) {
 	e.Code = code
+}
+func (e *Error) SetCause(err error) {
+	e.Err = err
 }
 func (e *Error) SetMessage(message string) {
 	e.Message = message

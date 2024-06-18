@@ -16,6 +16,7 @@ import (
 	"github.com/018bf/example/internal/pkg/log"
 	mock_log "github.com/018bf/example/internal/pkg/log/mock"
 	"github.com/018bf/example/internal/pkg/uuid"
+	mock_uuid "github.com/018bf/example/internal/pkg/uuid/mock"
 	"github.com/jaswdr/faker"
 	"go.uber.org/mock/gomock"
 )
@@ -24,12 +25,14 @@ func TestNewEquipmentUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	equipmentRepository := mock_usecases.NewMockEquipmentRepository(ctrl)
-	clockMock := mock_clock.NewMockClock(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
+	mockLogger := mock_log.NewMockLogger(ctrl)
+	mockUUID := mock_uuid.NewMockGenerator(ctrl)
 	type args struct {
 		equipmentRepository EquipmentRepository
 		clock               clock.Clock
 		logger              log.Logger
+		uuid                uuid.Generator
 	}
 	tests := []struct {
 		name  string
@@ -43,20 +46,22 @@ func TestNewEquipmentUseCase(t *testing.T) {
 			},
 			args: args{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:               mockClock,
+				logger:              mockLogger,
+				uuid:                mockUUID,
 			},
 			want: &EquipmentUseCase{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:               mockClock,
+				logger:              mockLogger,
+				uuid:                mockUUID,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			if got := NewEquipmentUseCase(tt.args.equipmentRepository, tt.args.clock, tt.args.logger); !reflect.DeepEqual(
+			if got := NewEquipmentUseCase(tt.args.equipmentRepository, tt.args.clock, tt.args.logger, tt.args.uuid); !reflect.DeepEqual(
 				got,
 				tt.want,
 			) {
@@ -256,8 +261,9 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	equipmentRepository := mock_usecases.NewMockEquipmentRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
-	clockMock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
+	mockLogger := mock_log.NewMockLogger(ctrl)
+	mockUUID := mock_uuid.NewMockGenerator(ctrl)
 	ctx := context.Background()
 	create := mock_models.NewEquipmentCreate(t)
 	now := time.Now().UTC()
@@ -265,6 +271,7 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 		equipmentRepository EquipmentRepository
 		clock               clock.Clock
 		logger              log.Logger
+		uuid                uuid.Generator
 	}
 	type args struct {
 		ctx    context.Context
@@ -281,11 +288,13 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
+				mockUUID.EXPECT().NewUUID().Return(uuid.UUID("test"))
 				equipmentRepository.EXPECT().
 					Create(
 						ctx,
 						&models.Equipment{
+							ID:        uuid.UUID("test"),
 							Name:      create.Name,
 							Repeat:    create.Repeat,
 							Weight:    create.Weight,
@@ -297,15 +306,16 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:               mockClock,
+				logger:              mockLogger,
+				uuid:                mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
 				create: create,
 			},
 			want: &models.Equipment{
-				ID:        "",
+				ID:        uuid.UUID("test"),
 				Name:      create.Name,
 				Repeat:    create.Repeat,
 				Weight:    create.Weight,
@@ -317,12 +327,13 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 		{
 			name: "unexpected behavior",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
+				mockUUID.EXPECT().NewUUID().Return(uuid.UUID("test 2"))
 				equipmentRepository.EXPECT().
 					Create(
 						ctx,
 						&models.Equipment{
-							ID:        "",
+							ID:        uuid.UUID("test 2"),
 							Name:      create.Name,
 							Repeat:    create.Repeat,
 							Weight:    create.Weight,
@@ -334,8 +345,9 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
-				logger:              logger,
+				clock:               mockClock,
+				logger:              mockLogger,
+				uuid:                mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
@@ -350,7 +362,9 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				logger:              logger,
+				logger:              mockLogger,
+				clock:               mockClock,
+				uuid:                mockUUID,
 			},
 			args: args{
 				ctx:    ctx,
@@ -371,6 +385,7 @@ func TestEquipmentUseCase_Create(t *testing.T) {
 				equipmentRepository: tt.fields.equipmentRepository,
 				clock:               tt.fields.clock,
 				logger:              tt.fields.logger,
+				uuid:                tt.fields.uuid,
 			}
 			got, err := u.Create(tt.args.ctx, tt.args.create)
 			if !errors.Is(err, tt.wantErr) {
@@ -391,7 +406,7 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	ctx := context.Background()
 	equipment := mock_models.NewEquipment(t)
-	clockMock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_clock.NewMockClock(ctrl)
 	update := mock_models.NewEquipmentUpdate(t)
 	now := equipment.UpdatedAt
 	type fields struct {
@@ -414,7 +429,7 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
 				equipmentRepository.EXPECT().
 					Get(ctx, update.ID).Return(equipment, nil)
 				equipmentRepository.EXPECT().
@@ -422,7 +437,7 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
+				clock:               mockClock,
 				logger:              logger,
 			},
 			args: args{
@@ -435,7 +450,7 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 		{
 			name: "update error",
 			setup: func() {
-				clockMock.EXPECT().Now().Return(now)
+				mockClock.EXPECT().Now().Return(now)
 				equipmentRepository.EXPECT().
 					Get(ctx, update.ID).
 					Return(equipment, nil)
@@ -445,7 +460,7 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
+				clock:               mockClock,
 				logger:              logger,
 			},
 			args: args{
@@ -464,7 +479,7 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
+				clock:               mockClock,
 				logger:              logger,
 			},
 			args: args{
@@ -480,7 +495,7 @@ func TestEquipmentUseCase_Update(t *testing.T) {
 			},
 			fields: fields{
 				equipmentRepository: equipmentRepository,
-				clock:               clockMock,
+				clock:               mockClock,
 				logger:              logger,
 			},
 			args: args{
