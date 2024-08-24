@@ -24,6 +24,7 @@ type App struct {
 	authUseCase     *usecases.AuthUseCase
 	authInterceptor *interceptors.AuthInterceptor
 	authHandler     *handlers.AuthServiceServer
+	authMiddleware  *handlers.AuthMiddleware
 }
 
 func NewApp(
@@ -38,6 +39,7 @@ func NewApp(
 	authUseCase := usecases.NewAuthUseCase(authRepository, userRepository, logger)
 	authInterceptor := interceptors.NewAuthInterceptor(authUseCase, clock, logger)
 	authHandler := handlers.NewAuthServiceServer(authInterceptor)
+	authMiddleware := handlers.NewAuthMiddleware(authUseCase, logger, config)
 	return &App{
 		db:              db,
 		grpcServer:      grpcServer,
@@ -46,10 +48,12 @@ func NewApp(
 		authUseCase:     authUseCase,
 		authInterceptor: authInterceptor,
 		authHandler:     authHandler,
+		authMiddleware:  authMiddleware,
 	}
 }
 func (a *App) Start(ctx context.Context) error {
 	a.grpcServer.AddHandler(&examplepb.AuthService_ServiceDesc, a.authHandler)
+	a.grpcServer.AddInterceptor(a.authMiddleware.UnaryServerInterceptor)
 	return nil
 }
 func (a *App) Stop(ctx context.Context) error {

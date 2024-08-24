@@ -6,10 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	mockUseCases "github.com/018bf/example/internal/app/auth/usecases/mock"
-	userModels "github.com/018bf/example/internal/app/user/models"
 	"github.com/mikalai-mitsin/example/internal/app/auth/models"
 	mockModels "github.com/mikalai-mitsin/example/internal/app/auth/models/mock"
+	mockUseCases "github.com/mikalai-mitsin/example/internal/app/auth/usecases/mock"
+	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
 	mockUserModels "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
