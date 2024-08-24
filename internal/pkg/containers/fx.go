@@ -44,27 +44,35 @@ func NewMigrateContainer(config string) *fx.App {
 	return app
 }
 func NewGRPCContainer(config string) *fx.App {
-	app := fx.New(fx.Provide(func() string {
-		return config
-	}), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, app *session.App) {
-		lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *arch.App) {
-		lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *user.App) {
-		lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *auth.App) {
-		lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, logger *log.Log, server *grpc.Server, shutdowner fx.Shutdowner) {
-		lifecycle.Append(fx.Hook{OnStart: func(ctx context.Context) error {
-			go func() {
-				err := server.Start(ctx)
-				if err != nil {
-					logger.Error("shutdown", log.Any("error", err))
-					_ = shutdowner.Shutdown()
-				}
-			}()
-			return nil
-		}, OnStop: server.Stop})
-	}))
+	app := fx.New(
+		fx.Provide(func() string {
+			return config
+		}),
+		FXModule,
+		fx.Invoke(func(lifecycle fx.Lifecycle, app *auth.App) {
+			lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
+		}),
+		fx.Invoke(func(lifecycle fx.Lifecycle, app *session.App) {
+			lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
+		}),
+		fx.Invoke(func(lifecycle fx.Lifecycle, app *arch.App) {
+			lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
+		}),
+		fx.Invoke(func(lifecycle fx.Lifecycle, app *user.App) {
+			lifecycle.Append(fx.Hook{OnStart: app.Start, OnStop: app.Stop})
+		}),
+		fx.Invoke(func(lifecycle fx.Lifecycle, logger *log.Log, server *grpc.Server, shutdowner fx.Shutdowner) {
+			lifecycle.Append(fx.Hook{OnStart: func(ctx context.Context) error {
+				go func() {
+					err := server.Start(ctx)
+					if err != nil {
+						logger.Error("shutdown", log.Any("error", err))
+						_ = shutdowner.Shutdown()
+					}
+				}()
+				return nil
+			}, OnStop: server.Stop})
+		}),
+	)
 	return app
 }

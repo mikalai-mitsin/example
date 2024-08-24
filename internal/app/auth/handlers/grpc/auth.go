@@ -8,14 +8,6 @@ import (
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 )
 
-// AuthInterceptor - domain layer repository interface
-//
-//go:generate mockgen -build_flags=-mod=mod -destination mock/auth_interceptor.go . AuthInterceptor
-type AuthInterceptor interface {
-	CreateToken(ctx context.Context, login *models.Login) (*models.TokenPair, error)
-	RefreshToken(ctx context.Context, login models.Token) (*models.TokenPair, error)
-}
-
 type AuthServiceServer struct {
 	examplepb.UnimplementedAuthServiceServer
 	authInterceptor AuthInterceptor
