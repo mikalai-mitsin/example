@@ -6,14 +6,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/018bf/example/internal/app/auth/models"
-	mockModels "github.com/018bf/example/internal/app/auth/models/mock"
 	mockUseCases "github.com/018bf/example/internal/app/auth/usecases/mock"
 	userModels "github.com/018bf/example/internal/app/user/models"
-	mockUserModels "github.com/018bf/example/internal/app/user/models/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mockLog "github.com/018bf/example/internal/pkg/log/mock"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	mockModels "github.com/mikalai-mitsin/example/internal/app/auth/models/mock"
+	mockUserModels "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
 	"go.uber.org/mock/gomock"
 )
@@ -23,13 +21,13 @@ func TestAuthUseCase_Auth(t *testing.T) {
 	defer ctrl.Finish()
 	userRepository := mockUseCases.NewMockUserRepository(ctrl)
 	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockLog.NewMockLogger(ctrl)
+	logger := mockUseCases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	user := mockUserModels.NewUser(t)
 	type fields struct {
 		authRepository AuthRepository
 		userRepository UserRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -134,7 +132,7 @@ func TestAuthUseCase_CreateToken(t *testing.T) {
 	defer ctrl.Finish()
 	userRepository := mockUseCases.NewMockUserRepository(ctrl)
 	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockLog.NewMockLogger(ctrl)
+	logger := mockUseCases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	user := mockUserModels.NewUser(t)
 	login := mockModels.NewLogin(t)
@@ -144,7 +142,7 @@ func TestAuthUseCase_CreateToken(t *testing.T) {
 	type fields struct {
 		authRepository AuthRepository
 		userRepository UserRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -265,13 +263,13 @@ func TestAuthUseCase_RefreshToken(t *testing.T) {
 	defer ctrl.Finish()
 	userRepository := mockUseCases.NewMockUserRepository(ctrl)
 	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockLog.NewMockLogger(ctrl)
+	logger := mockUseCases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	pair := mockModels.NewTokenPair(t)
 	type fields struct {
 		authRepository AuthRepository
 		userRepository UserRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx     context.Context
@@ -351,12 +349,12 @@ func TestAuthUseCase_ValidateToken(t *testing.T) {
 	defer ctrl.Finish()
 	userRepository := mockUseCases.NewMockUserRepository(ctrl)
 	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockLog.NewMockLogger(ctrl)
+	logger := mockUseCases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	type fields struct {
 		authRepository AuthRepository
 		userRepository UserRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -429,12 +427,11 @@ func TestNewAuthUseCase(t *testing.T) {
 	defer ctrl.Finish()
 	userRepository := mockUseCases.NewMockUserRepository(ctrl)
 	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockLog.NewMockLogger(ctrl)
+	logger := mockUseCases.NewMockLogger(ctrl)
 	type args struct {
-		authRepository       AuthRepository
-		userRepository       UserRepository
-		permissionRepository PermissionRepository
-		logger               log.Logger
+		authRepository AuthRepository
+		userRepository UserRepository
+		logger         Logger
 	}
 	tests := []struct {
 		name string
@@ -457,207 +454,11 @@ func TestNewAuthUseCase(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewAuthUseCase(tt.args.authRepository, tt.args.userRepository, tt.args.permissionRepository, tt.args.logger); !reflect.DeepEqual(
+			if got := NewAuthUseCase(tt.args.authRepository, tt.args.userRepository, tt.args.logger); !reflect.DeepEqual(
 				got,
 				tt.want,
 			) {
 				t.Errorf("NewAuthUseCase() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestAuthUseCase_HasPermission(t *testing.T) {
-	ctx := context.Background()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	permissionRepository := mockUseCases.NewMockPermissionRepository(ctrl)
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	user := mockUserModels.NewUser(t)
-	type fields struct {
-		authRepository       AuthRepository
-		userRepository       UserRepository
-		logger               log.Logger
-		permissionRepository PermissionRepository
-	}
-	type args struct {
-		in0        context.Context
-		in1        *userModels.User
-		permission userModels.PermissionID
-	}
-	tests := []struct {
-		name    string
-		setup   func()
-		fields  fields
-		args    args
-		wantErr error
-	}{
-		{
-			name: "ok",
-			setup: func() {
-				permissionRepository.EXPECT().
-					HasPermission(ctx, userModels.PermissionIDUserList, user).
-					Return(nil)
-			},
-			fields: fields{
-				authRepository:       authRepository,
-				permissionRepository: permissionRepository,
-				userRepository:       userRepository,
-				logger:               nil,
-			},
-			args: args{
-				in0:        ctx,
-				in1:        user,
-				permission: userModels.PermissionIDUserList,
-			},
-			wantErr: nil,
-		},
-		{
-			name: "error",
-			setup: func() {
-				permissionRepository.EXPECT().
-					HasPermission(ctx, userModels.PermissionIDUserList, user).
-					Return(errs.NewPermissionDeniedError())
-			},
-			fields: fields{
-				authRepository:       authRepository,
-				permissionRepository: permissionRepository,
-				userRepository:       userRepository,
-				logger:               nil,
-			},
-			args: args{
-				in0:        ctx,
-				in1:        user,
-				permission: userModels.PermissionIDUserList,
-			},
-			wantErr: errs.NewPermissionDeniedError(),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			u := AuthUseCase{
-				authRepository:       tt.fields.authRepository,
-				userRepository:       tt.fields.userRepository,
-				permissionRepository: tt.fields.permissionRepository,
-				logger:               tt.fields.logger,
-			}
-			tt.setup()
-			if err := u.HasPermission(tt.args.in0, tt.args.in1, tt.args.permission); !errors.Is(
-				err,
-				tt.wantErr,
-			) {
-				t.Errorf("HasPermission() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestAuthUseCase_HasObjectPermission(t *testing.T) {
-	ctx := context.Background()
-	user := mockUserModels.NewUser(t)
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	permissionRepository := mockUseCases.NewMockPermissionRepository(ctrl)
-	type fields struct {
-		authRepository       AuthRepository
-		userRepository       UserRepository
-		permissionRepository PermissionRepository
-		logger               log.Logger
-	}
-	type args struct {
-		in0        context.Context
-		user       *userModels.User
-		permission userModels.PermissionID
-		object     interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr error
-		setup   func()
-	}{
-		{
-			name: "error",
-			setup: func() {
-				permissionRepository.EXPECT().
-					HasObjectPermission(ctx, userModels.PermissionIDUserDetail, user, "user").
-					Return(errs.NewPermissionDeniedError())
-			},
-			fields: fields{
-				authRepository:       authRepository,
-				permissionRepository: permissionRepository,
-				userRepository:       userRepository,
-				logger:               nil,
-			},
-			args: args{
-				in0:        ctx,
-				user:       user,
-				permission: userModels.PermissionIDUserDetail,
-				object:     "user",
-			},
-			wantErr: errs.NewPermissionDeniedError(),
-		},
-		{
-			name: "ok",
-			setup: func() {
-				permissionRepository.EXPECT().
-					HasObjectPermission(ctx, userModels.PermissionIDUserDetail, user, user).
-					Return(nil)
-			},
-			fields: fields{
-				authRepository:       authRepository,
-				permissionRepository: permissionRepository,
-				userRepository:       userRepository,
-				logger:               nil,
-			},
-			args: args{
-				in0:        ctx,
-				user:       user,
-				permission: userModels.PermissionIDUserDetail,
-				object:     user,
-			},
-			wantErr: nil,
-		},
-		{
-			name: "ok with user",
-			setup: func() {
-				permissionRepository.EXPECT().
-					HasObjectPermission(ctx, userModels.PermissionIDUserDelete, user, user).
-					Return(nil)
-			},
-			fields: fields{
-				authRepository:       authRepository,
-				permissionRepository: permissionRepository,
-				userRepository:       userRepository,
-				logger:               nil,
-			},
-			args: args{
-				in0:        ctx,
-				user:       user,
-				permission: userModels.PermissionIDUserDelete,
-				object:     user,
-			},
-			wantErr: nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			u := AuthUseCase{
-				authRepository:       tt.fields.authRepository,
-				userRepository:       tt.fields.userRepository,
-				permissionRepository: tt.fields.permissionRepository,
-				logger:               tt.fields.logger,
-			}
-			tt.setup()
-			if err := u.HasObjectPermission(tt.args.in0, tt.args.user, tt.args.permission, tt.args.object); !errors.Is(
-				err,
-				tt.wantErr,
-			) {
-				t.Errorf("HasObjectPermission() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -668,14 +469,14 @@ func TestAuthUseCase_CreateTokenByUser(t *testing.T) {
 	defer ctrl.Finish()
 	userRepository := mockUseCases.NewMockUserRepository(ctrl)
 	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockLog.NewMockLogger(ctrl)
+	logger := mockUseCases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	user := mockUserModels.NewUser(t)
 	tokenPair := mockModels.NewTokenPair(t)
 	type fields struct {
 		authRepository AuthRepository
 		userRepository UserRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx  context.Context

@@ -1,19 +1,18 @@
-package grpc
+package handlers
 
 import (
 	"context"
 	"errors"
 
-	mock_grpc "github.com/018bf/example/internal/app/auth/handlers/grpc/mock"
-	"github.com/018bf/example/internal/app/auth/models"
-	mock_models "github.com/018bf/example/internal/app/auth/models/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/grpc"
+	mock_grpc "github.com/mikalai-mitsin/example/internal/app/auth/handlers/grpc/mock"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/auth/models/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
 	"reflect"
 	"testing"
 
-	examplepb "github.com/018bf/example/pkg/examplepb/v1"
+	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"go.uber.org/mock/gomock"
 )
 
@@ -80,7 +79,7 @@ func TestAuthServiceServer_CreateToken(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewBadTokenError()),
+			wantErr: errs.NewBadTokenError(),
 		},
 	}
 	for _, tt := range tests {
@@ -163,7 +162,7 @@ func TestAuthServiceServer_RefreshToken(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewBadTokenError()),
+			wantErr: errs.NewBadTokenError(),
 		},
 	}
 	for _, tt := range tests {

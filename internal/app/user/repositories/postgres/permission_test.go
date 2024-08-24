@@ -6,13 +6,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/018bf/example/internal/app/user/models"
-	mock_models "github.com/018bf/example/internal/app/user/models/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/postgres"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
+	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 )
 
 func TestPermissionRepository_objectAnybody(t *testing.T) {

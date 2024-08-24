@@ -7,17 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/018bf/example/internal/app/session/models"
-	mock_models "github.com/018bf/example/internal/app/session/models/mock"
-	mock_usecases "github.com/018bf/example/internal/app/session/usecases/mock"
-	"github.com/018bf/example/internal/pkg/clock"
-	mock_clock "github.com/018bf/example/internal/pkg/clock/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/018bf/example/internal/pkg/uuid"
-	mock_uuid "github.com/018bf/example/internal/pkg/uuid/mock"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/app/session/models"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/session/models/mock"
+	mock_usecases "github.com/mikalai-mitsin/example/internal/app/session/usecases/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"go.uber.org/mock/gomock"
 )
 
@@ -25,14 +20,14 @@ func TestNewSessionUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionRepository := mock_usecases.NewMockSessionRepository(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
-	mockLogger := mock_log.NewMockLogger(ctrl)
-	mockUUID := mock_uuid.NewMockGenerator(ctrl)
+	mockClock := mock_usecases.NewMockClock(ctrl)
+	mockLogger := mock_usecases.NewMockLogger(ctrl)
+	mockUUID := mock_usecases.NewMockUUIDGenerator(ctrl)
 	type args struct {
 		sessionRepository SessionRepository
-		clock             clock.Clock
-		logger            log.Logger
-		uuid              uuid.Generator
+		clock             Clock
+		logger            Logger
+		uuid              UUIDGenerator
 	}
 	tests := []struct {
 		name  string
@@ -75,12 +70,12 @@ func TestSessionUseCase_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionRepository := mock_usecases.NewMockSessionRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	session := mock_models.NewSession(t)
 	type fields struct {
 		sessionRepository SessionRepository
-		logger            log.Logger
+		logger            Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -152,7 +147,7 @@ func TestSessionUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionRepository := mock_usecases.NewMockSessionRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	var listSessions []*models.Session
 	count := faker.New().UInt64Between(2, 20)
@@ -162,7 +157,7 @@ func TestSessionUseCase_List(t *testing.T) {
 	filter := mock_models.NewSessionFilter(t)
 	type fields struct {
 		sessionRepository SessionRepository
-		logger            log.Logger
+		logger            Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -261,17 +256,17 @@ func TestSessionUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionRepository := mock_usecases.NewMockSessionRepository(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
-	mockLogger := mock_log.NewMockLogger(ctrl)
-	mockUUID := mock_uuid.NewMockGenerator(ctrl)
+	mockClock := mock_usecases.NewMockClock(ctrl)
+	mockLogger := mock_usecases.NewMockLogger(ctrl)
+	mockUUID := mock_usecases.NewMockUUIDGenerator(ctrl)
 	ctx := context.Background()
 	create := mock_models.NewSessionCreate(t)
 	now := time.Now().UTC()
 	type fields struct {
 		sessionRepository SessionRepository
-		clock             clock.Clock
-		logger            log.Logger
-		uuid              uuid.Generator
+		clock             Clock
+		logger            Logger
+		uuid              UUIDGenerator
 	}
 	type args struct {
 		ctx    context.Context
@@ -399,16 +394,16 @@ func TestSessionUseCase_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionRepository := mock_usecases.NewMockSessionRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	session := mock_models.NewSession(t)
-	mockClock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_usecases.NewMockClock(ctrl)
 	update := mock_models.NewSessionUpdate(t)
 	now := session.UpdatedAt
 	type fields struct {
 		sessionRepository SessionRepository
-		clock             clock.Clock
-		logger            log.Logger
+		clock             Clock
+		logger            Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -528,12 +523,12 @@ func TestSessionUseCase_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionRepository := mock_usecases.NewMockSessionRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	session := mock_models.NewSession(t)
 	type fields struct {
 		sessionRepository SessionRepository
-		logger            log.Logger
+		logger            Logger
 	}
 	type args struct {
 		ctx context.Context

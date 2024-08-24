@@ -9,15 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/018bf/example/internal/app/auth/models"
-	userModels "github.com/018bf/example/internal/app/user/models"
-	mockUserModels "github.com/018bf/example/internal/app/user/models/mock"
-	"github.com/018bf/example/internal/pkg/clock"
-	mock_clock "github.com/018bf/example/internal/pkg/clock/mock"
-	"github.com/018bf/example/internal/pkg/configs"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	mock_jwt "github.com/mikalai-mitsin/example/internal/app/auth/repositories/jwt/mock"
+	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
+	mockUserModels "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/configs"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
 	"github.com/golang-jwt/jwt/v4"
 	"go.uber.org/mock/gomock"
@@ -26,8 +23,8 @@ import (
 func TestAuthRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
+	logger := mock_jwt.NewMockLogger(ctrl)
+	mockClock := mock_jwt.NewMockClock(ctrl)
 	mockClock.EXPECT().Now().Return(time.Now()).AnyTimes()
 	config := configs.NewMockConfig(t)
 	publicKey, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(config.Auth.PublicKey))
@@ -37,8 +34,8 @@ func TestAuthRepository_Create(t *testing.T) {
 		refreshTTL time.Duration
 		publicKey  *rsa.PublicKey
 		privateKey *rsa.PrivateKey
-		clock      clock.Clock
-		logger     log.Logger
+		clock      Clock
+		logger     Logger
 	}
 	type args struct {
 		in0  context.Context
@@ -103,8 +100,8 @@ func TestAuthRepository_GetSubject(t *testing.T) {
 		refreshTTL time.Duration
 		publicKey  *rsa.PublicKey
 		privateKey *rsa.PrivateKey
-		clock      clock.Clock
-		logger     log.Logger
+		clock      Clock
+		logger     Logger
 	}
 	type args struct {
 		in0   context.Context
@@ -181,8 +178,8 @@ func TestAuthRepository_GetSubject(t *testing.T) {
 func TestAuthRepository_RefreshToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
+	logger := mock_jwt.NewMockLogger(ctrl)
+	mockClock := mock_jwt.NewMockClock(ctrl)
 	mockClock.EXPECT().Now().Return(time.Date(2022, 2, 22, 0, 0, 0, 0, time.UTC)).AnyTimes()
 	privatePEM := []byte(
 		"-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQChTrU+r2uTQPQOxBCwKVAM0AJPnB4MEh+MggX5lkrGOPtzBglz\nV2DF+ydVknJoqmUFbnczXJsAFaaaXCYm7N/kOcwwsL+q7oKBKbiJYtrYGr7uoJrO\nJ1SIWq/RnvkWpGGqth6SvryEB742l0WAiG3nxWY+m1EXClDQU1sAa4LMeQIDAQAB\nAoGAGZAxpPeD4tg+VUC5LFG/v+gPFbK2CE+u9EN+0ukAfJ13K+lfAgps6bM9rpAA\n1Zl7XPr+pQMeBUtpFblYyn5rlK0oultlJI//H0I3+6newKp7LewPIrV08lGEn1hB\n2XtSAvZVShsCmtyw8UvXwHk01UJA0pEyGdkWiHE3jEuCUSkCQQDSsulNRw/G+8xZ\nUXTCgb9ep9EojDIQYqAeomX9/CMgS6QAWERPt9Q37ZHkki0i1iicOdZc94C7PxA5\nNe9DhGofAkEAw/09n+v2YBPpYY1Wik1NKA4I1Q3/zZlsop3W+fCiJZiO3Dhef0TT\nUrQmYSMftbe6peSo3yQGVPnBGB+0phSmZwJAWJaW10IQlSZblhZUlE9/SeofXAAO\nMKt3DUpUvcRcdIC5NNfn6Oiu1tERbVw0lBgdPQpoYfBCdPgf9x4BOo8bGwJBAKiX\nE8aYXNQi7LQMt6+6dS+KexCCvVPnsWplKkLQOzrp86H+H1ONKddPvl/6rdFMHZOM\nkbN5MrUwLmkJBQWEZ+sCQQClKUu0DYu+XgbDPrYgxJNAgWTtVTZ2wLCp46X4iHca\ngjOIscTm3jUVsz8bCkXrVlFsWRVCnvQwKx788Awq6mdw\n-----END RSA PRIVATE KEY-----",
@@ -197,8 +194,8 @@ func TestAuthRepository_RefreshToken(t *testing.T) {
 		refreshTTL time.Duration
 		publicKey  *rsa.PublicKey
 		privateKey *rsa.PrivateKey
-		clock      clock.Clock
-		logger     log.Logger
+		clock      Clock
+		logger     Logger
 	}
 	type args struct {
 		in0   context.Context
@@ -292,8 +289,8 @@ func TestAuthRepository_Validate(t *testing.T) {
 		refreshTTL time.Duration
 		publicKey  *rsa.PublicKey
 		privateKey *rsa.PrivateKey
-		clock      clock.Clock
-		logger     log.Logger
+		clock      Clock
+		logger     Logger
 	}
 	type args struct {
 		in0   context.Context
@@ -371,8 +368,8 @@ func TestAuthRepository_Validate(t *testing.T) {
 func TestAuthRepository_createPair(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
+	logger := mock_jwt.NewMockLogger(ctrl)
+	mockClock := mock_jwt.NewMockClock(ctrl)
 	mockClock.EXPECT().Now().Return(time.Date(2022, 2, 22, 0, 0, 0, 0, time.UTC)).AnyTimes()
 	privatePEM := []byte(
 		"-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQChTrU+r2uTQPQOxBCwKVAM0AJPnB4MEh+MggX5lkrGOPtzBglz\nV2DF+ydVknJoqmUFbnczXJsAFaaaXCYm7N/kOcwwsL+q7oKBKbiJYtrYGr7uoJrO\nJ1SIWq/RnvkWpGGqth6SvryEB742l0WAiG3nxWY+m1EXClDQU1sAa4LMeQIDAQAB\nAoGAGZAxpPeD4tg+VUC5LFG/v+gPFbK2CE+u9EN+0ukAfJ13K+lfAgps6bM9rpAA\n1Zl7XPr+pQMeBUtpFblYyn5rlK0oultlJI//H0I3+6newKp7LewPIrV08lGEn1hB\n2XtSAvZVShsCmtyw8UvXwHk01UJA0pEyGdkWiHE3jEuCUSkCQQDSsulNRw/G+8xZ\nUXTCgb9ep9EojDIQYqAeomX9/CMgS6QAWERPt9Q37ZHkki0i1iicOdZc94C7PxA5\nNe9DhGofAkEAw/09n+v2YBPpYY1Wik1NKA4I1Q3/zZlsop3W+fCiJZiO3Dhef0TT\nUrQmYSMftbe6peSo3yQGVPnBGB+0phSmZwJAWJaW10IQlSZblhZUlE9/SeofXAAO\nMKt3DUpUvcRcdIC5NNfn6Oiu1tERbVw0lBgdPQpoYfBCdPgf9x4BOo8bGwJBAKiX\nE8aYXNQi7LQMt6+6dS+KexCCvVPnsWplKkLQOzrp86H+H1ONKddPvl/6rdFMHZOM\nkbN5MrUwLmkJBQWEZ+sCQQClKUu0DYu+XgbDPrYgxJNAgWTtVTZ2wLCp46X4iHca\ngjOIscTm3jUVsz8bCkXrVlFsWRVCnvQwKx788Awq6mdw\n-----END RSA PRIVATE KEY-----",
@@ -387,8 +384,8 @@ func TestAuthRepository_createPair(t *testing.T) {
 		refreshTTL time.Duration
 		publicKey  *rsa.PublicKey
 		privateKey *rsa.PrivateKey
-		clock      clock.Clock
-		logger     log.Logger
+		clock      Clock
+		logger     Logger
 	}
 	type args struct {
 		subject string
@@ -434,8 +431,8 @@ func TestAuthRepository_createPair(t *testing.T) {
 func TestAuthRepository_keyFunc(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
+	logger := mock_jwt.NewMockLogger(ctrl)
+	mockClock := mock_jwt.NewMockClock(ctrl)
 	privatePEM := []byte(
 		"-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQChTrU+r2uTQPQOxBCwKVAM0AJPnB4MEh+MggX5lkrGOPtzBglz\nV2DF+ydVknJoqmUFbnczXJsAFaaaXCYm7N/kOcwwsL+q7oKBKbiJYtrYGr7uoJrO\nJ1SIWq/RnvkWpGGqth6SvryEB742l0WAiG3nxWY+m1EXClDQU1sAa4LMeQIDAQAB\nAoGAGZAxpPeD4tg+VUC5LFG/v+gPFbK2CE+u9EN+0ukAfJ13K+lfAgps6bM9rpAA\n1Zl7XPr+pQMeBUtpFblYyn5rlK0oultlJI//H0I3+6newKp7LewPIrV08lGEn1hB\n2XtSAvZVShsCmtyw8UvXwHk01UJA0pEyGdkWiHE3jEuCUSkCQQDSsulNRw/G+8xZ\nUXTCgb9ep9EojDIQYqAeomX9/CMgS6QAWERPt9Q37ZHkki0i1iicOdZc94C7PxA5\nNe9DhGofAkEAw/09n+v2YBPpYY1Wik1NKA4I1Q3/zZlsop3W+fCiJZiO3Dhef0TT\nUrQmYSMftbe6peSo3yQGVPnBGB+0phSmZwJAWJaW10IQlSZblhZUlE9/SeofXAAO\nMKt3DUpUvcRcdIC5NNfn6Oiu1tERbVw0lBgdPQpoYfBCdPgf9x4BOo8bGwJBAKiX\nE8aYXNQi7LQMt6+6dS+KexCCvVPnsWplKkLQOzrp86H+H1ONKddPvl/6rdFMHZOM\nkbN5MrUwLmkJBQWEZ+sCQQClKUu0DYu+XgbDPrYgxJNAgWTtVTZ2wLCp46X4iHca\ngjOIscTm3jUVsz8bCkXrVlFsWRVCnvQwKx788Awq6mdw\n-----END RSA PRIVATE KEY-----",
 	)
@@ -449,8 +446,8 @@ func TestAuthRepository_keyFunc(t *testing.T) {
 		refreshTTL time.Duration
 		publicKey  *rsa.PublicKey
 		privateKey *rsa.PrivateKey
-		clock      clock.Clock
-		logger     log.Logger
+		clock      Clock
+		logger     Logger
 	}
 	type args struct {
 		in0 *jwt.Token
@@ -522,8 +519,8 @@ func TestAuthRepository_validate(t *testing.T) {
 		refreshTTL time.Duration
 		publicKey  *rsa.PublicKey
 		privateKey *rsa.PrivateKey
-		clock      clock.Clock
-		logger     log.Logger
+		clock      Clock
+		logger     Logger
 	}
 	type args struct {
 		token models.Token
@@ -613,15 +610,15 @@ func TestAuthRepository_validate(t *testing.T) {
 func TestNewAuthRepository(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
+	logger := mock_jwt.NewMockLogger(ctrl)
+	mockClock := mock_jwt.NewMockClock(ctrl)
 	config := configs.NewMockConfig(t)
 	publicKey, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(config.Auth.PublicKey))
 	privateKey, _ := jwt.ParseRSAPrivateKeyFromPEM([]byte(config.Auth.PrivateKey))
 	type args struct {
 		config *configs.Config
-		clock  clock.Clock
-		logger log.Logger
+		clock  Clock
+		logger Logger
 	}
 	tests := []struct {
 		name string

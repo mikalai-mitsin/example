@@ -5,23 +5,22 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/018bf/example/internal/app/arch/models"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/postgres"
-	"github.com/018bf/example/internal/pkg/uuid"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"github.com/mikalai-mitsin/example/internal/app/arch/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type ArchRepository struct {
 	database *sqlx.DB
-	logger   log.Logger
+	logger   Logger
 }
 
-func NewArchRepository(database *sqlx.DB, logger log.Logger) *ArchRepository {
+func NewArchRepository(database *sqlx.DB, logger Logger) *ArchRepository {
 	return &ArchRepository{database: database, logger: logger}
 }
 

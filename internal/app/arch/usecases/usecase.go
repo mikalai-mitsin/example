@@ -3,24 +3,22 @@ package usecases
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/arch/models"
-	"github.com/018bf/example/internal/pkg/clock"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/uuid"
+	"github.com/mikalai-mitsin/example/internal/app/arch/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type ArchUseCase struct {
 	archRepository ArchRepository
-	clock          clock.Clock
-	logger         log.Logger
-	uuid           uuid.Generator
+	clock          Clock
+	logger         Logger
+	uuid           UUIDGenerator
 }
 
 func NewArchUseCase(
 	archRepository ArchRepository,
-	clock clock.Clock,
-	logger log.Logger,
-	uuid uuid.Generator,
+	clock Clock,
+	logger Logger,
+	uuid UUIDGenerator,
 ) *ArchUseCase {
 	return &ArchUseCase{archRepository: archRepository, clock: clock, logger: logger, uuid: uuid}
 }

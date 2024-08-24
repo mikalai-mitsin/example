@@ -1,24 +1,21 @@
-package grpc
+package handlers
 
 import (
 	"context"
 	"errors"
 
-	mock_grpc "github.com/018bf/example/internal/app/user/handlers/grpc/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/grpc"
-	"github.com/018bf/example/internal/pkg/log"
+	mock_grpc "github.com/mikalai-mitsin/example/internal/app/user/handlers/grpc/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
 	"reflect"
 	"testing"
 
-	"github.com/018bf/example/internal/app/user/models"
-	mock_models "github.com/018bf/example/internal/app/user/models/mock"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
-	examplepb "github.com/018bf/example/pkg/examplepb/v1"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -29,10 +26,10 @@ func TestNewUserServiceServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	type args struct {
 		userInterceptor UserInterceptor
-		logger          log.Logger
+		logger          Logger
 	}
 	tests := []struct {
 		name string
@@ -67,14 +64,14 @@ func TestUserServiceServer_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	// create := mock_models.NewUserCreate(t)
 	user := mock_models.NewUser(t)
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
 		userInterceptor                UserInterceptor
-		logger                         log.Logger
+		logger                         Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -127,7 +124,7 @@ func TestUserServiceServer_Create(t *testing.T) {
 				input: &examplepb.UserCreate{},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("interceptor error")),
+			wantErr: errs.NewUnexpectedBehaviorError("interceptor error"),
 		},
 	}
 	for _, tt := range tests {
@@ -154,13 +151,13 @@ func TestUserServiceServer_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	id := uuid.NewUUID()
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
 		userInterceptor                UserInterceptor
-		logger                         log.Logger
+		logger                         Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -212,11 +209,11 @@ func TestUserServiceServer_Delete(t *testing.T) {
 				},
 			},
 			want: nil,
-			wantErr: grpc.DecodeError(&errs.Error{
+			wantErr: &errs.Error{
 				Code:    13,
 				Message: "Unexpected behavior.",
 				Params:  errs.Params{{Key: "details", Value: "i error"}},
-			}),
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -243,13 +240,13 @@ func TestUserServiceServer_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	user := mock_models.NewUser(t)
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
 		userInterceptor                UserInterceptor
-		logger                         log.Logger
+		logger                         Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -301,7 +298,7 @@ func TestUserServiceServer_Get(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("i error")),
+			wantErr: errs.NewUnexpectedBehaviorError("i error"),
 		},
 	}
 	for _, tt := range tests {
@@ -328,7 +325,7 @@ func TestUserServiceServer_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	filter := mock_models.NewUserFilter(t)
 	var ids []uuid.UUID
@@ -350,7 +347,7 @@ func TestUserServiceServer_List(t *testing.T) {
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
 		userInterceptor                UserInterceptor
-		logger                         log.Logger
+		logger                         Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -412,7 +409,7 @@ func TestUserServiceServer_List(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("i error")),
+			wantErr: errs.NewUnexpectedBehaviorError("i error"),
 		},
 	}
 	for _, tt := range tests {
@@ -439,14 +436,14 @@ func TestUserServiceServer_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	user := mock_models.NewUser(t)
 	update := mock_models.NewUserUpdate(t)
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
 		userInterceptor                UserInterceptor
-		logger                         log.Logger
+		logger                         Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -493,7 +490,7 @@ func TestUserServiceServer_Update(t *testing.T) {
 				input: decodeUserUpdate(update),
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("i error")),
+			wantErr: errs.NewUnexpectedBehaviorError("i error"),
 		},
 	}
 	for _, tt := range tests {

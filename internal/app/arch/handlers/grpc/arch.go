@@ -1,14 +1,12 @@
-package grpc
+package handlers
 
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/arch/models"
-	"github.com/018bf/example/internal/pkg/grpc"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
-	examplepb "github.com/018bf/example/pkg/examplepb/v1"
+	"github.com/mikalai-mitsin/example/internal/app/arch/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -18,13 +16,10 @@ import (
 type ArchServiceServer struct {
 	examplepb.UnimplementedArchServiceServer
 	archInterceptor ArchInterceptor
-	logger          log.Logger
+	logger          Logger
 }
 
-func NewArchServiceServer(
-	archInterceptor ArchInterceptor,
-	logger log.Logger,
-) examplepb.ArchServiceServer {
+func NewArchServiceServer(archInterceptor ArchInterceptor, logger Logger) *ArchServiceServer {
 	return &ArchServiceServer{archInterceptor: archInterceptor, logger: logger}
 }
 
@@ -34,7 +29,7 @@ func (s *ArchServiceServer) Create(
 ) (*examplepb.Arch, error) {
 	item, err := s.archInterceptor.Create(ctx, encodeArchCreate(input))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeArch(item), nil
 }
@@ -45,7 +40,7 @@ func (s *ArchServiceServer) Get(
 ) (*examplepb.Arch, error) {
 	item, err := s.archInterceptor.Get(ctx, uuid.UUID(input.GetId()))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeArch(item), nil
 }
@@ -56,7 +51,7 @@ func (s *ArchServiceServer) List(
 ) (*examplepb.ListArch, error) {
 	items, count, err := s.archInterceptor.List(ctx, encodeArchFilter(filter))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeListArch(items, count), nil
 }
@@ -67,7 +62,7 @@ func (s *ArchServiceServer) Update(
 ) (*examplepb.Arch, error) {
 	item, err := s.archInterceptor.Update(ctx, encodeArchUpdate(input))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeArch(item), nil
 }
@@ -77,7 +72,7 @@ func (s *ArchServiceServer) Delete(
 	input *examplepb.ArchDelete,
 ) (*emptypb.Empty, error) {
 	if err := s.archInterceptor.Delete(ctx, uuid.UUID(input.GetId())); err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return &emptypb.Empty{}, nil
 }

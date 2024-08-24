@@ -3,24 +3,22 @@ package usecases
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/clock"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/uuid"
+	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type UserUseCase struct {
 	userRepository UserRepository
-	clock          clock.Clock
-	logger         log.Logger
-	uuid           uuid.Generator
+	clock          Clock
+	logger         Logger
+	uuid           UUIDGenerator
 }
 
 func NewUserUseCase(
 	userRepository UserRepository,
-	clock clock.Clock,
-	logger log.Logger,
-	uuid uuid.Generator,
+	clock Clock,
+	logger Logger,
+	uuid UUIDGenerator,
 ) *UserUseCase {
 	return &UserUseCase{userRepository: userRepository, clock: clock, logger: logger, uuid: uuid}
 }

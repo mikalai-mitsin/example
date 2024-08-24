@@ -3,10 +3,10 @@ package models
 import (
 	"time"
 
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/uuid"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type Arch struct {

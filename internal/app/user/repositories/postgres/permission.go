@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/errs"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 )
 
 type objectPermissionChecker func(model any, user *models.User) error
@@ -20,7 +20,7 @@ var hasObjectPermission = map[models.PermissionID][]objectPermissionChecker{
 	models.PermissionIDUserUpdate: {objectOwner},
 	models.PermissionIDUserDelete: {
 		objectOwner,
-	}, models.PermissionIDSessionList: {objectAnybody}, models.PermissionIDSessionDetail: {objectAnybody}, models.PermissionIDSessionCreate: {objectAnybody}, models.PermissionIDSessionUpdate: {objectAnybody}, models.PermissionIDSessionDelete: {objectAnybody}, models.PermissionIDEquipmentList: {objectAnybody}, models.PermissionIDEquipmentDetail: {objectAnybody}, models.PermissionIDEquipmentCreate: {objectAnybody}, models.PermissionIDEquipmentUpdate: {objectAnybody}, models.PermissionIDEquipmentDelete: {objectAnybody}, models.PermissionIDPlanList: {objectAnybody}, models.PermissionIDPlanDetail: {objectAnybody}, models.PermissionIDPlanCreate: {objectAnybody}, models.PermissionIDPlanUpdate: {objectAnybody}, models.PermissionIDPlanDelete: {objectAnybody}, models.PermissionIDDayList: {objectAnybody}, models.PermissionIDDayDetail: {objectAnybody}, models.PermissionIDDayCreate: {objectAnybody}, models.PermissionIDDayUpdate: {objectAnybody}, models.PermissionIDDayDelete: {objectAnybody}, models.PermissionIDArchList: {objectAnybody}, models.PermissionIDArchDetail: {objectAnybody}, models.PermissionIDArchCreate: {objectAnybody}, models.PermissionIDArchUpdate: {objectAnybody}, models.PermissionIDArchDelete: {objectAnybody},
+	}, models.PermissionIDSessionList: {objectAnybody}, models.PermissionIDSessionDetail: {objectAnybody}, models.PermissionIDSessionCreate: {objectAnybody}, models.PermissionIDSessionUpdate: {objectAnybody}, models.PermissionIDSessionDelete: {objectAnybody}, models.PermissionIDArchList: {objectAnybody}, models.PermissionIDArchDetail: {objectAnybody}, models.PermissionIDArchCreate: {objectAnybody}, models.PermissionIDArchUpdate: {objectAnybody}, models.PermissionIDArchDelete: {objectAnybody},
 }
 
 type PermissionRepository struct {

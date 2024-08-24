@@ -7,19 +7,18 @@ import (
 	"reflect"
 	"testing"
 
-	mock_models "github.com/018bf/example/internal/app/session/models/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/018bf/example/internal/pkg/postgres"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/session/models/mock"
+	mock_postgres "github.com/mikalai-mitsin/example/internal/app/session/repositories/postgres/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"go.uber.org/mock/gomock"
 
-	"github.com/018bf/example/internal/app/session/models"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/mikalai-mitsin/example/internal/app/session/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 func TestNewSessionRepository(t *testing.T) {
@@ -31,7 +30,7 @@ func TestNewSessionRepository(t *testing.T) {
 	defer mockDB.Close()
 	type args struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	tests := []struct {
 		name  string
@@ -72,13 +71,13 @@ func TestSessionRepository_Create(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	query := "INSERT INTO public.sessions (created_at,updated_at,title,description) VALUES ($1,$2,$3,$4) RETURNING id"
 	session := mock_models.NewSession(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx  context.Context
@@ -160,13 +159,13 @@ func TestSessionRepository_Get(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions WHERE id = $1 LIMIT 1"
 	session := mock_models.NewSession(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -261,7 +260,7 @@ func TestSessionRepository_List(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	ctx := context.Background()
 	var listSessions []*models.Session
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
@@ -277,7 +276,7 @@ func TestSessionRepository_List(t *testing.T) {
 	query := "SELECT sessions.id, sessions.created_at, sessions.updated_at, sessions.title, sessions.description FROM public.sessions ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -374,13 +373,13 @@ func TestSessionRepository_Update(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	session := mock_models.NewSession(t)
 	query := `UPDATE public.sessions SET sessions.created_at = $1, sessions.updated_at = $2, sessions.title = $3, sessions.description = $4 WHERE id = $5`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx  context.Context
@@ -535,11 +534,11 @@ func TestSessionRepository_Delete(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	session := mock_models.NewSession(t)
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -649,7 +648,7 @@ func TestSessionRepository_Count(t *testing.T) {
 	filter := &models.SessionFilter{}
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx    context.Context

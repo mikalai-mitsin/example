@@ -5,9 +5,9 @@ import (
 	"embed"
 	"errors"
 
-	"github.com/018bf/example/internal/pkg/configs"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/mikalai-mitsin/example/internal/pkg/configs"
 
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jmoiron/sqlx"

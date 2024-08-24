@@ -9,19 +9,18 @@ import (
 
 	"github.com/lib/pq"
 
-	mock_models "github.com/018bf/example/internal/app/arch/models/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/018bf/example/internal/pkg/postgres"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/arch/models/mock"
+	mock_postgres "github.com/mikalai-mitsin/example/internal/app/arch/repositories/postgres/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"go.uber.org/mock/gomock"
 
-	"github.com/018bf/example/internal/app/arch/models"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/mikalai-mitsin/example/internal/app/arch/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 func TestNewArchRepository(t *testing.T) {
@@ -33,7 +32,7 @@ func TestNewArchRepository(t *testing.T) {
 	defer mockDB.Close()
 	type args struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	tests := []struct {
 		name  string
@@ -74,13 +73,13 @@ func TestArchRepository_Create(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	query := "INSERT INTO public.arches (created_at,updated_at,name,title,subtitle,tags,versions,old_versions,release,tested,mark,submarine,numb) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id"
 	arch := mock_models.NewArch(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx  context.Context
@@ -180,13 +179,13 @@ func TestArchRepository_Get(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches WHERE id = $1 LIMIT 1"
 	arch := mock_models.NewArch(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -279,7 +278,7 @@ func TestArchRepository_List(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	ctx := context.Background()
 	var listArches []*models.Arch
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
@@ -295,7 +294,7 @@ func TestArchRepository_List(t *testing.T) {
 	query := "SELECT arches.id, arches.created_at, arches.updated_at, arches.name, arches.title, arches.subtitle, arches.tags, arches.versions, arches.old_versions, arches.release, arches.tested, arches.mark, arches.submarine, arches.numb FROM public.arches ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -392,13 +391,13 @@ func TestArchRepository_Update(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	arch := mock_models.NewArch(t)
 	query := `UPDATE public.arches SET arches.created_at = $1, arches.updated_at = $2, arches.name = $3, arches.title = $4, arches.subtitle = $5, arches.tags = $6, arches.versions = $7, arches.old_versions = $8, arches.release = $9, arches.tested = $10, arches.mark = $11, arches.submarine = $12, arches.numb = $13 WHERE id = $14`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx  context.Context
@@ -598,11 +597,11 @@ func TestArchRepository_Delete(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	arch := mock_models.NewArch(t)
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -712,7 +711,7 @@ func TestArchRepository_Count(t *testing.T) {
 	filter := &models.ArchFilter{}
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx    context.Context

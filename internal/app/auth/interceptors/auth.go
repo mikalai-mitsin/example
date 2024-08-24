@@ -3,23 +3,17 @@ package interceptors
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/auth/models"
-	userModels "github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/clock"
-	"github.com/018bf/example/internal/pkg/log"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
 )
 
 type AuthInterceptor struct {
 	authUseCase AuthUseCase
-	clock       clock.Clock
-	logger      log.Logger
+	clock       Clock
+	logger      Logger
 }
 
-func NewAuthInterceptor(
-	authUseCase AuthUseCase,
-	clock clock.Clock,
-	logger log.Logger,
-) *AuthInterceptor {
+func NewAuthInterceptor(authUseCase AuthUseCase, clock Clock, logger Logger) *AuthInterceptor {
 	return &AuthInterceptor{authUseCase: authUseCase, clock: clock, logger: logger}
 }
 

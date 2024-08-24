@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package examplepb.v1;
 
-option go_package = "github.com/018bf/example/pkg/examplepb/v1";
+option go_package = "github.com/mikalai-mitsin/example/pkg/examplepb/v1";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";

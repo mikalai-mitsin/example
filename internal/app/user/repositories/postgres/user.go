@@ -5,22 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/postgres"
-	"github.com/018bf/example/internal/pkg/uuid"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type UserRepository struct {
 	database *sqlx.DB
-	logger   log.Logger
+	logger   Logger
 }
 
-func NewUserRepository(database *sqlx.DB, logger log.Logger) *UserRepository {
+func NewUserRepository(database *sqlx.DB, logger Logger) *UserRepository {
 	return &UserRepository{database: database, logger: logger}
 }
 

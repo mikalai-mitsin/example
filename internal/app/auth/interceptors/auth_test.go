@@ -6,16 +6,12 @@ import (
 	"reflect"
 	"testing"
 
-	mock_interceptors "github.com/018bf/example/internal/app/auth/interceptors/mock"
-	"github.com/018bf/example/internal/app/auth/models"
-	mock_models "github.com/018bf/example/internal/app/auth/models/mock"
-	user_models "github.com/018bf/example/internal/app/user/models"
-	mock_user_models "github.com/018bf/example/internal/app/user/models/mock"
-	"github.com/018bf/example/internal/pkg/clock"
-	mock_clock "github.com/018bf/example/internal/pkg/clock/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
+	mock_interceptors "github.com/mikalai-mitsin/example/internal/app/auth/interceptors/mock"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/auth/models/mock"
+	user_models "github.com/mikalai-mitsin/example/internal/app/user/models"
+	mock_user_models "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"go.uber.org/mock/gomock"
 )
 
@@ -23,13 +19,13 @@ func TestAuthInterceptor_Auth(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	authUseCase := mock_interceptors.NewMockAuthUseCase(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_interceptors.NewMockLogger(ctrl)
 	ctx := context.Background()
 	token := mock_models.NewToken(t)
 	user := mock_user_models.NewUser(t)
 	type fields struct {
 		authUseCase AuthUseCase
-		logger      log.Logger
+		logger      Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -102,15 +98,15 @@ func TestAuthInterceptor_CreateToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	authUseCase := mock_interceptors.NewMockAuthUseCase(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_interceptors.NewMockLogger(ctrl)
 	ctx := context.Background()
 	login := mock_models.NewLogin(t)
 	pair := mock_models.NewTokenPair(t)
-	clockmock := mock_clock.NewMockClock(ctrl)
+	clockmock := mock_interceptors.NewMockClock(ctrl)
 	type fields struct {
 		authUseCase AuthUseCase
-		logger      log.Logger
-		clock       clock.Clock
+		logger      Logger
+		clock       Clock
 	}
 	type args struct {
 		ctx   context.Context
@@ -186,15 +182,15 @@ func TestAuthInterceptor_RefreshToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	authUseCase := mock_interceptors.NewMockAuthUseCase(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_interceptors.NewMockLogger(ctrl)
 	ctx := context.Background()
 	pair := mock_models.NewTokenPair(t)
 	refresh := mock_models.NewToken(t)
-	clockmock := mock_clock.NewMockClock(ctrl)
+	clockmock := mock_interceptors.NewMockClock(ctrl)
 	type fields struct {
 		authUseCase AuthUseCase
-		logger      log.Logger
-		clock       clock.Clock
+		logger      Logger
+		clock       Clock
 	}
 	type args struct {
 		ctx     context.Context
@@ -269,12 +265,12 @@ func TestNewAuthInterceptor(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	authUseCase := mock_interceptors.NewMockAuthUseCase(ctrl)
-	clockmock := mock_clock.NewMockClock(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	clockmock := mock_interceptors.NewMockClock(ctrl)
+	logger := mock_interceptors.NewMockLogger(ctrl)
 	type args struct {
 		authUseCase AuthUseCase
-		logger      log.Logger
-		clock       clock.Clock
+		logger      Logger
+		clock       Clock
 	}
 	tests := []struct {
 		name string
@@ -309,12 +305,12 @@ func TestAuthInterceptor_ValidateToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	authUseCase := mock_interceptors.NewMockAuthUseCase(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_interceptors.NewMockLogger(ctrl)
 	ctx := context.Background()
 	token := models.Token("this_is_valid_token")
 	type fields struct {
 		authUseCase AuthUseCase
-		logger      log.Logger
+		logger      Logger
 	}
 	type args struct {
 		ctx   context.Context

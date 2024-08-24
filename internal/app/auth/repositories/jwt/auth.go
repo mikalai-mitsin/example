@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/018bf/example/internal/app/auth/models"
-	userModels "github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/clock"
-	"github.com/018bf/example/internal/pkg/configs"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/configs"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/log"
 
 	"github.com/google/uuid"
 )
@@ -20,19 +19,39 @@ import (
 const refreshAudience = "refresh"
 const accessAudience = "access"
 
+// Logger - base logger interface
+//
+//go:generate mockgen -build_flags=-mod=mod -destination mock/logger.go . Logger
+type Logger interface {
+	Debug(msg string, fields ...log.Field)
+	Info(msg string, fields ...log.Field)
+	Print(msg string, fields ...log.Field)
+	Warn(msg string, fields ...log.Field)
+	Error(msg string, fields ...log.Field)
+	Fatal(msg string, fields ...log.Field)
+	Panic(msg string, fields ...log.Field)
+}
+
+// Clock - clock interface
+//
+//go:generate mockgen -build_flags=-mod=mod -destination mock/clock.go . Clock
+type Clock interface {
+	Now() time.Time
+}
+
 type AuthRepository struct {
 	accessTTL  time.Duration
 	refreshTTL time.Duration
 	publicKey  *rsa.PublicKey
 	privateKey *rsa.PrivateKey
-	clock      clock.Clock
-	logger     log.Logger
+	clock      Clock
+	logger     Logger
 }
 
 func NewAuthRepository(
 	config *configs.Config,
-	clock clock.Clock,
-	logger log.Logger,
+	clock Clock,
+	logger Logger,
 ) *AuthRepository {
 	private, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(config.Auth.PrivateKey))
 	if err != nil {

@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/018bf/example/internal/app/arch/models"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/app/arch/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 func NewArch(t *testing.T) *models.Arch {

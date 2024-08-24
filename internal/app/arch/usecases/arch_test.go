@@ -7,17 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/018bf/example/internal/app/arch/models"
-	mock_models "github.com/018bf/example/internal/app/arch/models/mock"
-	mock_usecases "github.com/018bf/example/internal/app/arch/usecases/mock"
-	"github.com/018bf/example/internal/pkg/clock"
-	mock_clock "github.com/018bf/example/internal/pkg/clock/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/018bf/example/internal/pkg/uuid"
-	mock_uuid "github.com/018bf/example/internal/pkg/uuid/mock"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/app/arch/models"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/arch/models/mock"
+	mock_usecases "github.com/mikalai-mitsin/example/internal/app/arch/usecases/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"go.uber.org/mock/gomock"
 )
 
@@ -25,14 +20,14 @@ func TestNewArchUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
-	mockLogger := mock_log.NewMockLogger(ctrl)
-	mockUUID := mock_uuid.NewMockGenerator(ctrl)
+	mockClock := mock_usecases.NewMockClock(ctrl)
+	mockLogger := mock_usecases.NewMockLogger(ctrl)
+	mockUUID := mock_usecases.NewMockUUIDGenerator(ctrl)
 	type args struct {
 		archRepository ArchRepository
-		clock          clock.Clock
-		logger         log.Logger
-		uuid           uuid.Generator
+		clock          Clock
+		logger         Logger
+		uuid           UUIDGenerator
 	}
 	tests := []struct {
 		name  string
@@ -75,12 +70,12 @@ func TestArchUseCase_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	arch := mock_models.NewArch(t)
 	type fields struct {
 		archRepository ArchRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -150,7 +145,7 @@ func TestArchUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	var listArches []*models.Arch
 	count := faker.New().UInt64Between(2, 20)
@@ -160,7 +155,7 @@ func TestArchUseCase_List(t *testing.T) {
 	filter := mock_models.NewArchFilter(t)
 	type fields struct {
 		archRepository ArchRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -259,17 +254,17 @@ func TestArchUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	mockClock := mock_clock.NewMockClock(ctrl)
-	mockLogger := mock_log.NewMockLogger(ctrl)
-	mockUUID := mock_uuid.NewMockGenerator(ctrl)
+	mockClock := mock_usecases.NewMockClock(ctrl)
+	mockLogger := mock_usecases.NewMockLogger(ctrl)
+	mockUUID := mock_usecases.NewMockUUIDGenerator(ctrl)
 	ctx := context.Background()
 	create := mock_models.NewArchCreate(t)
 	now := time.Now().UTC()
 	type fields struct {
 		archRepository ArchRepository
-		clock          clock.Clock
-		logger         log.Logger
-		uuid           uuid.Generator
+		clock          Clock
+		logger         Logger
+		uuid           UUIDGenerator
 	}
 	type args struct {
 		ctx    context.Context
@@ -433,16 +428,16 @@ func TestArchUseCase_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	arch := mock_models.NewArch(t)
-	mockClock := mock_clock.NewMockClock(ctrl)
+	mockClock := mock_usecases.NewMockClock(ctrl)
 	update := mock_models.NewArchUpdate(t)
 	now := arch.UpdatedAt
 	type fields struct {
 		archRepository ArchRepository
-		clock          clock.Clock
-		logger         log.Logger
+		clock          Clock
+		logger         Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -562,12 +557,12 @@ func TestArchUseCase_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	archRepository := mock_usecases.NewMockArchRepository(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_usecases.NewMockLogger(ctrl)
 	ctx := context.Background()
 	arch := mock_models.NewArch(t)
 	type fields struct {
 		archRepository ArchRepository
-		logger         log.Logger
+		logger         Logger
 	}
 	type args struct {
 		ctx context.Context

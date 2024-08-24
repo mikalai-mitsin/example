@@ -3,7 +3,7 @@ package mock_models // nolint:stylecheck
 import (
 	"testing"
 
-	"github.com/018bf/example/internal/app/auth/models"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
 
 	"github.com/jaswdr/faker"
 )

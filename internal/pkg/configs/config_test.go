@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/018bf/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 )
 
 func TestParseConfig(t *testing.T) {

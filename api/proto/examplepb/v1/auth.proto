@@ -4,7 +4,7 @@ package examplepb.v1;
 
 import "google/api/annotations.proto";
 
-option go_package = "github.com/018bf/example/pkg/examplepb/v1";
+option go_package = "github.com/mikalai-mitsin/example/pkg/examplepb/v1";
 
 message CreateToken {
   string email = 1;

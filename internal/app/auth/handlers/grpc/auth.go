@@ -1,12 +1,11 @@
-package grpc
+package handlers
 
 import (
 	"context"
 	"strings"
 
-	"github.com/018bf/example/internal/app/auth/models"
-	"github.com/018bf/example/internal/pkg/grpc"
-	examplepb "github.com/018bf/example/pkg/examplepb/v1"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 )
 
 // AuthInterceptor - domain layer repository interface
@@ -24,7 +23,7 @@ type AuthServiceServer struct {
 
 func NewAuthServiceServer(
 	authInterceptor AuthInterceptor,
-) examplepb.AuthServiceServer {
+) *AuthServiceServer {
 	return &AuthServiceServer{authInterceptor: authInterceptor}
 }
 
@@ -38,7 +37,7 @@ func (s AuthServiceServer) CreateToken(
 	}
 	tokenPair, err := s.authInterceptor.CreateToken(ctx, login)
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeTokenPair(tokenPair), nil
 }
@@ -49,7 +48,7 @@ func (s AuthServiceServer) RefreshToken(
 ) (*examplepb.TokenPair, error) {
 	tokenPair, err := s.authInterceptor.RefreshToken(ctx, models.Token(input.GetToken()))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeTokenPair(tokenPair), nil
 }

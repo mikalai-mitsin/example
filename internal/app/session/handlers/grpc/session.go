@@ -1,14 +1,12 @@
-package grpc
+package handlers
 
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/session/models"
-	"github.com/018bf/example/internal/pkg/grpc"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
-	examplepb "github.com/018bf/example/pkg/examplepb/v1"
+	"github.com/mikalai-mitsin/example/internal/app/session/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -17,13 +15,13 @@ import (
 type SessionServiceServer struct {
 	examplepb.UnimplementedSessionServiceServer
 	sessionInterceptor SessionInterceptor
-	logger             log.Logger
+	logger             Logger
 }
 
 func NewSessionServiceServer(
 	sessionInterceptor SessionInterceptor,
-	logger log.Logger,
-) examplepb.SessionServiceServer {
+	logger Logger,
+) *SessionServiceServer {
 	return &SessionServiceServer{sessionInterceptor: sessionInterceptor, logger: logger}
 }
 
@@ -33,7 +31,7 @@ func (s *SessionServiceServer) Create(
 ) (*examplepb.Session, error) {
 	item, err := s.sessionInterceptor.Create(ctx, encodeSessionCreate(input))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeSession(item), nil
 }
@@ -44,7 +42,7 @@ func (s *SessionServiceServer) Get(
 ) (*examplepb.Session, error) {
 	item, err := s.sessionInterceptor.Get(ctx, uuid.UUID(input.GetId()))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeSession(item), nil
 }
@@ -55,7 +53,7 @@ func (s *SessionServiceServer) List(
 ) (*examplepb.ListSession, error) {
 	items, count, err := s.sessionInterceptor.List(ctx, encodeSessionFilter(filter))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeListSession(items, count), nil
 }
@@ -66,7 +64,7 @@ func (s *SessionServiceServer) Update(
 ) (*examplepb.Session, error) {
 	item, err := s.sessionInterceptor.Update(ctx, encodeSessionUpdate(input))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeSession(item), nil
 }
@@ -76,7 +74,7 @@ func (s *SessionServiceServer) Delete(
 	input *examplepb.SessionDelete,
 ) (*emptypb.Empty, error) {
 	if err := s.sessionInterceptor.Delete(ctx, uuid.UUID(input.GetId())); err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return &emptypb.Empty{}, nil
 }

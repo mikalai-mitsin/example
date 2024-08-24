@@ -7,19 +7,18 @@ import (
 	"reflect"
 	"testing"
 
-	mock_models "github.com/018bf/example/internal/app/user/models/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/log"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/018bf/example/internal/pkg/postgres"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	mock_postgres "github.com/mikalai-mitsin/example/internal/app/user/repositories/postgres/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"go.uber.org/mock/gomock"
 
-	"github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 func TestNewUserRepository(t *testing.T) {
@@ -31,7 +30,7 @@ func TestNewUserRepository(t *testing.T) {
 	defer mockDB.Close()
 	type args struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	tests := []struct {
 		name  string
@@ -72,13 +71,13 @@ func TestUserRepository_Create(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	query := "INSERT INTO public.users (created_at,updated_at,first_name,last_name,password,email,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id"
 	user := mock_models.NewUser(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx  context.Context
@@ -166,13 +165,13 @@ func TestUserRepository_Get(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	query := "SELECT users.id, users.created_at, users.updated_at, users.first_name, users.last_name, users.password, users.email, users.group_id FROM public.users WHERE id = $1 LIMIT 1"
 	user := mock_models.NewUser(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -265,7 +264,7 @@ func TestUserRepository_List(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	ctx := context.Background()
 	var listUsers []*models.User
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
@@ -281,7 +280,7 @@ func TestUserRepository_List(t *testing.T) {
 	query := "SELECT users.id, users.created_at, users.updated_at, users.first_name, users.last_name, users.password, users.email, users.group_id FROM public.users ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -378,13 +377,13 @@ func TestUserRepository_Update(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	user := mock_models.NewUser(t)
 	query := `UPDATE public.users SET users.created_at = $1, users.updated_at = $2, users.first_name = $3, users.last_name = $4, users.password = $5, users.email = $6, users.group_id = $7 WHERE id = $8`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx  context.Context
@@ -554,11 +553,11 @@ func TestUserRepository_Delete(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_postgres.NewMockLogger(ctrl)
 	user := mock_models.NewUser(t)
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx context.Context
@@ -668,7 +667,7 @@ func TestUserRepository_Count(t *testing.T) {
 	filter := &models.UserFilter{}
 	type fields struct {
 		database *sqlx.DB
-		logger   log.Logger
+		logger   Logger
 	}
 	type args struct {
 		ctx    context.Context

@@ -1,14 +1,12 @@
-package grpc
+package handlers
 
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/grpc"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
-	examplepb "github.com/018bf/example/pkg/examplepb/v1"
+	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -17,13 +15,10 @@ import (
 type UserServiceServer struct {
 	examplepb.UnimplementedUserServiceServer
 	userInterceptor UserInterceptor
-	logger          log.Logger
+	logger          Logger
 }
 
-func NewUserServiceServer(
-	userInterceptor UserInterceptor,
-	logger log.Logger,
-) examplepb.UserServiceServer {
+func NewUserServiceServer(userInterceptor UserInterceptor, logger Logger) *UserServiceServer {
 	return &UserServiceServer{userInterceptor: userInterceptor, logger: logger}
 }
 
@@ -33,7 +28,7 @@ func (s *UserServiceServer) Create(
 ) (*examplepb.User, error) {
 	item, err := s.userInterceptor.Create(ctx, encodeUserCreate(input))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeUser(item), nil
 }
@@ -44,7 +39,7 @@ func (s *UserServiceServer) Get(
 ) (*examplepb.User, error) {
 	item, err := s.userInterceptor.Get(ctx, uuid.UUID(input.GetId()))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeUser(item), nil
 }
@@ -55,7 +50,7 @@ func (s *UserServiceServer) List(
 ) (*examplepb.ListUser, error) {
 	items, count, err := s.userInterceptor.List(ctx, encodeUserFilter(filter))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeListUser(items, count), nil
 }
@@ -66,7 +61,7 @@ func (s *UserServiceServer) Update(
 ) (*examplepb.User, error) {
 	item, err := s.userInterceptor.Update(ctx, encodeUserUpdate(input))
 	if err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return decodeUser(item), nil
 }
@@ -76,7 +71,7 @@ func (s *UserServiceServer) Delete(
 	input *examplepb.UserDelete,
 ) (*emptypb.Empty, error) {
 	if err := s.userInterceptor.Delete(ctx, uuid.UUID(input.GetId())); err != nil {
-		return nil, grpc.DecodeError(err)
+		return nil, err
 	}
 	return &emptypb.Empty{}, nil
 }

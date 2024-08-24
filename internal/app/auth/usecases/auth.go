@@ -3,30 +3,26 @@ package usecases
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/auth/models"
-	userModels "github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/log"
-	"github.com/018bf/example/internal/pkg/uuid"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type AuthUseCase struct {
-	authRepository       AuthRepository
-	userRepository       UserRepository
-	permissionRepository PermissionRepository
-	logger               log.Logger
+	authRepository AuthRepository
+	userRepository UserRepository
+	logger         Logger
 }
 
 func NewAuthUseCase(
 	authRepository AuthRepository,
 	userRepository UserRepository,
-	permissionRepository PermissionRepository,
-	logger log.Logger,
+	logger Logger,
 ) *AuthUseCase {
 	return &AuthUseCase{
-		authRepository:       authRepository,
-		userRepository:       userRepository,
-		permissionRepository: permissionRepository,
-		logger:               logger,
+		authRepository: authRepository,
+		userRepository: userRepository,
+		logger:         logger,
 	}
 }
 
@@ -85,30 +81,4 @@ func (u AuthUseCase) Auth(ctx context.Context, access models.Token) (*userModels
 		return nil, err
 	}
 	return user, nil
-}
-
-func (u AuthUseCase) HasPermission(
-	ctx context.Context,
-	user *userModels.User,
-	permission userModels.PermissionID,
-) error {
-	if err := u.permissionRepository.HasPermission(ctx, permission, user); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (u AuthUseCase) HasObjectPermission(
-	ctx context.Context,
-	user *userModels.User,
-	permission userModels.PermissionID,
-	object any,
-) error {
-	if err := u.permissionRepository.HasObjectPermission(ctx, permission, user, object); err != nil {
-		return err
-	}
-	return nil
-}
-func (u AuthUseCase) GetUser(ctx context.Context) (*userModels.User, error) {
-	return nil, nil
 }

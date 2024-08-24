@@ -3,7 +3,7 @@ package errs
 import (
 	"encoding/json"
 	"errors"
-	"reflect"
+	"slices"
 
 	"go.uber.org/zap/zapcore"
 )
@@ -125,11 +125,23 @@ func (e *Error) Is(tgt error) bool {
 	if ok := errors.As(tgt, &target); !ok {
 		return false
 	}
-	target.Err = nil
-	err := *e
-	err.Err = nil
-	eq := reflect.DeepEqual(&err, target)
-	return eq
+	if target.Code != e.Code {
+		return false
+	}
+	if target.Message != e.Message {
+		return false
+	}
+	for _, param := range target.Params {
+		if !slices.Contains(e.Params, param) {
+			return false
+		}
+	}
+	for _, param := range e.Params {
+		if !slices.Contains(target.Params, param) {
+			return false
+		}
+	}
+	return true
 }
 func (e *Error) SetCode(code ErrorCode) {
 	e.Code = code

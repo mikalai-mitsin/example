@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/018bf/example"
-	"github.com/018bf/example/internal/pkg/containers"
+	"github.com/mikalai-mitsin/example"
+	"github.com/mikalai-mitsin/example/internal/pkg/containers"
 	"github.com/urfave/cli/v2"
 )
 

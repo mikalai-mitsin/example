@@ -3,10 +3,10 @@ package models
 import (
 	"time"
 
-	userModels "github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/errs"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 )
 
 type Token string

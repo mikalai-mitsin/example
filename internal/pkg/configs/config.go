@@ -1,8 +1,8 @@
 package configs
 
 import (
-	"github.com/018bf/example/internal/pkg/errs"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 )
 
 type otel struct {

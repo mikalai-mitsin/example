@@ -1,24 +1,21 @@
-package grpc
+package handlers
 
 import (
 	"context"
 	"errors"
 
-	mock_grpc "github.com/018bf/example/internal/app/session/handlers/grpc/mock"
-	"github.com/018bf/example/internal/pkg/errs"
-	"github.com/018bf/example/internal/pkg/grpc"
-	"github.com/018bf/example/internal/pkg/log"
+	mock_grpc "github.com/mikalai-mitsin/example/internal/app/session/handlers/grpc/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
 	"reflect"
 	"testing"
 
-	"github.com/018bf/example/internal/app/session/models"
-	mock_models "github.com/018bf/example/internal/app/session/models/mock"
-	mock_log "github.com/018bf/example/internal/pkg/log/mock"
-	"github.com/018bf/example/internal/pkg/pointer"
-	"github.com/018bf/example/internal/pkg/uuid"
-	examplepb "github.com/018bf/example/pkg/examplepb/v1"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/app/session/models"
+	mock_models "github.com/mikalai-mitsin/example/internal/app/session/models/mock"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -29,10 +26,10 @@ func TestNewSessionServiceServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionInterceptor := mock_grpc.NewMockSessionInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	type args struct {
 		sessionInterceptor SessionInterceptor
-		logger             log.Logger
+		logger             Logger
 	}
 	tests := []struct {
 		name string
@@ -67,14 +64,14 @@ func TestSessionServiceServer_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionInterceptor := mock_grpc.NewMockSessionInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	// create := mock_models.NewSessionCreate(t)
 	session := mock_models.NewSession(t)
 	type fields struct {
 		UnimplementedSessionServiceServer examplepb.UnimplementedSessionServiceServer
 		sessionInterceptor                SessionInterceptor
-		logger                            log.Logger
+		logger                            Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -127,7 +124,7 @@ func TestSessionServiceServer_Create(t *testing.T) {
 				input: &examplepb.SessionCreate{},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("interceptor error")),
+			wantErr: errs.NewUnexpectedBehaviorError("interceptor error"),
 		},
 	}
 	for _, tt := range tests {
@@ -154,13 +151,13 @@ func TestSessionServiceServer_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionInterceptor := mock_grpc.NewMockSessionInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	id := uuid.NewUUID()
 	type fields struct {
 		UnimplementedSessionServiceServer examplepb.UnimplementedSessionServiceServer
 		sessionInterceptor                SessionInterceptor
-		logger                            log.Logger
+		logger                            Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -212,11 +209,11 @@ func TestSessionServiceServer_Delete(t *testing.T) {
 				},
 			},
 			want: nil,
-			wantErr: grpc.DecodeError(&errs.Error{
+			wantErr: &errs.Error{
 				Code:    13,
 				Message: "Unexpected behavior.",
 				Params:  errs.Params{{Key: "details", Value: "i error"}},
-			}),
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -243,13 +240,13 @@ func TestSessionServiceServer_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionInterceptor := mock_grpc.NewMockSessionInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	session := mock_models.NewSession(t)
 	type fields struct {
 		UnimplementedSessionServiceServer examplepb.UnimplementedSessionServiceServer
 		sessionInterceptor                SessionInterceptor
-		logger                            log.Logger
+		logger                            Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -301,7 +298,7 @@ func TestSessionServiceServer_Get(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("i error")),
+			wantErr: errs.NewUnexpectedBehaviorError("i error"),
 		},
 	}
 	for _, tt := range tests {
@@ -328,7 +325,7 @@ func TestSessionServiceServer_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionInterceptor := mock_grpc.NewMockSessionInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	filter := mock_models.NewSessionFilter(t)
 	var ids []uuid.UUID
@@ -350,7 +347,7 @@ func TestSessionServiceServer_List(t *testing.T) {
 	type fields struct {
 		UnimplementedSessionServiceServer examplepb.UnimplementedSessionServiceServer
 		sessionInterceptor                SessionInterceptor
-		logger                            log.Logger
+		logger                            Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -415,7 +412,7 @@ func TestSessionServiceServer_List(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("i error")),
+			wantErr: errs.NewUnexpectedBehaviorError("i error"),
 		},
 	}
 	for _, tt := range tests {
@@ -442,14 +439,14 @@ func TestSessionServiceServer_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	sessionInterceptor := mock_grpc.NewMockSessionInterceptor(ctrl)
-	logger := mock_log.NewMockLogger(ctrl)
+	logger := mock_grpc.NewMockLogger(ctrl)
 	ctx := context.Background()
 	session := mock_models.NewSession(t)
 	update := mock_models.NewSessionUpdate(t)
 	type fields struct {
 		UnimplementedSessionServiceServer examplepb.UnimplementedSessionServiceServer
 		sessionInterceptor                SessionInterceptor
-		logger                            log.Logger
+		logger                            Logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -496,7 +493,7 @@ func TestSessionServiceServer_Update(t *testing.T) {
 				input: decodeSessionUpdate(update),
 			},
 			want:    nil,
-			wantErr: grpc.DecodeError(errs.NewUnexpectedBehaviorError("i error")),
+			wantErr: errs.NewUnexpectedBehaviorError("i error"),
 		},
 	}
 	for _, tt := range tests {

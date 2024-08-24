@@ -3,10 +3,24 @@ package usecases
 import (
 	"context"
 
-	"github.com/018bf/example/internal/app/auth/models"
-	userModels "github.com/018bf/example/internal/app/user/models"
-	"github.com/018bf/example/internal/pkg/uuid"
+	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/pkg/log"
+	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
+
+// Logger - base logger interface
+//
+//go:generate mockgen -build_flags=-mod=mod -destination mock/logger.go . Logger
+type Logger interface {
+	Debug(msg string, fields ...log.Field)
+	Info(msg string, fields ...log.Field)
+	Print(msg string, fields ...log.Field)
+	Warn(msg string, fields ...log.Field)
+	Error(msg string, fields ...log.Field)
+	Fatal(msg string, fields ...log.Field)
+	Panic(msg string, fields ...log.Field)
+}
 
 // AuthRepository - domain layer repository interface
 //
@@ -24,21 +38,4 @@ type AuthRepository interface {
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*userModels.User, error)
 	Get(ctx context.Context, id uuid.UUID) (*userModels.User, error)
-}
-
-// PermissionRepository - domain layer repository interface
-//
-//go:generate mockgen -build_flags=-mod=mod -destination mock/permission_repository.go . PermissionRepository
-type PermissionRepository interface {
-	HasPermission(
-		ctx context.Context,
-		permission userModels.PermissionID,
-		requestUser *userModels.User,
-	) error
-	HasObjectPermission(
-		ctx context.Context,
-		permission userModels.PermissionID,
-		user *userModels.User,
-		obj any,
-	) error
 }

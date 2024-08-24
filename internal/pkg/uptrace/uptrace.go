@@ -3,8 +3,8 @@ package uptrace
 import (
 	"context"
 
-	"github.com/018bf/example"
-	"github.com/018bf/example/internal/pkg/configs"
+	"github.com/mikalai-mitsin/example"
+	"github.com/mikalai-mitsin/example/internal/pkg/configs"
 	"github.com/uptrace/uptrace-go/uptrace"
 )
 
