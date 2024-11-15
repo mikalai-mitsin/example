@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/app/user/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
@@ -14,19 +14,19 @@ import (
 
 type UserServiceServer struct {
 	examplepb.UnimplementedUserServiceServer
-	userInterceptor UserInterceptor
-	logger          Logger
+	userUseCase userUseCase
+	logger      logger
 }
 
-func NewUserServiceServer(userInterceptor UserInterceptor, logger Logger) *UserServiceServer {
-	return &UserServiceServer{userInterceptor: userInterceptor, logger: logger}
+func NewUserServiceServer(userUseCase userUseCase, logger logger) *UserServiceServer {
+	return &UserServiceServer{userUseCase: userUseCase, logger: logger}
 }
 
 func (s *UserServiceServer) Create(
 	ctx context.Context,
 	input *examplepb.UserCreate,
 ) (*examplepb.User, error) {
-	item, err := s.userInterceptor.Create(ctx, encodeUserCreate(input))
+	item, err := s.userUseCase.Create(ctx, encodeUserCreate(input))
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (s *UserServiceServer) Get(
 	ctx context.Context,
 	input *examplepb.UserGet,
 ) (*examplepb.User, error) {
-	item, err := s.userInterceptor.Get(ctx, uuid.UUID(input.GetId()))
+	item, err := s.userUseCase.Get(ctx, uuid.UUID(input.GetId()))
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (s *UserServiceServer) List(
 	ctx context.Context,
 	filter *examplepb.UserFilter,
 ) (*examplepb.ListUser, error) {
-	items, count, err := s.userInterceptor.List(ctx, encodeUserFilter(filter))
+	items, count, err := s.userUseCase.List(ctx, encodeUserFilter(filter))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *UserServiceServer) Update(
 	ctx context.Context,
 	input *examplepb.UserUpdate,
 ) (*examplepb.User, error) {
-	item, err := s.userInterceptor.Update(ctx, encodeUserUpdate(input))
+	item, err := s.userUseCase.Update(ctx, encodeUserUpdate(input))
 	if err != nil {
 		return nil, err
 	}
@@ -70,23 +70,23 @@ func (s *UserServiceServer) Delete(
 	ctx context.Context,
 	input *examplepb.UserDelete,
 ) (*emptypb.Empty, error) {
-	if err := s.userInterceptor.Delete(ctx, uuid.UUID(input.GetId())); err != nil {
+	if err := s.userUseCase.Delete(ctx, uuid.UUID(input.GetId())); err != nil {
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
 }
-func encodeUserCreate(input *examplepb.UserCreate) *models.UserCreate {
-	create := &models.UserCreate{
+func encodeUserCreate(input *examplepb.UserCreate) *entities.UserCreate {
+	create := &entities.UserCreate{
 		FirstName: input.GetFirstName(),
 		LastName:  input.GetLastName(),
 		Password:  input.GetPassword(),
 		Email:     input.GetEmail(),
-		GroupID:   models.GroupID(input.GetGroupId()),
+		GroupID:   entities.GroupID(input.GetGroupId()),
 	}
 	return create
 }
-func encodeUserFilter(input *examplepb.UserFilter) *models.UserFilter {
-	filter := &models.UserFilter{
+func encodeUserFilter(input *examplepb.UserFilter) *entities.UserFilter {
+	filter := &entities.UserFilter{
 		IDs:        nil,
 		PageSize:   nil,
 		PageNumber: nil,
@@ -107,8 +107,8 @@ func encodeUserFilter(input *examplepb.UserFilter) *models.UserFilter {
 	}
 	return filter
 }
-func encodeUserUpdate(input *examplepb.UserUpdate) *models.UserUpdate {
-	update := &models.UserUpdate{ID: uuid.UUID(input.GetId())}
+func encodeUserUpdate(input *examplepb.UserUpdate) *entities.UserUpdate {
+	update := &entities.UserUpdate{ID: uuid.UUID(input.GetId())}
 	if input.GetFirstName() != nil {
 		update.FirstName = pointer.Pointer(string(input.GetFirstName().GetValue()))
 	}
@@ -122,11 +122,11 @@ func encodeUserUpdate(input *examplepb.UserUpdate) *models.UserUpdate {
 		update.Email = pointer.Pointer(string(input.GetEmail().GetValue()))
 	}
 	if input.GetGroupId() != nil {
-		update.GroupID = pointer.Pointer(models.GroupID(input.GetGroupId().GetValue()))
+		update.GroupID = pointer.Pointer(entities.GroupID(input.GetGroupId().GetValue()))
 	}
 	return update
 }
-func decodeUser(item *models.User) *examplepb.User {
+func decodeUser(item *entities.User) *examplepb.User {
 	response := &examplepb.User{
 		Id:        string(item.ID),
 		CreatedAt: timestamppb.New(item.CreatedAt),
@@ -139,14 +139,14 @@ func decodeUser(item *models.User) *examplepb.User {
 	}
 	return response
 }
-func decodeListUser(items []*models.User, count uint64) *examplepb.ListUser {
+func decodeListUser(items []*entities.User, count uint64) *examplepb.ListUser {
 	response := &examplepb.ListUser{Items: make([]*examplepb.User, 0, len(items)), Count: count}
 	for _, item := range items {
 		response.Items = append(response.Items, decodeUser(item))
 	}
 	return response
 }
-func decodeUserUpdate(update *models.UserUpdate) *examplepb.UserUpdate {
+func decodeUserUpdate(update *entities.UserUpdate) *examplepb.UserUpdate {
 	result := &examplepb.UserUpdate{
 		Id:        string(string(update.ID)),
 		FirstName: wrapperspb.String(*update.FirstName),

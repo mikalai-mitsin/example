@@ -2,20 +2,18 @@ package handlers
 
 import (
 	"context"
-	"errors"
 
-	mock_grpc "github.com/mikalai-mitsin/example/internal/app/user/handlers/grpc/mock"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
-	"reflect"
 	"testing"
 
 	"github.com/jaswdr/faker"
-	"github.com/mikalai-mitsin/example/internal/app/user/models"
-	mock_models "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/app/user/entities"
+	mock_entities "github.com/mikalai-mitsin/example/internal/app/user/entities/mock"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -25,11 +23,11 @@ import (
 func TestNewUserServiceServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_grpc.NewMockLogger(ctrl)
+	mockUserUseCase := NewMockuserUseCase(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	type args struct {
-		userInterceptor UserInterceptor
-		logger          Logger
+		userUseCase userUseCase
+		logger      logger
 	}
 	tests := []struct {
 		name string
@@ -39,23 +37,19 @@ func TestNewUserServiceServer(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				userInterceptor: userInterceptor,
-				logger:          logger,
+				userUseCase: mockUserUseCase,
+				logger:      mockLogger,
 			},
 			want: &UserServiceServer{
-				userInterceptor: userInterceptor,
-				logger:          logger,
+				userUseCase: mockUserUseCase,
+				logger:      mockLogger,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewUserServiceServer(tt.args.userInterceptor, tt.args.logger); !reflect.DeepEqual(
-				got,
-				tt.want,
-			) {
-				t.Errorf("NewUserServiceServer() = %v, want %v", got, tt.want)
-			}
+			got := NewUserServiceServer(tt.args.userUseCase, tt.args.logger)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -63,15 +57,15 @@ func TestNewUserServiceServer(t *testing.T) {
 func TestUserServiceServer_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_grpc.NewMockLogger(ctrl)
+	mockUserUseCase := NewMockuserUseCase(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	// create := mock_models.NewUserCreate(t)
-	user := mock_models.NewUser(t)
+	// create := mock_entities.NewUserCreate(t)
+	user := mock_entities.NewUser(t)
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
-		userInterceptor                UserInterceptor
-		logger                         Logger
+		userUseCase                    userUseCase
+		logger                         logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -88,15 +82,15 @@ func TestUserServiceServer_Create(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				userInterceptor.
+				mockUserUseCase.
 					EXPECT().
 					Create(ctx, gomock.Any()).
 					Return(user, nil)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx:   ctx,
@@ -106,25 +100,25 @@ func TestUserServiceServer_Create(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "interceptor error",
+			name: "usecase error",
 			setup: func() {
-				userInterceptor.
+				mockUserUseCase.
 					EXPECT().
 					Create(ctx, gomock.Any()).
-					Return(nil, errs.NewUnexpectedBehaviorError("interceptor error")).
+					Return(nil, errs.NewUnexpectedBehaviorError("usecase error")).
 					Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx:   ctx,
 				input: &examplepb.UserCreate{},
 			},
 			want:    nil,
-			wantErr: errs.NewUnexpectedBehaviorError("interceptor error"),
+			wantErr: errs.NewUnexpectedBehaviorError("usecase error"),
 		},
 	}
 	for _, tt := range tests {
@@ -132,17 +126,12 @@ func TestUserServiceServer_Create(t *testing.T) {
 			tt.setup()
 			s := UserServiceServer{
 				UnimplementedUserServiceServer: tt.fields.UnimplementedUserServiceServer,
-				userInterceptor:                tt.fields.userInterceptor,
+				userUseCase:                    tt.fields.userUseCase,
 				logger:                         tt.fields.logger,
 			}
 			got, err := s.Create(tt.args.ctx, tt.args.input)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Create() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -150,14 +139,14 @@ func TestUserServiceServer_Create(t *testing.T) {
 func TestUserServiceServer_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_grpc.NewMockLogger(ctrl)
+	mockUserUseCase := NewMockuserUseCase(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	id := uuid.NewUUID()
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
-		userInterceptor                UserInterceptor
-		logger                         Logger
+		userUseCase                    userUseCase
+		logger                         logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -174,12 +163,12 @@ func TestUserServiceServer_Delete(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				userInterceptor.EXPECT().Delete(ctx, id).Return(nil).Times(1)
+				mockUserUseCase.EXPECT().Delete(ctx, id).Return(nil).Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -191,16 +180,16 @@ func TestUserServiceServer_Delete(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "interceptor error",
+			name: "usecase error",
 			setup: func() {
-				userInterceptor.EXPECT().Delete(ctx, id).
+				mockUserUseCase.EXPECT().Delete(ctx, id).
 					Return(errs.NewUnexpectedBehaviorError("i error")).
 					Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -221,17 +210,12 @@ func TestUserServiceServer_Delete(t *testing.T) {
 			tt.setup()
 			s := UserServiceServer{
 				UnimplementedUserServiceServer: tt.fields.UnimplementedUserServiceServer,
-				userInterceptor:                tt.fields.userInterceptor,
+				userUseCase:                    tt.fields.userUseCase,
 				logger:                         tt.fields.logger,
 			}
 			got, err := s.Delete(tt.args.ctx, tt.args.input)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Delete() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -239,14 +223,14 @@ func TestUserServiceServer_Delete(t *testing.T) {
 func TestUserServiceServer_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_grpc.NewMockLogger(ctrl)
+	mockUserUseCase := NewMockuserUseCase(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	user := mock_models.NewUser(t)
+	user := mock_entities.NewUser(t)
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
-		userInterceptor                UserInterceptor
-		logger                         Logger
+		userUseCase                    userUseCase
+		logger                         logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -263,12 +247,12 @@ func TestUserServiceServer_Get(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				userInterceptor.EXPECT().Get(ctx, user.ID).Return(user, nil).Times(1)
+				mockUserUseCase.EXPECT().Get(ctx, user.ID).Return(user, nil).Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -280,16 +264,16 @@ func TestUserServiceServer_Get(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "interceptor error",
+			name: "usecase error",
 			setup: func() {
-				userInterceptor.EXPECT().Get(ctx, user.ID).
+				mockUserUseCase.EXPECT().Get(ctx, user.ID).
 					Return(nil, errs.NewUnexpectedBehaviorError("i error")).
 					Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -306,17 +290,12 @@ func TestUserServiceServer_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := UserServiceServer{
 				UnimplementedUserServiceServer: tt.fields.UnimplementedUserServiceServer,
-				userInterceptor:                tt.fields.userInterceptor,
+				userUseCase:                    tt.fields.userUseCase,
 				logger:                         tt.fields.logger,
 			}
 			got, err := s.Get(tt.args.ctx, tt.args.input)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Get() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -324,10 +303,10 @@ func TestUserServiceServer_Get(t *testing.T) {
 func TestUserServiceServer_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_grpc.NewMockLogger(ctrl)
+	mockUserUseCase := NewMockuserUseCase(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	filter := mock_models.NewUserFilter(t)
+	filter := mock_entities.NewUserFilter(t)
 	var ids []uuid.UUID
 	var stringIDs []string
 	count := faker.New().UInt64Between(2, 20)
@@ -335,9 +314,9 @@ func TestUserServiceServer_List(t *testing.T) {
 		Items: make([]*examplepb.User, 0, int(count)),
 		Count: count,
 	}
-	listUsers := make([]*models.User, 0, int(count))
+	listUsers := make([]*entities.User, 0, int(count))
 	for i := 0; i < int(count); i++ {
-		a := mock_models.NewUser(t)
+		a := mock_entities.NewUser(t)
 		ids = append(ids, a.ID)
 		stringIDs = append(stringIDs, string(a.ID))
 		listUsers = append(listUsers, a)
@@ -346,8 +325,8 @@ func TestUserServiceServer_List(t *testing.T) {
 	filter.IDs = ids
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
-		userInterceptor                UserInterceptor
-		logger                         Logger
+		userUseCase                    userUseCase
+		logger                         logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -364,12 +343,15 @@ func TestUserServiceServer_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				userInterceptor.EXPECT().List(ctx, filter).Return(listUsers, count, nil).Times(1)
+				mockUserUseCase.EXPECT().
+					List(ctx, gomock.Any()).
+					Return(listUsers, count, nil).
+					Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -385,18 +367,18 @@ func TestUserServiceServer_List(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "interceptor error",
+			name: "usecase error",
 			setup: func() {
-				userInterceptor.
+				mockUserUseCase.
 					EXPECT().
-					List(ctx, filter).
+					List(ctx, gomock.Any()).
 					Return(nil, uint64(0), errs.NewUnexpectedBehaviorError("i error")).
 					Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -417,17 +399,12 @@ func TestUserServiceServer_List(t *testing.T) {
 			tt.setup()
 			s := UserServiceServer{
 				UnimplementedUserServiceServer: tt.fields.UnimplementedUserServiceServer,
-				userInterceptor:                tt.fields.userInterceptor,
+				userUseCase:                    tt.fields.userUseCase,
 				logger:                         tt.fields.logger,
 			}
 			got, err := s.List(tt.args.ctx, tt.args.input)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("List() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("List() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -435,15 +412,15 @@ func TestUserServiceServer_List(t *testing.T) {
 func TestUserServiceServer_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userInterceptor := mock_grpc.NewMockUserInterceptor(ctrl)
-	logger := mock_grpc.NewMockLogger(ctrl)
+	mockUserUseCase := NewMockuserUseCase(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	user := mock_models.NewUser(t)
-	update := mock_models.NewUserUpdate(t)
+	user := mock_entities.NewUser(t)
+	update := mock_entities.NewUserUpdate(t)
 	type fields struct {
 		UnimplementedUserServiceServer examplepb.UnimplementedUserServiceServer
-		userInterceptor                UserInterceptor
-		logger                         Logger
+		userUseCase                    userUseCase
+		logger                         logger
 	}
 	type args struct {
 		ctx   context.Context
@@ -460,12 +437,12 @@ func TestUserServiceServer_Update(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				userInterceptor.EXPECT().Update(ctx, gomock.Any()).Return(user, nil).Times(1)
+				mockUserUseCase.EXPECT().Update(ctx, gomock.Any()).Return(user, nil).Times(1)
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx:   ctx,
@@ -475,15 +452,15 @@ func TestUserServiceServer_Update(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "interceptor error",
+			name: "usecase error",
 			setup: func() {
-				userInterceptor.EXPECT().Update(ctx, gomock.Any()).
+				mockUserUseCase.EXPECT().Update(ctx, gomock.Any()).
 					Return(nil, errs.NewUnexpectedBehaviorError("i error"))
 			},
 			fields: fields{
 				UnimplementedUserServiceServer: examplepb.UnimplementedUserServiceServer{},
-				userInterceptor:                userInterceptor,
-				logger:                         logger,
+				userUseCase:                    mockUserUseCase,
+				logger:                         mockLogger,
 			},
 			args: args{
 				ctx:   ctx,
@@ -498,23 +475,18 @@ func TestUserServiceServer_Update(t *testing.T) {
 			tt.setup()
 			s := UserServiceServer{
 				UnimplementedUserServiceServer: tt.fields.UnimplementedUserServiceServer,
-				userInterceptor:                tt.fields.userInterceptor,
+				userUseCase:                    tt.fields.userUseCase,
 				logger:                         tt.fields.logger,
 			}
 			got, err := s.Update(tt.args.ctx, tt.args.input)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Update() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
 func Test_decodeUser(t *testing.T) {
-	user := mock_models.NewUser(t)
+	user := mock_entities.NewUser(t)
 	result := &examplepb.User{
 		Id:        string(user.ID),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
@@ -526,7 +498,7 @@ func Test_decodeUser(t *testing.T) {
 		GroupId:   string(user.GroupID),
 	}
 	type args struct {
-		user *models.User
+		user *entities.User
 	}
 	tests := []struct {
 		name string
@@ -543,9 +515,8 @@ func Test_decodeUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := decodeUser(tt.args.user); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("decodeUser() = %v, want %v", got, tt.want)
-			}
+			got := decodeUser(tt.args.user)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -558,7 +529,7 @@ func Test_encodeUserFilter(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *models.UserFilter
+		want *entities.UserFilter
 	}{
 		{
 			name: "ok",
@@ -571,7 +542,7 @@ func Test_encodeUserFilter(t *testing.T) {
 					Ids:        []string{string(id)},
 				},
 			},
-			want: &models.UserFilter{
+			want: &entities.UserFilter{
 				PageSize:   pointer.Pointer(uint64(5)),
 				PageNumber: pointer.Pointer(uint64(2)),
 				OrderBy:    []string{"created_at", "id"},
@@ -582,9 +553,8 @@ func Test_encodeUserFilter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := encodeUserFilter(tt.args.input); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("encodeUserFilter() = %v, want %v", got, tt.want)
-			}
+			got := encodeUserFilter(tt.args.input)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

@@ -7,7 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/app/user/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
@@ -16,10 +16,10 @@ import (
 
 type UserRepository struct {
 	database *sqlx.DB
-	logger   Logger
+	logger   logger
 }
 
-func NewUserRepository(database *sqlx.DB, logger Logger) *UserRepository {
+func NewUserRepository(database *sqlx.DB, logger logger) *UserRepository {
 	return &UserRepository{database: database, logger: logger}
 }
 
@@ -35,14 +35,14 @@ type UserDTO struct {
 }
 type UserListDTO []*UserDTO
 
-func (list UserListDTO) ToModels() []*models.User {
-	items := make([]*models.User, len(list))
+func (list UserListDTO) ToEntities() []*entities.User {
+	items := make([]*entities.User, len(list))
 	for i := range list {
 		items[i] = list[i].ToModel()
 	}
 	return items
 }
-func NewUserDTOFromModel(model *models.User) *UserDTO {
+func NewUserDTOFromModel(model *entities.User) *UserDTO {
 	dto := &UserDTO{
 		ID:        string(model.ID),
 		CreatedAt: model.CreatedAt,
@@ -55,8 +55,8 @@ func NewUserDTOFromModel(model *models.User) *UserDTO {
 	}
 	return dto
 }
-func (dto *UserDTO) ToModel() *models.User {
-	model := &models.User{
+func (dto *UserDTO) ToModel() *entities.User {
+	model := &entities.User{
 		ID:        uuid.UUID(dto.ID),
 		CreatedAt: dto.CreatedAt,
 		UpdatedAt: dto.UpdatedAt,
@@ -64,11 +64,11 @@ func (dto *UserDTO) ToModel() *models.User {
 		LastName:  dto.LastName,
 		Password:  dto.Password,
 		Email:     dto.Email,
-		GroupID:   models.GroupID(dto.GroupID),
+		GroupID:   entities.GroupID(dto.GroupID),
 	}
 	return model
 }
-func (r *UserRepository) Create(ctx context.Context, model *models.User) error {
+func (r *UserRepository) Create(ctx context.Context, model *entities.User) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewUserDTOFromModel(model)
@@ -84,11 +84,26 @@ func (r *UserRepository) Create(ctx context.Context, model *models.User) error {
 	model.ID = uuid.UUID(dto.ID)
 	return nil
 }
+func (r *UserRepository) Get(ctx context.Context, id uuid.UUID) (*entities.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	dto := &UserDTO{}
+	q := sq.Select("users.id", "users.created_at", "users.updated_at", "users.first_name", "users.last_name", "users.password", "users.email", "users.group_id").
+		From("public.users").
+		Where(sq.Eq{"id": id}).
+		Limit(1)
+	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
+	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
+		e := errs.FromPostgresError(err).WithParam("user_id", string(id))
+		return nil, e
+	}
+	return dto.ToModel(), nil
+}
 
 func (r *UserRepository) List(
 	ctx context.Context,
-	filter *models.UserFilter,
-) ([]*models.User, error) {
+	filter *entities.UserFilter,
+) ([]*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	var dto UserListDTO
@@ -123,9 +138,9 @@ func (r *UserRepository) List(
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
-	return dto.ToModels(), nil
+	return dto.ToEntities(), nil
 }
-func (r *UserRepository) Count(ctx context.Context, filter *models.UserFilter) (uint64, error) {
+func (r *UserRepository) Count(ctx context.Context, filter *entities.UserFilter) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.users")
@@ -154,22 +169,7 @@ func (r *UserRepository) Count(ctx context.Context, filter *models.UserFilter) (
 	}
 	return count, nil
 }
-func (r *UserRepository) Get(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-	dto := &UserDTO{}
-	q := sq.Select("users.id", "users.created_at", "users.updated_at", "users.first_name", "users.last_name", "users.password", "users.email", "users.group_id").
-		From("public.users").
-		Where(sq.Eq{"id": id}).
-		Limit(1)
-	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
-		e := errs.FromPostgresError(err).WithParam("user_id", string(id))
-		return nil, e
-	}
-	return dto.ToModel(), nil
-}
-func (r *UserRepository) Update(ctx context.Context, model *models.User) error {
+func (r *UserRepository) Update(ctx context.Context, model *entities.User) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewUserDTOFromModel(model)
@@ -220,7 +220,7 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 	return nil
 }
-func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := &UserDTO{}

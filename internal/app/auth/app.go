@@ -1,12 +1,10 @@
 package auth
 
 import (
-	"context"
-
 	"github.com/jmoiron/sqlx"
 	handlers "github.com/mikalai-mitsin/example/internal/app/auth/handlers/grpc"
-	"github.com/mikalai-mitsin/example/internal/app/auth/interceptors"
 	"github.com/mikalai-mitsin/example/internal/app/auth/repositories/jwt"
+	"github.com/mikalai-mitsin/example/internal/app/auth/services"
 	"github.com/mikalai-mitsin/example/internal/app/auth/usecases"
 	"github.com/mikalai-mitsin/example/internal/app/user/repositories/postgres"
 	"github.com/mikalai-mitsin/example/internal/pkg/clock"
@@ -17,14 +15,14 @@ import (
 )
 
 type App struct {
-	db              *sqlx.DB
-	grpcServer      *grpc.Server
-	logger          *log.Log
-	authRepository  *jwt.AuthRepository
-	authUseCase     *usecases.AuthUseCase
-	authInterceptor *interceptors.AuthInterceptor
-	authHandler     *handlers.AuthServiceServer
-	authMiddleware  *handlers.AuthMiddleware
+	db             *sqlx.DB
+	grpcServer     *grpc.Server
+	logger         *log.Log
+	authRepository *jwt.AuthRepository
+	authService    *services.AuthService
+	authUseCase    *usecases.AuthUseCase
+	authHandler    *handlers.AuthServiceServer
+	authMiddleware *handlers.AuthMiddleware
 }
 
 func NewApp(
@@ -36,26 +34,23 @@ func NewApp(
 ) *App {
 	userRepository := postgres.NewUserRepository(db, logger)
 	authRepository := jwt.NewAuthRepository(config, clock, logger)
-	authUseCase := usecases.NewAuthUseCase(authRepository, userRepository, logger)
-	authInterceptor := interceptors.NewAuthInterceptor(authUseCase, clock, logger)
-	authHandler := handlers.NewAuthServiceServer(authInterceptor)
-	authMiddleware := handlers.NewAuthMiddleware(authUseCase, logger, config)
+	authService := services.NewAuthService(authRepository, userRepository, logger)
+	authUseCase := usecases.NewAuthUseCase(authService, clock, logger)
+	authHandler := handlers.NewAuthServiceServer(authUseCase)
+	authMiddleware := handlers.NewAuthMiddleware(authService, logger, config)
 	return &App{
-		db:              db,
-		grpcServer:      grpcServer,
-		logger:          logger,
-		authRepository:  authRepository,
-		authUseCase:     authUseCase,
-		authInterceptor: authInterceptor,
-		authHandler:     authHandler,
-		authMiddleware:  authMiddleware,
+		db:             db,
+		grpcServer:     grpcServer,
+		logger:         logger,
+		authRepository: authRepository,
+		authService:    authService,
+		authUseCase:    authUseCase,
+		authHandler:    authHandler,
+		authMiddleware: authMiddleware,
 	}
 }
-func (a *App) Start(ctx context.Context) error {
-	a.grpcServer.AddHandler(&examplepb.AuthService_ServiceDesc, a.authHandler)
-	a.grpcServer.AddInterceptor(a.authMiddleware.UnaryServerInterceptor)
-	return nil
-}
-func (a *App) Stop(ctx context.Context) error {
+func (a *App) RegisterGRPC(grpcServer *grpc.Server) error {
+	grpcServer.AddHandler(&examplepb.AuthService_ServiceDesc, a.authHandler)
+	grpcServer.AddInterceptor(a.authMiddleware.UnaryServerInterceptor)
 	return nil
 }

@@ -8,37 +8,17 @@ gateway: false
 REST: false
 uptrace: true
 domains:
-  - model: "session"
+  - model: widget
     params:
-      - name: "title"
+      - name: form_screen_id
+        type: string
+      - name: name
+        type: string
+      - name: ordering
+        type: int64
+      - name: is_optional
+        type: bool
+      - name: ui_settings
         type: "string"
-        search: false
-      - name: "description"
-        type: "string"
-        search: true
-  - model: "arch"
-    params:
-      - name: "name"
-        type: "string"
-        search: true
-      - name: "title"
-        type: "string"
-      - name: "subtitle"
-        type: "string"
-        search: true
-      - name: "tags"
-        type: "[]string"
-      - name: "versions"
-        type: "[]uint"
-      - name: "oldVersions"
-        type: "[]uint64"
-      - name: "release"
+      - name: deleted_at
         type: "time.Time"
-      - name: "tested"
-        type: "time.Time"
-      - name: "mark"
-        type: "string"
-      - name: "submarine"
-        type: "string"
-      - name: "numb"
-        type: "uint64"

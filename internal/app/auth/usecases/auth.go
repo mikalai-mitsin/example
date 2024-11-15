@@ -3,80 +3,49 @@ package usecases
 import (
 	"context"
 
-	"github.com/mikalai-mitsin/example/internal/app/auth/models"
-	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	"github.com/mikalai-mitsin/example/internal/app/auth/entities"
+	userEntities "github.com/mikalai-mitsin/example/internal/app/user/entities"
 )
 
 type AuthUseCase struct {
-	authRepository AuthRepository
-	userRepository UserRepository
-	logger         Logger
+	authService AuthService
+	clock       clock
+	logger      logger
 }
 
-func NewAuthUseCase(
-	authRepository AuthRepository,
-	userRepository UserRepository,
-	logger Logger,
-) *AuthUseCase {
-	return &AuthUseCase{
-		authRepository: authRepository,
-		userRepository: userRepository,
-		logger:         logger,
-	}
+func NewAuthUseCase(authService AuthService, clock clock, logger logger) *AuthUseCase {
+	return &AuthUseCase{authService: authService, clock: clock, logger: logger}
 }
 
-func (u AuthUseCase) CreateToken(
+func (i *AuthUseCase) CreateToken(
 	ctx context.Context,
-	login *models.Login,
-) (*models.TokenPair, error) {
-	user, err := u.userRepository.GetByEmail(ctx, login.Email)
-	if err != nil {
-		return nil, err
-	}
-	if err := user.CheckPassword(login.Password); err != nil {
-		return nil, err
-	}
-	tokenPair, err := u.authRepository.Create(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-	return tokenPair, nil
-}
-
-func (u AuthUseCase) CreateTokenByUser(
-	ctx context.Context,
-	user *userModels.User,
-) (*models.TokenPair, error) {
-	tokenPair, err := u.authRepository.Create(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-	return tokenPair, nil
-}
-
-func (u AuthUseCase) RefreshToken(
-	ctx context.Context,
-	refresh models.Token,
-) (*models.TokenPair, error) {
-	pair, err := u.authRepository.RefreshToken(ctx, refresh)
+	login *entities.Login,
+) (*entities.TokenPair, error) {
+	pair, err := i.authService.CreateToken(ctx, login)
 	if err != nil {
 		return nil, err
 	}
 	return pair, nil
 }
-func (u AuthUseCase) ValidateToken(ctx context.Context, access models.Token) error {
-	if err := u.authRepository.Validate(ctx, access); err != nil {
+func (i *AuthUseCase) ValidateToken(ctx context.Context, token entities.Token) error {
+	if err := i.authService.ValidateToken(ctx, token); err != nil {
 		return err
 	}
 	return nil
 }
-func (u AuthUseCase) Auth(ctx context.Context, access models.Token) (*userModels.User, error) {
-	userID, err := u.authRepository.GetSubject(ctx, access)
+
+func (i *AuthUseCase) RefreshToken(
+	ctx context.Context,
+	refresh entities.Token,
+) (*entities.TokenPair, error) {
+	pair, err := i.authService.RefreshToken(ctx, refresh)
 	if err != nil {
 		return nil, err
 	}
-	user, err := u.userRepository.Get(ctx, uuid.UUID(userID))
+	return pair, nil
+}
+func (i *AuthUseCase) Auth(ctx context.Context, access entities.Token) (*userEntities.User, error) {
+	user, err := i.authService.Auth(ctx, access)
 	if err != nil {
 		return nil, err
 	}

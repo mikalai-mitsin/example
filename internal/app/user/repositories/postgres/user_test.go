@@ -4,19 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
-	mock_models "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
-	mock_postgres "github.com/mikalai-mitsin/example/internal/app/user/repositories/postgres/mock"
+	mock_entities "github.com/mikalai-mitsin/example/internal/app/user/entities/mock"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/app/user/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
@@ -30,7 +29,7 @@ func TestNewUserRepository(t *testing.T) {
 	defer mockDB.Close()
 	type args struct {
 		database *sqlx.DB
-		logger   Logger
+		logger   logger
 	}
 	tests := []struct {
 		name  string
@@ -52,12 +51,8 @@ func TestNewUserRepository(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			if got := NewUserRepository(tt.args.database, tt.args.logger); !reflect.DeepEqual(
-				got,
-				tt.want,
-			) {
-				t.Errorf("NewUserRepository() = %v, want %v", got, tt.want)
-			}
+			got := NewUserRepository(tt.args.database, tt.args.logger)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -71,17 +66,17 @@ func TestUserRepository_Create(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_postgres.NewMockLogger(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	query := "INSERT INTO public.users (created_at,updated_at,first_name,last_name,password,email,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id"
-	user := mock_models.NewUser(t)
+	user := mock_entities.NewUser(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   Logger
+		logger   logger
 	}
 	type args struct {
 		ctx  context.Context
-		card *models.User
+		card *entities.User
 	}
 	tests := []struct {
 		name    string
@@ -108,7 +103,7 @@ func TestUserRepository_Create(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:  ctx,
@@ -133,7 +128,7 @@ func TestUserRepository_Create(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:  ctx,
@@ -149,9 +144,8 @@ func TestUserRepository_Create(t *testing.T) {
 				database: tt.fields.database,
 				logger:   tt.fields.logger,
 			}
-			if err := r.Create(tt.args.ctx, tt.args.card); !errors.Is(err, tt.wantErr) {
-				t.Errorf("UserRepository.Create() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := r.Create(tt.args.ctx, tt.args.card)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -165,13 +159,13 @@ func TestUserRepository_Get(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_postgres.NewMockLogger(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	query := "SELECT users.id, users.created_at, users.updated_at, users.first_name, users.last_name, users.password, users.email, users.group_id FROM public.users WHERE id = $1 LIMIT 1"
-	user := mock_models.NewUser(t)
+	user := mock_entities.NewUser(t)
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   Logger
+		logger   logger
 	}
 	type args struct {
 		ctx context.Context
@@ -182,18 +176,18 @@ func TestUserRepository_Get(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
-		want    *models.User
+		want    *entities.User
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				rows := newUserRows(t, []*models.User{user})
+				rows := newUserRows(t, []*entities.User{user})
 				mock.ExpectQuery(query).WithArgs(user.ID).WillReturnRows(rows)
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -209,7 +203,7 @@ func TestUserRepository_Get(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -226,7 +220,7 @@ func TestUserRepository_Get(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -244,13 +238,8 @@ func TestUserRepository_Get(t *testing.T) {
 				logger:   tt.fields.logger,
 			}
 			got, err := r.Get(tt.args.ctx, tt.args.id)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("UserRepository.Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UserRepository.Get() = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -264,13 +253,13 @@ func TestUserRepository_List(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_postgres.NewMockLogger(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listUsers []*models.User
+	var listUsers []*entities.User
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
-		listUsers = append(listUsers, mock_models.NewUser(t))
+		listUsers = append(listUsers, mock_entities.NewUser(t))
 	}
-	filter := &models.UserFilter{
+	filter := &entities.UserFilter{
 		PageSize:   pointer.Pointer(uint64(10)),
 		PageNumber: pointer.Pointer(uint64(2)),
 		Search:     nil,
@@ -280,18 +269,18 @@ func TestUserRepository_List(t *testing.T) {
 	query := "SELECT users.id, users.created_at, users.updated_at, users.first_name, users.last_name, users.password, users.email, users.group_id FROM public.users ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		database *sqlx.DB
-		logger   Logger
+		logger   logger
 	}
 	type args struct {
 		ctx    context.Context
-		filter *models.UserFilter
+		filter *entities.UserFilter
 	}
 	tests := []struct {
 		name    string
 		setup   func()
 		fields  fields
 		args    args
-		want    []*models.User
+		want    []*entities.User
 		wantErr error
 	}{
 		{
@@ -302,7 +291,7 @@ func TestUserRepository_List(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -318,7 +307,7 @@ func TestUserRepository_List(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -339,7 +328,7 @@ func TestUserRepository_List(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -357,13 +346,8 @@ func TestUserRepository_List(t *testing.T) {
 				logger:   tt.fields.logger,
 			}
 			got, err := r.List(tt.args.ctx, tt.args.filter)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("UserRepository.List() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UserRepository.List() = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -377,17 +361,17 @@ func TestUserRepository_Update(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_postgres.NewMockLogger(ctrl)
-	user := mock_models.NewUser(t)
+	mockLogger := NewMocklogger(ctrl)
+	user := mock_entities.NewUser(t)
 	query := `UPDATE public.users SET users.created_at = $1, users.updated_at = $2, users.first_name = $3, users.last_name = $4, users.password = $5, users.email = $6, users.group_id = $7 WHERE id = $8`
 	ctx := context.Background()
 	type fields struct {
 		database *sqlx.DB
-		logger   Logger
+		logger   logger
 	}
 	type args struct {
 		ctx  context.Context
-		card *models.User
+		card *entities.User
 	}
 	tests := []struct {
 		name    string
@@ -414,7 +398,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:  ctx,
@@ -440,7 +424,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:  ctx,
@@ -466,7 +450,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:  ctx,
@@ -493,7 +477,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:  ctx,
@@ -520,7 +504,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx:  ctx,
@@ -537,9 +521,8 @@ func TestUserRepository_Update(t *testing.T) {
 				database: tt.fields.database,
 				logger:   tt.fields.logger,
 			}
-			if err := r.Update(tt.args.ctx, tt.args.card); !errors.Is(err, tt.wantErr) {
-				t.Errorf("UserRepository.Update() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := r.Update(tt.args.ctx, tt.args.card)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -553,11 +536,11 @@ func TestUserRepository_Delete(t *testing.T) {
 	defer db.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	logger := mock_postgres.NewMockLogger(ctrl)
-	user := mock_models.NewUser(t)
+	mockLogger := NewMocklogger(ctrl)
+	user := mock_entities.NewUser(t)
 	type fields struct {
 		database *sqlx.DB
-		logger   Logger
+		logger   logger
 	}
 	type args struct {
 		ctx context.Context
@@ -574,7 +557,7 @@ func TestUserRepository_Delete(t *testing.T) {
 			name: "ok",
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			setup: func() {
 				mock.ExpectExec("DELETE FROM public.users WHERE id = $1").
@@ -596,7 +579,7 @@ func TestUserRepository_Delete(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -613,7 +596,7 @@ func TestUserRepository_Delete(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -631,7 +614,7 @@ func TestUserRepository_Delete(t *testing.T) {
 			},
 			fields: fields{
 				database: db,
-				logger:   logger,
+				logger:   mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -648,9 +631,8 @@ func TestUserRepository_Delete(t *testing.T) {
 				database: tt.fields.database,
 				logger:   tt.fields.logger,
 			}
-			if err := r.Delete(tt.args.ctx, tt.args.id); !errors.Is(err, tt.wantErr) {
-				t.Errorf("UserRepository.Delete() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := r.Delete(tt.args.ctx, tt.args.id)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
@@ -664,14 +646,14 @@ func TestUserRepository_Count(t *testing.T) {
 	defer db.Close()
 	query := "SELECT count(id) FROM public.users"
 	ctx := context.Background()
-	filter := &models.UserFilter{}
+	filter := &entities.UserFilter{}
 	type fields struct {
 		database *sqlx.DB
-		logger   Logger
+		logger   logger
 	}
 	type args struct {
 		ctx    context.Context
-		filter *models.UserFilter
+		filter *entities.UserFilter
 	}
 	tests := []struct {
 		name    string
@@ -749,18 +731,13 @@ func TestUserRepository_Count(t *testing.T) {
 				logger:   tt.fields.logger,
 			}
 			got, err := r.Count(tt.args.ctx, tt.args.filter)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("Count() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("Count() got = %v, want %v", got, tt.want)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
-func newUserRows(t *testing.T, listUsers []*models.User) *sqlmock.Rows {
+func newUserRows(t *testing.T, listUsers []*entities.User) *sqlmock.Rows {
 	t.Helper()
 	rows := sqlmock.NewRows([]string{
 		"id",

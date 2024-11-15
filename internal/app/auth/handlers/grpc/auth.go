@@ -4,30 +4,30 @@ import (
 	"context"
 	"strings"
 
-	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	"github.com/mikalai-mitsin/example/internal/app/auth/entities"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 )
 
 type AuthServiceServer struct {
 	examplepb.UnimplementedAuthServiceServer
-	authInterceptor AuthInterceptor
+	authUseCase AuthUseCase
 }
 
 func NewAuthServiceServer(
-	authInterceptor AuthInterceptor,
+	authUseCase AuthUseCase,
 ) *AuthServiceServer {
-	return &AuthServiceServer{authInterceptor: authInterceptor}
+	return &AuthServiceServer{authUseCase: authUseCase}
 }
 
 func (s AuthServiceServer) CreateToken(
 	ctx context.Context,
 	input *examplepb.CreateToken,
 ) (*examplepb.TokenPair, error) {
-	login := &models.Login{
+	login := &entities.Login{
 		Email:    strings.ToLower(input.GetEmail()),
 		Password: input.GetPassword(),
 	}
-	tokenPair, err := s.authInterceptor.CreateToken(ctx, login)
+	tokenPair, err := s.authUseCase.CreateToken(ctx, login)
 	if err != nil {
 		return nil, err
 	}
@@ -38,14 +38,14 @@ func (s AuthServiceServer) RefreshToken(
 	ctx context.Context,
 	input *examplepb.RefreshToken,
 ) (*examplepb.TokenPair, error) {
-	tokenPair, err := s.authInterceptor.RefreshToken(ctx, models.Token(input.GetToken()))
+	tokenPair, err := s.authUseCase.RefreshToken(ctx, entities.Token(input.GetToken()))
 	if err != nil {
 		return nil, err
 	}
 	return decodeTokenPair(tokenPair), nil
 }
 
-func decodeTokenPair(pair *models.TokenPair) *examplepb.TokenPair {
+func decodeTokenPair(pair *entities.TokenPair) *examplepb.TokenPair {
 	return &examplepb.TokenPair{
 		Access:  pair.Access.String(),
 		Refresh: pair.Refresh.String(),

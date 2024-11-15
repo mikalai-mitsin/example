@@ -1,5 +1,6 @@
 package jwt
 
+//go:generate mockgen -source=auth.go -package=jwt -destination=interfaces_mock.go
 import (
 	"context"
 	"crypto/rsa"
@@ -7,8 +8,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/mikalai-mitsin/example/internal/app/auth/models"
-	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/app/auth/entities"
+	userEntities "github.com/mikalai-mitsin/example/internal/app/user/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/configs"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
@@ -19,10 +20,8 @@ import (
 const refreshAudience = "refresh"
 const accessAudience = "access"
 
-// Logger - base logger interface
-//
-//go:generate mockgen -build_flags=-mod=mod -destination mock/logger.go . Logger
-type Logger interface {
+// logger - base logger interface
+type logger interface {
 	Debug(msg string, fields ...log.Field)
 	Info(msg string, fields ...log.Field)
 	Print(msg string, fields ...log.Field)
@@ -32,10 +31,8 @@ type Logger interface {
 	Panic(msg string, fields ...log.Field)
 }
 
-// Clock - clock interface
-//
-//go:generate mockgen -build_flags=-mod=mod -destination mock/clock.go . Clock
-type Clock interface {
+// clock - clock interface
+type clock interface {
 	Now() time.Time
 }
 
@@ -44,14 +41,14 @@ type AuthRepository struct {
 	refreshTTL time.Duration
 	publicKey  *rsa.PublicKey
 	privateKey *rsa.PrivateKey
-	clock      Clock
-	logger     Logger
+	clock      clock
+	logger     logger
 }
 
 func NewAuthRepository(
 	config *configs.Config,
-	clock Clock,
-	logger Logger,
+	clock clock,
+	logger logger,
 ) *AuthRepository {
 	private, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(config.Auth.PrivateKey))
 	if err != nil {
@@ -73,13 +70,13 @@ func NewAuthRepository(
 
 func (r *AuthRepository) Create(
 	_ context.Context,
-	user *userModels.User,
-) (*models.TokenPair, error) {
+	user *userEntities.User,
+) (*entities.TokenPair, error) {
 	pair := r.createPair(string(user.ID))
 	return pair, nil
 }
 
-func (r *AuthRepository) createPair(subject string) *models.TokenPair {
+func (r *AuthRepository) createPair(subject string) *entities.TokenPair {
 	now := r.clock.Now().UTC()
 	accessClaims := jwt.RegisteredClaims{
 		Audience:  []string{accessAudience},
@@ -110,13 +107,13 @@ func (r *AuthRepository) createPair(subject string) *models.TokenPair {
 	if err != nil {
 		return nil
 	}
-	return &models.TokenPair{
-		Access:  models.Token(accessTokenString),
-		Refresh: models.Token(refreshTokenString),
+	return &entities.TokenPair{
+		Access:  entities.Token(accessTokenString),
+		Refresh: entities.Token(refreshTokenString),
 	}
 }
 
-func (r *AuthRepository) Validate(_ context.Context, token models.Token) error {
+func (r *AuthRepository) Validate(_ context.Context, token entities.Token) error {
 	jwtToken, err := r.validate(token)
 	if err != nil {
 		return err
@@ -130,8 +127,8 @@ func (r *AuthRepository) Validate(_ context.Context, token models.Token) error {
 
 func (r *AuthRepository) RefreshToken(
 	_ context.Context,
-	token models.Token,
-) (*models.TokenPair, error) {
+	token entities.Token,
+) (*entities.TokenPair, error) {
 	jwtToken, err := r.validate(token)
 	if err != nil {
 		return nil, err
@@ -144,7 +141,7 @@ func (r *AuthRepository) RefreshToken(
 	return pair, nil
 }
 
-func (r *AuthRepository) validate(token models.Token) (*jwt.Token, error) {
+func (r *AuthRepository) validate(token entities.Token) (*jwt.Token, error) {
 	jwtToken, err := jwt.Parse(token.String(), r.keyFunc)
 	if err != nil {
 		e := errs.NewBadTokenError()
@@ -153,7 +150,7 @@ func (r *AuthRepository) validate(token models.Token) (*jwt.Token, error) {
 	return jwtToken, nil
 }
 
-func (r *AuthRepository) GetSubject(_ context.Context, token models.Token) (string, error) {
+func (r *AuthRepository) GetSubject(_ context.Context, token entities.Token) (string, error) {
 	jwtToken, err := jwt.Parse(token.String(), r.keyFunc)
 	if err != nil {
 		e := errs.NewError(errs.ErrorCodeUnauthenticated, "Invalid token.")

@@ -15,11 +15,11 @@ import (
 )
 
 type Server struct {
-	logger            *log.Log
-	server            *grpc.Server
-	config            *configs.Config
-	handlers          map[*grpc.ServiceDesc]any
-	unaryInterceptors []grpc.UnaryServerInterceptor
+	logger        *log.Log
+	server        *grpc.Server
+	config        *configs.Config
+	handlers      map[*grpc.ServiceDesc]any
+	unaryUseCases []grpc.UnaryServerInterceptor
 }
 
 func NewServer(logger *log.Log, config *configs.Config) *Server {
@@ -28,8 +28,8 @@ func NewServer(logger *log.Log, config *configs.Config) *Server {
 		server:   nil,
 		config:   config,
 		handlers: map[*grpc.ServiceDesc]any{},
-		unaryInterceptors: []grpc.UnaryServerInterceptor{
-			unaryErrorServerInterceptor,
+		unaryUseCases: []grpc.UnaryServerInterceptor{
+			unaryErrorServerUseCase,
 			otelgrpc.UnaryServerInterceptor(),
 			grpc_zap.UnaryServerInterceptor(
 				logger.Logger(),
@@ -39,7 +39,7 @@ func NewServer(logger *log.Log, config *configs.Config) *Server {
 	}
 }
 func (s *Server) Start(_ context.Context) error {
-	s.server = grpc.NewServer(grpc.ChainUnaryInterceptor(s.unaryInterceptors...))
+	s.server = grpc.NewServer(grpc.ChainUnaryInterceptor(s.unaryUseCases...))
 	for sd, ss := range s.handlers {
 		s.server.RegisterService(sd, ss)
 	}
@@ -62,6 +62,6 @@ func (s *Server) Stop(_ context.Context) error {
 func (s *Server) AddHandler(sd *grpc.ServiceDesc, ss any) {
 	s.handlers[sd] = ss
 }
-func (s *Server) AddInterceptor(interceptor grpc.UnaryServerInterceptor) {
-	s.unaryInterceptors = append(s.unaryInterceptors, interceptor)
+func (s *Server) AddInterceptor(usecase grpc.UnaryServerInterceptor) {
+	s.unaryUseCases = append(s.unaryUseCases, usecase)
 }

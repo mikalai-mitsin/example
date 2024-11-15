@@ -83,11 +83,8 @@ func NewBadTokenError() *Error {
 func NewPermissionDeniedError() *Error {
 	return NewError(ErrorCodePermissionDenied, "Permission denied.")
 }
-func NewSubscriptionAlreadyCancelledError() *Error {
-	return NewError(ErrorCodeFailedPrecondition, "Subscription is already cancelled.")
-}
-func NewInactivePlanError() *Error {
-	return NewError(ErrorCodeFailedPrecondition, "This plan is inactive.")
+func NewUnauthenticatedError() *Error {
+	return NewError(ErrorCodeFailedPrecondition, "Unauthenticated error.")
 }
 func (e *Error) Cause() error {
 	return e.Err

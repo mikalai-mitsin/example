@@ -6,116 +6,82 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mikalai-mitsin/example/internal/app/auth/models"
-	mockModels "github.com/mikalai-mitsin/example/internal/app/auth/models/mock"
-	mockUseCases "github.com/mikalai-mitsin/example/internal/app/auth/usecases/mock"
-	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
-	mockUserModels "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/app/auth/entities"
+	mock_entities "github.com/mikalai-mitsin/example/internal/app/auth/entities/mock"
+	user_entities "github.com/mikalai-mitsin/example/internal/app/user/entities"
+	mock_user_entities "github.com/mikalai-mitsin/example/internal/app/user/entities/mock"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
-
 	"go.uber.org/mock/gomock"
 )
 
 func TestAuthUseCase_Auth(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockUseCases.NewMockLogger(ctrl)
+	authService := NewMockAuthService(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	user := mockUserModels.NewUser(t)
+	token := mock_entities.NewToken(t)
+	user := mock_user_entities.NewUser(t)
 	type fields struct {
-		authRepository AuthRepository
-		userRepository UserRepository
-		logger         Logger
+		authService AuthService
+		logger      logger
 	}
 	type args struct {
 		ctx    context.Context
-		access models.Token
+		access entities.Token
 	}
 	tests := []struct {
 		name    string
 		setup   func()
 		fields  fields
 		args    args
-		want    *userModels.User
+		want    *user_entities.User
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				authRepository.EXPECT().
-					GetSubject(ctx, models.Token("mytoken")).
-					Return(string(user.ID), nil).
-					Times(1)
-				userRepository.EXPECT().Get(ctx, user.ID).Return(user, nil).Times(1)
+				authService.EXPECT().Auth(ctx, token).Return(user, nil).Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
-				access: "mytoken",
+				access: token,
 			},
 			want:    user,
 			wantErr: nil,
 		},
 		{
-			name: "bad user",
+			name: "repository error",
 			setup: func() {
-				authRepository.EXPECT().
-					GetSubject(ctx, models.Token("mytoken")).
-					Return("", errs.NewBadTokenError()).
+				authService.EXPECT().
+					Auth(ctx, token).
+					Return(nil, errs.NewBadTokenError()).
 					Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
-				access: "mytoken",
+				access: token,
 			},
 			want:    nil,
 			wantErr: errs.NewBadTokenError(),
-		},
-		{
-			name: "user not found",
-			setup: func() {
-				authRepository.EXPECT().
-					GetSubject(ctx, models.Token("mytoken")).
-					Return(string(user.ID), nil).
-					Times(1)
-				userRepository.EXPECT().
-					Get(ctx, user.ID).
-					Return(nil, errs.NewEntityNotFoundError()).
-					Times(1)
-			},
-			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
-			},
-			args: args{
-				ctx:    ctx,
-				access: "mytoken",
-			},
-			want:    nil,
-			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			u := AuthUseCase{
-				authRepository: tt.fields.authRepository,
-				userRepository: tt.fields.userRepository,
-				logger:         tt.fields.logger,
+			i := AuthUseCase{
+				authService: tt.fields.authService,
+				logger:      tt.fields.logger,
 			}
-			got, err := u.Auth(tt.args.ctx, tt.args.access)
+			got, err := i.Auth(tt.args.ctx, tt.args.access)
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("Auth() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -130,42 +96,38 @@ func TestAuthUseCase_Auth(t *testing.T) {
 func TestAuthUseCase_CreateToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockUseCases.NewMockLogger(ctrl)
+	authService := NewMockAuthService(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	user := mockUserModels.NewUser(t)
-	login := mockModels.NewLogin(t)
-	user.Email = login.Email
-	pair := mockModels.NewTokenPair(t)
-	user.SetPassword(login.Password)
+	login := mock_entities.NewLogin(t)
+	pair := mock_entities.NewTokenPair(t)
+	clockmock := NewMockclock(ctrl)
 	type fields struct {
-		authRepository AuthRepository
-		userRepository UserRepository
-		logger         Logger
+		authService AuthService
+		logger      logger
+		clock       clock
 	}
 	type args struct {
 		ctx   context.Context
-		login *models.Login
+		login *entities.Login
 	}
 	tests := []struct {
 		name    string
 		setup   func()
 		fields  fields
 		args    args
-		want    *models.TokenPair
+		want    *entities.TokenPair
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				userRepository.EXPECT().GetByEmail(ctx, user.Email).Return(user, nil).Times(1)
-				authRepository.EXPECT().Create(ctx, user).Return(pair, nil).Times(1)
+				authService.EXPECT().CreateToken(ctx, login).Return(pair, nil).Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
+				clock:       clockmock,
 			},
 			args: args{
 				ctx:   ctx,
@@ -175,78 +137,35 @@ func TestAuthUseCase_CreateToken(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "user not found",
+			name: "create requestUser error",
 			setup: func() {
-				userRepository.EXPECT().
-					GetByEmail(ctx, user.Email).Return(nil, errs.NewEntityNotFoundError()).
+				authService.EXPECT().
+					CreateToken(ctx, login).
+					Return(nil, errs.NewInvalidParameter("email or password")).
 					Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
+				clock:       clockmock,
 			},
 			args: args{
 				ctx:   ctx,
 				login: login,
-			},
-			want:    nil,
-			wantErr: errs.NewEntityNotFoundError(),
-		},
-		{
-			name: "bad password",
-			setup: func() {
-				userRepository.EXPECT().
-					GetByEmail(ctx, user.Email).Return(user, nil).
-					Times(1)
-			},
-			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
-			},
-			args: args{
-				ctx: ctx,
-				login: &models.Login{
-					Email:    login.Email,
-					Password: "mojParol'",
-				},
 			},
 			want:    nil,
 			wantErr: errs.NewInvalidParameter("email or password"),
-		},
-		{
-			name: "bad password",
-			setup: func() {
-				userRepository.EXPECT().
-					GetByEmail(ctx, user.Email).Return(user, nil).
-					Times(1)
-				authRepository.EXPECT().Create(ctx, user).
-					Return(nil, errs.NewUnexpectedBehaviorError("system errpr")).
-					Times(1)
-			},
-			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
-			},
-			args: args{
-				ctx:   ctx,
-				login: login,
-			},
-			want:    nil,
-			wantErr: errs.NewUnexpectedBehaviorError("system errpr"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			u := AuthUseCase{
-				authRepository: tt.fields.authRepository,
-				userRepository: tt.fields.userRepository,
-				logger:         tt.fields.logger,
+			i := AuthUseCase{
+				authService: tt.fields.authService,
+				clock:       tt.fields.clock,
+				logger:      tt.fields.logger,
 			}
-			got, err := u.CreateToken(tt.args.ctx, tt.args.login)
+			got, err := i.CreateToken(tt.args.ctx, tt.args.login)
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("CreateToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -261,64 +180,61 @@ func TestAuthUseCase_CreateToken(t *testing.T) {
 func TestAuthUseCase_RefreshToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockUseCases.NewMockLogger(ctrl)
+	authService := NewMockAuthService(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	pair := mockModels.NewTokenPair(t)
+	pair := mock_entities.NewTokenPair(t)
+	refresh := mock_entities.NewToken(t)
+	clockmock := NewMockclock(ctrl)
 	type fields struct {
-		authRepository AuthRepository
-		userRepository UserRepository
-		logger         Logger
+		authService AuthService
+		logger      logger
+		clock       clock
 	}
 	type args struct {
 		ctx     context.Context
-		refresh models.Token
+		refresh entities.Token
 	}
 	tests := []struct {
 		name    string
 		setup   func()
 		fields  fields
 		args    args
-		want    *models.TokenPair
+		want    *entities.TokenPair
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				authRepository.EXPECT().
-					RefreshToken(ctx, models.Token("my_r_token")).
-					Return(pair, nil).
-					Times(1)
+				authService.EXPECT().RefreshToken(ctx, refresh).Return(pair, nil).Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
+				clock:       clockmock,
 			},
 			args: args{
 				ctx:     ctx,
-				refresh: "my_r_token",
+				refresh: refresh,
 			},
 			want:    pair,
 			wantErr: nil,
 		},
 		{
-			name: "repository error",
+			name: "bad requestUser",
 			setup: func() {
-				authRepository.EXPECT().
-					RefreshToken(ctx, models.Token("my_r_token")).
-					Return(nil, errs.NewBadTokenError()).
-					Times(1)
+				authService.EXPECT().
+					RefreshToken(ctx, refresh).
+					Return(nil, errs.NewBadTokenError()).Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
+				clock:       clockmock,
 			},
 			args: args{
 				ctx:     ctx,
-				refresh: "my_r_token",
+				refresh: refresh,
 			},
 			want:    nil,
 			wantErr: errs.NewBadTokenError(),
@@ -327,12 +243,12 @@ func TestAuthUseCase_RefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			u := AuthUseCase{
-				authRepository: tt.fields.authRepository,
-				userRepository: tt.fields.userRepository,
-				logger:         tt.fields.logger,
+			i := AuthUseCase{
+				authService: tt.fields.authService,
+				clock:       tt.fields.clock,
+				logger:      tt.fields.logger,
 			}
-			got, err := u.RefreshToken(tt.args.ctx, tt.args.refresh)
+			got, err := i.RefreshToken(tt.args.ctx, tt.args.refresh)
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("RefreshToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -344,94 +260,16 @@ func TestAuthUseCase_RefreshToken(t *testing.T) {
 	}
 }
 
-func TestAuthUseCase_ValidateToken(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockUseCases.NewMockLogger(ctrl)
-	ctx := context.Background()
-	type fields struct {
-		authRepository AuthRepository
-		userRepository UserRepository
-		logger         Logger
-	}
-	type args struct {
-		ctx    context.Context
-		access models.Token
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr error
-		setup   func()
-	}{
-		{
-			name: "ok",
-			setup: func() {
-				authRepository.EXPECT().Validate(ctx, models.Token("my_token")).Return(nil).Times(1)
-			},
-			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
-			},
-			args: args{
-				ctx:    ctx,
-				access: "my_token",
-			},
-			wantErr: nil,
-		},
-		{
-			name: "repository error",
-			setup: func() {
-				authRepository.EXPECT().
-					Validate(ctx, models.Token("my_token")).
-					Return(errs.NewUnexpectedBehaviorError("error 345")).
-					Times(1)
-			},
-			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
-			},
-			args: args{
-				ctx:    ctx,
-				access: "my_token",
-			},
-			wantErr: &errs.Error{
-				Code:    13,
-				Message: "Unexpected behavior.",
-				Params:  errs.Params{{Key: "details", Value: "error 345"}},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
-			u := AuthUseCase{
-				authRepository: tt.fields.authRepository,
-				userRepository: tt.fields.userRepository,
-				logger:         tt.fields.logger,
-			}
-			if err := u.ValidateToken(tt.args.ctx, tt.args.access); !errors.Is(err, tt.wantErr) {
-				t.Errorf("ValidateToken() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestNewAuthUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockUseCases.NewMockLogger(ctrl)
+	authService := NewMockAuthService(ctrl)
+	clockmock := NewMockclock(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	type args struct {
-		authRepository AuthRepository
-		userRepository UserRepository
-		logger         Logger
+		authService AuthService
+		logger      logger
+		clock       clock
 	}
 	tests := []struct {
 		name string
@@ -441,107 +279,96 @@ func TestNewAuthUseCase(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
+				clock:       clockmock,
 			},
 			want: &AuthUseCase{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				clock:       clockmock,
+				logger:      mockLogger,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewAuthUseCase(tt.args.authRepository, tt.args.userRepository, tt.args.logger); !reflect.DeepEqual(
-				got,
-				tt.want,
-			) {
+			got := NewAuthUseCase(tt.args.authService, tt.args.clock, tt.args.logger)
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewAuthUseCase() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestAuthUseCase_CreateTokenByUser(t *testing.T) {
+func TestAuthUseCase_ValidateToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	userRepository := mockUseCases.NewMockUserRepository(ctrl)
-	authRepository := mockUseCases.NewMockAuthRepository(ctrl)
-	logger := mockUseCases.NewMockLogger(ctrl)
+	authService := NewMockAuthService(ctrl)
+	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	user := mockUserModels.NewUser(t)
-	tokenPair := mockModels.NewTokenPair(t)
+	token := entities.Token("this_is_valid_token")
 	type fields struct {
-		authRepository AuthRepository
-		userRepository UserRepository
-		logger         Logger
+		authService AuthService
+		logger      logger
 	}
 	type args struct {
-		ctx  context.Context
-		user *userModels.User
+		ctx   context.Context
+		token entities.Token
 	}
 	tests := []struct {
 		name    string
 		setup   func()
 		fields  fields
 		args    args
-		want    *models.TokenPair
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				authRepository.EXPECT().Create(ctx, user).Return(tokenPair, nil)
+				authService.EXPECT().ValidateToken(ctx, token).Return(nil).Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
 			},
 			args: args{
-				ctx:  ctx,
-				user: user,
+				ctx:   ctx,
+				token: token,
 			},
-			want:    tokenPair,
 			wantErr: nil,
 		},
 		{
-			name: "error",
+			name: "repository error",
 			setup: func() {
-				authRepository.EXPECT().
-					Create(ctx, user).
-					Return(nil, errs.NewUnexpectedBehaviorError("asd"))
+				authService.EXPECT().
+					ValidateToken(ctx, token).
+					Return(errs.NewUnexpectedBehaviorError("35124345")).
+					Times(1)
 			},
 			fields: fields{
-				authRepository: authRepository,
-				userRepository: userRepository,
-				logger:         logger,
+				authService: authService,
+				logger:      mockLogger,
 			},
 			args: args{
-				ctx:  ctx,
-				user: user,
+				ctx:   ctx,
+				token: token,
 			},
-			want:    nil,
-			wantErr: errs.NewUnexpectedBehaviorError("asd"),
+			wantErr: &errs.Error{
+				Code:    13,
+				Message: "Unexpected behavior.",
+				Params:  errs.Params{{Key: "details", Value: "35124345"}},
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := AuthUseCase{
-				authRepository: tt.fields.authRepository,
-				userRepository: tt.fields.userRepository,
-				logger:         tt.fields.logger,
-			}
 			tt.setup()
-			got, err := u.CreateTokenByUser(tt.args.ctx, tt.args.user)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("CreateTokenByUser() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			i := AuthUseCase{
+				authService: tt.fields.authService,
+				logger:      tt.fields.logger,
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateTokenByUser() got = %v, want %v", got, tt.want)
+			if err := i.ValidateToken(tt.args.ctx, tt.args.token); !errors.Is(err, tt.wantErr) {
+				t.Errorf("ValidateToken() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

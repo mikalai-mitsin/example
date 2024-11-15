@@ -7,20 +7,20 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/app/user/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 )
 
-type objectPermissionChecker func(model any, user *models.User) error
+type objectPermissionChecker func(model any, user *entities.User) error
 
-var hasObjectPermission = map[models.PermissionID][]objectPermissionChecker{
-	models.PermissionIDUserCreate: {objectAnybody},
-	models.PermissionIDUserList:   {objectAnybody},
-	models.PermissionIDUserDetail: {objectOwner},
-	models.PermissionIDUserUpdate: {objectOwner},
-	models.PermissionIDUserDelete: {
+var hasObjectPermission = map[entities.PermissionID][]objectPermissionChecker{
+	entities.PermissionIDUserCreate: {objectAnybody},
+	entities.PermissionIDUserList:   {objectAnybody},
+	entities.PermissionIDUserDetail: {objectOwner},
+	entities.PermissionIDUserUpdate: {objectOwner},
+	entities.PermissionIDUserDelete: {
 		objectOwner,
-	}, models.PermissionIDSessionList: {objectAnybody}, models.PermissionIDSessionDetail: {objectAnybody}, models.PermissionIDSessionCreate: {objectAnybody}, models.PermissionIDSessionUpdate: {objectAnybody}, models.PermissionIDSessionDelete: {objectAnybody}, models.PermissionIDArchList: {objectAnybody}, models.PermissionIDArchDetail: {objectAnybody}, models.PermissionIDArchCreate: {objectAnybody}, models.PermissionIDArchUpdate: {objectAnybody}, models.PermissionIDArchDelete: {objectAnybody},
+	}, entities.PermissionIDWidgetList: {objectAnybody}, entities.PermissionIDWidgetDetail: {objectAnybody}, entities.PermissionIDWidgetCreate: {objectAnybody}, entities.PermissionIDWidgetUpdate: {objectAnybody}, entities.PermissionIDWidgetDelete: {objectAnybody},
 }
 
 type PermissionRepository struct {
@@ -35,10 +35,10 @@ func NewPermissionRepository(database *sqlx.DB) *PermissionRepository {
 
 func (r *PermissionRepository) HasPermission(
 	ctx context.Context,
-	permissionID models.PermissionID,
-	user *models.User,
+	permissionID entities.PermissionID,
+	user *entities.User,
 ) error {
-	permission := &models.Permission{}
+	permission := &entities.Permission{}
 	q := sq.Select("permissions.id", "permissions.name").
 		From("public.permissions").
 		InnerJoin("group_permissions ON permissions.id = group_permissions.permission_id").
@@ -58,8 +58,8 @@ func (r *PermissionRepository) HasPermission(
 
 func (r *PermissionRepository) HasObjectPermission(
 	_ context.Context,
-	permission models.PermissionID,
-	user *models.User,
+	permission entities.PermissionID,
+	user *entities.User,
 	obj any,
 ) error {
 	checkers := hasObjectPermission[permission]
@@ -71,7 +71,7 @@ func (r *PermissionRepository) HasObjectPermission(
 	return errs.NewPermissionDeniedError()
 }
 
-func objectOwner(model any, user *models.User) error {
+func objectOwner(model any, user *entities.User) error {
 	valueOf := reflect.ValueOf(model)
 	if valueOf.Kind() == reflect.Pointer {
 		valueOf = valueOf.Elem()
@@ -93,7 +93,7 @@ func objectOwner(model any, user *models.User) error {
 	return errs.NewPermissionDeniedError()
 }
 
-func objectOwnerOrAll(model any, user *models.User) error {
+func objectOwnerOrAll(model any, user *entities.User) error {
 	if model == nil {
 		return nil
 	}
@@ -121,10 +121,10 @@ func objectOwnerOrAll(model any, user *models.User) error {
 	return errs.NewPermissionDeniedError()
 }
 
-func objectNobody(_ any, _ *models.User) error {
+func objectNobody(_ any, _ *entities.User) error {
 	return errs.NewPermissionDeniedError()
 }
 
-func objectAnybody(_ any, _ *models.User) error {
+func objectAnybody(_ any, _ *entities.User) error {
 	return nil
 }

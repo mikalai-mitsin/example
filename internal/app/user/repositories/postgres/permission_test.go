@@ -8,8 +8,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
-	"github.com/mikalai-mitsin/example/internal/app/user/models"
-	mock_models "github.com/mikalai-mitsin/example/internal/app/user/models/mock"
+	"github.com/mikalai-mitsin/example/internal/app/user/entities"
+	mock_entities "github.com/mikalai-mitsin/example/internal/app/user/entities/mock"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
@@ -20,7 +20,7 @@ func TestPermissionRepository_objectAnybody(t *testing.T) {
 	}
 	type args struct {
 		in0 any
-		in1 *models.User
+		in1 *entities.User
 	}
 	tests := []struct {
 		name    string
@@ -53,7 +53,7 @@ func TestPermissionRepository_objectNobody(t *testing.T) {
 	}
 	type args struct {
 		in0 any
-		in1 *models.User
+		in1 *entities.User
 	}
 	tests := []struct {
 		name    string
@@ -93,7 +93,7 @@ func TestPermissionRepository_objectOwner(t *testing.T) {
 	}
 	type args struct {
 		model any
-		user  *models.User
+		user  *entities.User
 	}
 	tests := []struct {
 		name    string
@@ -110,8 +110,8 @@ func TestPermissionRepository_objectOwner(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: &models.User{ID: "asd-241"},
-				user:  &models.User{ID: "asd-241"},
+				model: &entities.User{ID: "asd-241"},
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: nil,
 		},
@@ -123,8 +123,8 @@ func TestPermissionRepository_objectOwner(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: "&models.Tips{}",
-				user:  &models.User{ID: "asd-241"},
+				model: "&entities.Tips{}",
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -136,8 +136,8 @@ func TestPermissionRepository_objectOwner(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: &models.User{ID: "asd-241"},
-				user:  &models.User{ID: "asd-241"},
+				model: &entities.User{ID: "asd-241"},
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: nil,
 		},
@@ -154,7 +154,7 @@ func TestPermissionRepository_objectOwner(t *testing.T) {
 				}{
 					ID: pointer.Pointer("asd-241"),
 				},
-				user: &models.User{ID: "asd-241"},
+				user: &entities.User{ID: "asd-241"},
 			},
 			wantErr: nil,
 		},
@@ -166,8 +166,8 @@ func TestPermissionRepository_objectOwner(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: &models.User{ID: "asd-2412"},
-				user:  &models.User{ID: "asd-241"},
+				model: &entities.User{ID: "asd-2412"},
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -225,16 +225,16 @@ func TestPermissionRepository_HasPermission(t *testing.T) {
 	}
 	defer db.Close()
 	query := "SELECT permissions.id, permissions.name FROM public.permissions INNER JOIN group_permissions ON permissions.id = group_permissions.permission_id WHERE group_permissions.group_id = $1 AND permissions.id = $2"
-	user := mock_models.NewUser(t)
+	user := mock_entities.NewUser(t)
 	user.GroupID = "user"
-	permission := &models.Permission{}
+	permission := &entities.Permission{}
 	type fields struct {
 		database *sqlx.DB
 	}
 	type args struct {
 		ctx          context.Context
-		permissionID models.PermissionID
-		user         *models.User
+		permissionID entities.PermissionID
+		user         *entities.User
 	}
 	tests := []struct {
 		name    string
@@ -246,9 +246,9 @@ func TestPermissionRepository_HasPermission(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				rows := NewPermissionRows(t, []*models.Permission{permission})
+				rows := NewPermissionRows(t, []*entities.Permission{permission})
 				mock.ExpectQuery(query).
-					WithArgs(user.GroupID, models.PermissionIDUserCreate).
+					WithArgs(user.GroupID, entities.PermissionIDUserCreate).
 					WillReturnRows(rows)
 			},
 			fields: fields{
@@ -256,7 +256,7 @@ func TestPermissionRepository_HasPermission(t *testing.T) {
 			},
 			args: args{
 				ctx:          context.Background(),
-				permissionID: models.PermissionIDUserCreate,
+				permissionID: entities.PermissionIDUserCreate,
 				user:         user,
 			},
 			wantErr: nil,
@@ -265,7 +265,7 @@ func TestPermissionRepository_HasPermission(t *testing.T) {
 			name: "error",
 			setup: func() {
 				mock.ExpectQuery(query).
-					WithArgs(user.GroupID, models.PermissionIDUserList).
+					WithArgs(user.GroupID, entities.PermissionIDUserList).
 					WillReturnError(errors.New("error"))
 			},
 			fields: fields{
@@ -273,7 +273,7 @@ func TestPermissionRepository_HasPermission(t *testing.T) {
 			},
 			args: args{
 				ctx:          context.Background(),
-				permissionID: models.PermissionIDUserList,
+				permissionID: entities.PermissionIDUserList,
 				user:         user,
 			},
 			wantErr: &errs.Error{
@@ -310,16 +310,16 @@ func TestPermissionRepository_HasObjectPermission1(t *testing.T) {
 		return
 	}
 	defer db.Close()
-	user := mock_models.NewUser(t)
+	user := mock_entities.NewUser(t)
 	user.GroupID = "user"
-	article := mock_models.NewUser(t)
+	article := mock_entities.NewUser(t)
 	type fields struct {
 		database *sqlx.DB
 	}
 	type args struct {
 		in0        context.Context
-		permission models.PermissionID
-		user       *models.User
+		permission entities.PermissionID
+		user       *entities.User
 		obj        any
 	}
 	tests := []struct {
@@ -338,7 +338,7 @@ func TestPermissionRepository_HasObjectPermission1(t *testing.T) {
 			},
 			args: args{
 				in0:        nil,
-				permission: models.PermissionIDUserCreate,
+				permission: entities.PermissionIDUserCreate,
 				user:       user,
 				obj:        nil,
 			},
@@ -353,7 +353,7 @@ func TestPermissionRepository_HasObjectPermission1(t *testing.T) {
 			},
 			args: args{
 				in0:        nil,
-				permission: models.PermissionIDUserUpdate,
+				permission: entities.PermissionIDUserUpdate,
 				user:       user,
 				obj:        article,
 			},
@@ -388,7 +388,7 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 	}
 	type args struct {
 		model any
-		user  *models.User
+		user  *entities.User
 	}
 	tests := []struct {
 		name    string
@@ -404,8 +404,8 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: &models.User{ID: "asd-241"},
-				user:  &models.User{ID: "asd-241"},
+				model: &entities.User{ID: "asd-241"},
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: nil,
 		},
@@ -416,8 +416,8 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: "&models.Tips{}",
-				user:  &models.User{ID: "asd-241"},
+				model: "&entities.Tips{}",
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -428,8 +428,8 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: &models.User{ID: "asd-241"},
-				user:  &models.User{ID: "asd-241"},
+				model: &entities.User{ID: "asd-241"},
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: nil,
 		},
@@ -445,7 +445,7 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 				}{
 					ID: pointer.Pointer("asd-241"),
 				},
-				user: &models.User{ID: "asd-241"},
+				user: &entities.User{ID: "asd-241"},
 			},
 			wantErr: nil,
 		},
@@ -456,8 +456,8 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 				database: db,
 			},
 			args: args{
-				model: &models.User{ID: "asd-2412"},
-				user:  &models.User{ID: "asd-241"},
+				model: &entities.User{ID: "asd-2412"},
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: errs.NewPermissionDeniedError(),
 		},
@@ -469,7 +469,7 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 			},
 			args: args{
 				model: nil,
-				user:  &models.User{ID: "asd-241"},
+				user:  &entities.User{ID: "asd-241"},
 			},
 			wantErr: nil,
 		},
@@ -484,7 +484,7 @@ func TestPermissionRepository_objectOwnerOrAll(t *testing.T) {
 	}
 }
 
-func NewPermissionRows(t *testing.T, permission []*models.Permission) *sqlmock.Rows {
+func NewPermissionRows(t *testing.T, permission []*entities.Permission) *sqlmock.Rows {
 	t.Helper()
 	rows := sqlmock.NewRows([]string{
 		"id",

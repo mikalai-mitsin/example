@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	mock_grpc "github.com/mikalai-mitsin/example/internal/app/auth/handlers/grpc/mock"
-	"github.com/mikalai-mitsin/example/internal/app/auth/models"
-	mock_models "github.com/mikalai-mitsin/example/internal/app/auth/models/mock"
+	"github.com/mikalai-mitsin/example/internal/app/auth/entities"
+	mock_entities "github.com/mikalai-mitsin/example/internal/app/auth/entities/mock"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 
 	"reflect"
@@ -19,13 +18,13 @@ import (
 func TestAuthServiceServer_CreateToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	authInterceptor := mock_grpc.NewMockAuthInterceptor(ctrl)
+	authUseCase := NewMockAuthUseCase(ctrl)
 	ctx := context.Background()
-	login := mock_models.NewLogin(t)
-	pair := mock_models.NewTokenPair(t)
+	login := mock_entities.NewLogin(t)
+	pair := mock_entities.NewTokenPair(t)
 	type fields struct {
 		UnimplementedAuthServiceServer examplepb.UnimplementedAuthServiceServer
-		authInterceptor                AuthInterceptor
+		authUseCase                    AuthUseCase
 	}
 	type args struct {
 		ctx   context.Context
@@ -42,12 +41,12 @@ func TestAuthServiceServer_CreateToken(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				authInterceptor.EXPECT().CreateToken(ctx, login).Return(pair, nil).Times(1)
+				authUseCase.EXPECT().CreateToken(ctx, login).Return(pair, nil).Times(1)
 
 			},
 			fields: fields{
 				UnimplementedAuthServiceServer: examplepb.UnimplementedAuthServiceServer{},
-				authInterceptor:                authInterceptor,
+				authUseCase:                    authUseCase,
 			},
 			args: args{
 				ctx: ctx,
@@ -60,16 +59,16 @@ func TestAuthServiceServer_CreateToken(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "interceptor error",
+			name: "usecase error",
 			setup: func() {
-				authInterceptor.EXPECT().
+				authUseCase.EXPECT().
 					CreateToken(ctx, login).
 					Return(nil, errs.NewBadTokenError()).
 					Times(1)
 			},
 			fields: fields{
 				UnimplementedAuthServiceServer: examplepb.UnimplementedAuthServiceServer{},
-				authInterceptor:                authInterceptor,
+				authUseCase:                    authUseCase,
 			},
 			args: args{
 				ctx: ctx,
@@ -87,7 +86,7 @@ func TestAuthServiceServer_CreateToken(t *testing.T) {
 			tt.setup()
 			s := AuthServiceServer{
 				UnimplementedAuthServiceServer: tt.fields.UnimplementedAuthServiceServer,
-				authInterceptor:                tt.fields.authInterceptor,
+				authUseCase:                    tt.fields.authUseCase,
 			}
 			got, err := s.CreateToken(tt.args.ctx, tt.args.input)
 			if !errors.Is(err, tt.wantErr) {
@@ -104,13 +103,13 @@ func TestAuthServiceServer_CreateToken(t *testing.T) {
 func TestAuthServiceServer_RefreshToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	authInterceptor := mock_grpc.NewMockAuthInterceptor(ctrl)
+	authUseCase := NewMockAuthUseCase(ctrl)
 	ctx := context.Background()
-	token := mock_models.NewToken(t)
-	pair := mock_models.NewTokenPair(t)
+	token := mock_entities.NewToken(t)
+	pair := mock_entities.NewTokenPair(t)
 	type fields struct {
 		UnimplementedAuthServiceServer examplepb.UnimplementedAuthServiceServer
-		authInterceptor                AuthInterceptor
+		authUseCase                    AuthUseCase
 	}
 	type args struct {
 		ctx   context.Context
@@ -127,12 +126,12 @@ func TestAuthServiceServer_RefreshToken(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				authInterceptor.EXPECT().RefreshToken(ctx, token).Return(pair, nil).Times(1)
+				authUseCase.EXPECT().RefreshToken(ctx, token).Return(pair, nil).Times(1)
 
 			},
 			fields: fields{
 				UnimplementedAuthServiceServer: examplepb.UnimplementedAuthServiceServer{},
-				authInterceptor:                authInterceptor,
+				authUseCase:                    authUseCase,
 			},
 			args: args{
 				ctx: ctx,
@@ -144,16 +143,16 @@ func TestAuthServiceServer_RefreshToken(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "interceptor error",
+			name: "usecase error",
 			setup: func() {
-				authInterceptor.EXPECT().
+				authUseCase.EXPECT().
 					RefreshToken(ctx, token).
 					Return(nil, errs.NewBadTokenError()).
 					Times(1)
 			},
 			fields: fields{
 				UnimplementedAuthServiceServer: examplepb.UnimplementedAuthServiceServer{},
-				authInterceptor:                authInterceptor,
+				authUseCase:                    authUseCase,
 			},
 			args: args{
 				ctx: ctx,
@@ -170,7 +169,7 @@ func TestAuthServiceServer_RefreshToken(t *testing.T) {
 			tt.setup()
 			s := AuthServiceServer{
 				UnimplementedAuthServiceServer: tt.fields.UnimplementedAuthServiceServer,
-				authInterceptor:                tt.fields.authInterceptor,
+				authUseCase:                    tt.fields.authUseCase,
 			}
 			got, err := s.RefreshToken(tt.args.ctx, tt.args.input)
 			if !errors.Is(err, tt.wantErr) {
@@ -187,9 +186,9 @@ func TestAuthServiceServer_RefreshToken(t *testing.T) {
 func TestNewAuthServiceServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	authInterceptor := mock_grpc.NewMockAuthInterceptor(ctrl)
+	authUseCase := NewMockAuthUseCase(ctrl)
 	type args struct {
-		authInterceptor AuthInterceptor
+		authUseCase AuthUseCase
 	}
 	tests := []struct {
 		name string
@@ -199,20 +198,17 @@ func TestNewAuthServiceServer(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				authInterceptor: authInterceptor,
+				authUseCase: authUseCase,
 			},
 			want: &AuthServiceServer{
 				UnimplementedAuthServiceServer: examplepb.UnimplementedAuthServiceServer{},
-				authInterceptor:                authInterceptor,
+				authUseCase:                    authUseCase,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewAuthServiceServer(tt.args.authInterceptor); !reflect.DeepEqual(
-				got,
-				tt.want,
-			) {
+			if got := NewAuthServiceServer(tt.args.authUseCase); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewAuthServiceServer() = %v, want %v", got, tt.want)
 			}
 		})
@@ -221,7 +217,7 @@ func TestNewAuthServiceServer(t *testing.T) {
 
 func Test_decodeTokenPair(t *testing.T) {
 	type args struct {
-		pair *models.TokenPair
+		pair *entities.TokenPair
 	}
 	tests := []struct {
 		name string
@@ -231,7 +227,7 @@ func Test_decodeTokenPair(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				pair: &models.TokenPair{
+				pair: &entities.TokenPair{
 					Access:  "dasasdasd",
 					Refresh: "asdartge245",
 				},

@@ -1,16 +1,15 @@
 package handlers
 
+//go:generate mockgen -source=interfaces.go -package=handlers -destination=interfaces_mock.go
 import (
 	"context"
 
-	"github.com/mikalai-mitsin/example/internal/app/auth/models"
+	"github.com/mikalai-mitsin/example/internal/app/auth/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 )
 
-// Logger - base logger interface
-//
-//go:generate mockgen -build_flags=-mod=mod -destination mock/logger.go . Logger
-type Logger interface {
+// logger - base logger interface
+type logger interface {
 	Debug(msg string, fields ...log.Field)
 	Info(msg string, fields ...log.Field)
 	Print(msg string, fields ...log.Field)
@@ -20,10 +19,8 @@ type Logger interface {
 	Panic(msg string, fields ...log.Field)
 }
 
-// AuthInterceptor - domain layer interceptor interface
-//
-//go:generate mockgen -build_flags=-mod=mod -destination mock/interfaces.go . AuthInterceptor
-type AuthInterceptor interface {
-	CreateToken(ctx context.Context, login *models.Login) (*models.TokenPair, error)
-	RefreshToken(ctx context.Context, refresh models.Token) (*models.TokenPair, error)
+// AuthUseCase - domain layer usecase interface
+type AuthUseCase interface {
+	CreateToken(ctx context.Context, login *entities.Login) (*entities.TokenPair, error)
+	RefreshToken(ctx context.Context, refresh entities.Token) (*entities.TokenPair, error)
 }

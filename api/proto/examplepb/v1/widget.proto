@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package examplepb.v1;
+
+option go_package = "github.com/mikalai-mitsin/example/pkg/examplepb/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/api/annotations.proto";
+
+message WidgetCreate {
+  string form_screen_id = 1;
+  string name = 2;
+  int64 ordering = 3;
+  bool is_optional = 4;
+  string ui_settings = 5;
+  google.protobuf.Timestamp deleted_at = 6;
+}
+
+message WidgetGet {
+  string id = 1;
+}
+
+message WidgetUpdate {
+  string id = 1;
+  google.protobuf.StringValue form_screen_id = 2;
+  google.protobuf.StringValue name = 3;
+  google.protobuf.Int64Value ordering = 4;
+  google.protobuf.BoolValue is_optional = 5;
+  google.protobuf.StringValue ui_settings = 6;
+  google.protobuf.Timestamp deleted_at = 7;
+}
+
+message Widget {
+  string id = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.Timestamp created_at = 3;
+  string form_screen_id = 4;
+  string name = 5;
+  int64 ordering = 6;
+  bool is_optional = 7;
+  string ui_settings = 8;
+  google.protobuf.Timestamp deleted_at = 9;
+}
+
+message ListWidget {
+  repeated Widget items = 1;
+  uint64 count = 2;
+}
+
+message WidgetDelete {
+  string id = 1;
+}
+
+message WidgetFilter {
+  google.protobuf.UInt64Value page_number = 1;
+  google.protobuf.UInt64Value page_size = 2;
+  repeated string order_by = 3;
+  repeated string ids = 4;
+}
+
+service WidgetService {
+  rpc Create(examplepb.v1.WidgetCreate) returns (examplepb.v1.Widget) {
+    option (google.api.http) = {
+      post: "/api/v1/widgets"
+      body: "*"
+    };
+  }
+  rpc Get(examplepb.v1.WidgetGet) returns (examplepb.v1.Widget) {
+    option (google.api.http) = {get: "/api/v1/widgets/{id}"};
+  }
+  rpc Update(examplepb.v1.WidgetUpdate) returns (examplepb.v1.Widget) {
+    option (google.api.http) = {
+      patch: "/api/v1/widgets/{id}"
+      body: "*"
+    };
+  }
+  rpc Delete(examplepb.v1.WidgetDelete) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/widgets/{id}"};
+  }
+  rpc List(examplepb.v1.WidgetFilter) returns (examplepb.v1.ListWidget) {
+    option (google.api.http) = {get: "/api/v1/widgets"};
+  }
+}

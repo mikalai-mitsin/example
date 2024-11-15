@@ -5,14 +5,13 @@ import (
 	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-	"github.com/mikalai-mitsin/example/internal/app/auth/models"
-	userModels "github.com/mikalai-mitsin/example/internal/app/user/models"
+	"github.com/mikalai-mitsin/example/internal/app/auth/entities"
+	userEntities "github.com/mikalai-mitsin/example/internal/app/user/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/auth"
 	"github.com/mikalai-mitsin/example/internal/pkg/configs"
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -20,21 +19,21 @@ const (
 	expectedScheme  = "bearer"
 )
 
-type AuthUseCase interface {
-	Auth(context.Context, models.Token) (*userModels.User, error)
+type AuthService interface {
+	Auth(context.Context, entities.Token) (*userEntities.User, error)
 }
 type AuthMiddleware struct {
 	logger      *log.Log
 	config      *configs.Config
-	authUseCase AuthUseCase
+	authService AuthService
 }
 
 func NewAuthMiddleware(
-	authUseCase AuthUseCase,
+	authService AuthService,
 	logger *log.Log,
 	config *configs.Config,
 ) *AuthMiddleware {
-	return &AuthMiddleware{authUseCase: authUseCase, logger: logger, config: config}
+	return &AuthMiddleware{authService: authService, logger: logger, config: config}
 }
 
 func (m *AuthMiddleware) UnaryServerInterceptor(
@@ -50,42 +49,36 @@ func (m *AuthMiddleware) UnaryServerInterceptor(
 	return handler(newCtx, req)
 }
 func (m *AuthMiddleware) auth(ctx context.Context) (context.Context, error) {
-	var token models.Token
+	var token entities.Token
 	token, err := m.authFromMD(ctx)
 	if err != nil {
 		return ctx, err
 	}
 	if token == "" {
-		return auth.PutUser(ctx, models.Guest), nil
+		return auth.PutUser(ctx, entities.Guest), nil
 	}
-	user, err := m.authUseCase.Auth(ctx, token)
+	user, err := m.authService.Auth(ctx, token)
 	if err != nil {
 		return ctx, err
 	}
 	newCtx := auth.PutUser(ctx, user)
 	return newCtx, nil
 }
-func (m *AuthMiddleware) authFromMD(ctx context.Context) (models.Token, error) {
+func (m *AuthMiddleware) authFromMD(ctx context.Context) (entities.Token, error) {
 	val := metautils.ExtractIncoming(ctx).Get(headerAuthorize)
 	if val == "" {
 		return "", nil
 	}
 	splits := strings.SplitN(val, " ", 2)
 	if len(splits) < 2 {
-		return "", status.Errorf(codes.Unauthenticated, "Bad authorization string")
+		return "", errs.NewUnauthenticatedError()
 	}
 	if !strings.EqualFold(splits[0], expectedScheme) {
-		return "", status.Errorf(
-			codes.Unauthenticated,
-			"Request unauthenticated with "+expectedScheme,
-		)
+		return "", errs.NewUnauthenticatedError()
 	}
 	bearerToken := strings.TrimSpace(splits[1])
 	if bearerToken == "" {
-		return "", status.Errorf(
-			codes.Unauthenticated,
-			"Request unauthenticated with "+expectedScheme,
-		)
+		return "", errs.NewUnauthenticatedError()
 	}
-	return models.Token(splits[1]), nil
+	return entities.Token(splits[1]), nil
 }
