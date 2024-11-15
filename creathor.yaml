@@ -8,17 +8,11 @@ gateway: false
 REST: false
 uptrace: true
 domains:
-  - model: widget
+  - model: Post
     params:
-      - name: form_screen_id
+      - name: title
         type: string
-      - name: name
-        type: string
-      - name: ordering
+      - name: order
         type: int64
       - name: is_optional
         type: bool
-      - name: ui_settings
-        type: "string"
-      - name: deleted_at
-        type: "time.Time"

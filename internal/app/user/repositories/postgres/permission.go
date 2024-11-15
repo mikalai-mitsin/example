@@ -20,7 +20,7 @@ var hasObjectPermission = map[entities.PermissionID][]objectPermissionChecker{
 	entities.PermissionIDUserUpdate: {objectOwner},
 	entities.PermissionIDUserDelete: {
 		objectOwner,
-	}, entities.PermissionIDWidgetList: {objectAnybody}, entities.PermissionIDWidgetDetail: {objectAnybody}, entities.PermissionIDWidgetCreate: {objectAnybody}, entities.PermissionIDWidgetUpdate: {objectAnybody}, entities.PermissionIDWidgetDelete: {objectAnybody},
+	}, entities.PermissionIDPostList: {objectAnybody}, entities.PermissionIDPostDetail: {objectAnybody}, entities.PermissionIDPostCreate: {objectAnybody}, entities.PermissionIDPostUpdate: {objectAnybody}, entities.PermissionIDPostDelete: {objectAnybody},
 }
 
 type PermissionRepository struct {

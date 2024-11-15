@@ -4,16 +4,16 @@ package usecases
 import (
 	"context"
 
-	"github.com/mikalai-mitsin/example/internal/app/user/entities"
+	"github.com/mikalai-mitsin/example/internal/app/post/entities"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
-type userService interface {
-	Create(context.Context, *entities.UserCreate) (*entities.User, error)
-	Get(context.Context, uuid.UUID) (*entities.User, error)
-	List(context.Context, *entities.UserFilter) ([]*entities.User, uint64, error)
-	Update(context.Context, *entities.UserUpdate) (*entities.User, error)
+type postService interface {
+	Create(context.Context, *entities.PostCreate) (*entities.Post, error)
+	Get(context.Context, uuid.UUID) (*entities.Post, error)
+	List(context.Context, *entities.PostFilter) ([]*entities.Post, uint64, error)
+	Update(context.Context, *entities.PostUpdate) (*entities.Post, error)
 	Delete(context.Context, uuid.UUID) error
 }
 type logger interface {

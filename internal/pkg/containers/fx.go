@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/mikalai-mitsin/example/internal/app/auth"
+	"github.com/mikalai-mitsin/example/internal/app/post"
 	"github.com/mikalai-mitsin/example/internal/app/user"
-	"github.com/mikalai-mitsin/example/internal/app/widget"
 	"github.com/mikalai-mitsin/example/internal/pkg/clock"
 	"github.com/mikalai-mitsin/example/internal/pkg/configs"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
@@ -21,7 +21,7 @@ var FXModule = fx.Options(fx.WithLogger(func(logger *log.Log) fxevent.Logger {
 	return logger
 }), fx.Provide(func(config *configs.Config) (*log.Log, error) {
 	return log.NewLog(config.LogLevel)
-}, context.Background, configs.ParseConfig, clock.NewClock, uuid.NewUUIDv4Generator, postgres.NewDatabase, postgres.NewMigrateManager, grpc.NewServer, uptrace.NewProvider, auth.NewApp, widget.NewApp, user.NewApp), fx.Invoke(func(lifecycle fx.Lifecycle, server *uptrace.Provider, config *configs.Config) {
+}, context.Background, configs.ParseConfig, clock.NewClock, uuid.NewUUIDv4Generator, postgres.NewDatabase, postgres.NewMigrateManager, grpc.NewServer, uptrace.NewProvider, auth.NewApp, post.NewApp, user.NewApp), fx.Invoke(func(lifecycle fx.Lifecycle, server *uptrace.Provider, config *configs.Config) {
 	lifecycle.Append(fx.Hook{OnStart: server.Start, OnStop: server.Stop})
 }))
 
@@ -52,7 +52,7 @@ func NewGRPCContainer(config string) *fx.App {
 			}
 			return nil
 		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *widget.App, server *grpc.Server) {
+	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *post.App, server *grpc.Server) {
 		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
 			if err := app.RegisterGRPC(server); err != nil {
 				return err
