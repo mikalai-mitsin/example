@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package examplepb.v1;
+
+option go_package = "github.com/mikalai-mitsin/example/pkg/examplepb/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/api/annotations.proto";
+
+message CommentCreate {
+  string text = 1;
+  string author_id = 2;
+  string post_id = 3;
+}
+
+message CommentGet {
+  string id = 1;
+}
+
+message CommentUpdate {
+  string id = 1;
+  google.protobuf.StringValue text = 2;
+  google.protobuf.StringValue author_id = 3;
+  google.protobuf.StringValue post_id = 4;
+}
+
+message Comment {
+  string id = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.Timestamp created_at = 3;
+  string text = 4;
+  string author_id = 5;
+  string post_id = 6;
+}
+
+message ListComment {
+  repeated Comment items = 1;
+  uint64 count = 2;
+}
+
+message CommentDelete {
+  string id = 1;
+}
+
+message CommentFilter {
+  google.protobuf.UInt64Value page_number = 1;
+  google.protobuf.UInt64Value page_size = 2;
+  repeated string order_by = 3;
+  repeated string ids = 4;
+}
+
+service CommentService {
+  rpc Create(examplepb.v1.CommentCreate) returns (examplepb.v1.Comment) {
+    option (google.api.http) = {
+      post: "/api/v1/comments"
+      body: "*"
+    };
+  }
+  rpc Get(examplepb.v1.CommentGet) returns (examplepb.v1.Comment) {
+    option (google.api.http) = {get: "/api/v1/comments/{id}"};
+  }
+  rpc Update(examplepb.v1.CommentUpdate) returns (examplepb.v1.Comment) {
+    option (google.api.http) = {
+      patch: "/api/v1/comments/{id}"
+      body: "*"
+    };
+  }
+  rpc Delete(examplepb.v1.CommentDelete) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/comments/{id}"};
+  }
+  rpc List(examplepb.v1.CommentFilter) returns (examplepb.v1.ListComment) {
+    option (google.api.http) = {get: "/api/v1/comments"};
+  }
+}
