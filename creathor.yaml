@@ -4,15 +4,29 @@ goVersion: "1.22"
 auth: true
 ci: "github"
 gRPC: true
+http: true
 gateway: false
-REST: false
 uptrace: true
 domains:
   - model: Post
     params:
-      - name: title
-        type: string
-      - name: order
-        type: int64
-      - name: is_optional
-        type: bool
+      - name: "title"
+        type: "string"
+      - name: "body"
+        type: "string"
+      - name: "is_private"
+        type: "bool"
+      - name: "tags"
+        type: "[]string"
+      - name: "published_at"
+        type: "time.Time"
+      - name: "author_id"
+        type: "uuid.UUID"
+  - model: Comment
+    params:
+      - name: "text"
+        type: "string"
+      - name: "author_id"
+        type: "uuid.UUID"
+      - name: "post_id"
+        type: "uuid.UUID"
