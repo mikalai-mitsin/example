@@ -723,10 +723,6 @@ paths:
     get:
       parameters:
       - in: query
-        name: page_size
-        schema:
-          type: integer
-      - in: query
         name: page_number
         schema:
           type: integer
@@ -737,6 +733,10 @@ paths:
             type: string
           type: array
           uniqueItems: false
+      - in: query
+        name: page_size
+        schema:
+          type: integer
       requestBody:
         content:
           application/json:
