@@ -75,7 +75,7 @@ func NewInvalidParameter(message string) *Error {
 	return NewError(ErrorCodeInvalidArgument, message)
 }
 func NewEntityNotFoundError() *Error {
-	return NewError(ErrorCodeNotFound, "Entity not found.")
+	return NewError(ErrorCodeNotFound, "Name not found.")
 }
 func NewBadTokenError() *Error {
 	return NewError(ErrorCodePermissionDenied, "Bad token.")

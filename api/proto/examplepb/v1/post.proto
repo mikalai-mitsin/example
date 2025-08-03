@@ -11,12 +11,7 @@ import "google/protobuf/struct.proto";
 import "google/api/annotations.proto";
 
 message PostCreate {
-  string title = 1;
-  string body = 2;
-  bool is_private = 3;
-  repeated string tags = 4;
-  google.protobuf.Timestamp published_at = 5;
-  string author_id = 6;
+  string body = 1;
 }
 
 message PostGet {
@@ -25,24 +20,14 @@ message PostGet {
 
 message PostUpdate {
   string id = 1;
-  google.protobuf.StringValue title = 2;
-  google.protobuf.StringValue body = 3;
-  google.protobuf.BoolValue is_private = 4;
-  google.protobuf.ListValue tags = 5;
-  google.protobuf.Timestamp published_at = 6;
-  google.protobuf.StringValue author_id = 7;
+  google.protobuf.StringValue body = 2;
 }
 
 message Post {
   string id = 1;
   google.protobuf.Timestamp updated_at = 2;
   google.protobuf.Timestamp created_at = 3;
-  string title = 4;
-  string body = 5;
-  bool is_private = 6;
-  repeated string tags = 7;
-  google.protobuf.Timestamp published_at = 8;
-  string author_id = 9;
+  string body = 4;
 }
 
 message ListPost {

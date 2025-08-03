@@ -54,7 +54,7 @@ func defaultMessageProducer(
 	}
 	logger.Check(level, msg).Write(params...)
 }
-func unaryErrorServerUseCase(ctx context.Context, req interface {
+func unaryErrorServerInterceptor(ctx context.Context, req interface {
 }, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface {
 }, error) {
 	resp, err := handler(ctx, req)

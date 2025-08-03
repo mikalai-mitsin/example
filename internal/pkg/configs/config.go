@@ -13,13 +13,6 @@ type otel struct {
 	Environment string `env:"OTEL_ENVIRONMENT" toml:"environment"`
 }
 
-type auth struct {
-	PublicKey  string `env:"AUTH_PUBLIC_KEY"  toml:"public_key"`
-	PrivateKey string `env:"AUTH_PRIVATE_KEY" toml:"private_key"`
-	RefreshTTL int64  `env:"AUTH_REFRESH_TTL" toml:"refresh_ttl" env-default:"172800"`
-	AccessTTL  int64  `env:"AUTH_ACCESS_TTL"  toml:"access_ttl"  env-default:"86400"`
-}
-
 type database struct {
 	URI                string `env:"DATABASE_URI"                  toml:"uri"`
 	MaxOpenConnections int    `env:"DATABASE_MAX_OPEN_CONNECTIONS" toml:"max_open_connections" env-default:"50"`
@@ -29,7 +22,6 @@ type database struct {
 type Config struct {
 	LogLevel string       `env:"LOG_LEVEL" toml:"log_level" env-default:"debug"`
 	Database database     `                toml:"database"`
-	Auth     auth         `                toml:"auth"`
 	Otel     otel         `                toml:"otel"`
 	HTTP     *http.Config `                toml:"http"`
 	GRPC     *grpc.Config `                toml:"grpc"`

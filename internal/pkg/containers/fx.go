@@ -3,10 +3,8 @@ package containers
 import (
 	"context"
 
-	"github.com/mikalai-mitsin/example/internal/app/auth"
-	"github.com/mikalai-mitsin/example/internal/app/comment"
-	"github.com/mikalai-mitsin/example/internal/app/post"
-	"github.com/mikalai-mitsin/example/internal/app/user"
+	articles "github.com/mikalai-mitsin/example/internal/app/articles"
+	posts "github.com/mikalai-mitsin/example/internal/app/posts"
 	"github.com/mikalai-mitsin/example/internal/pkg/clock"
 	"github.com/mikalai-mitsin/example/internal/pkg/configs"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
@@ -23,7 +21,7 @@ var FXModule = fx.Options(fx.WithLogger(func(logger *log.Log) fxevent.Logger {
 	return logger
 }), fx.Provide(func(config *configs.Config) (*log.Log, error) {
 	return log.NewLog(config.LogLevel)
-}, context.Background, configs.ParseConfig, clock.NewClock, uuid.NewUUIDv4Generator, postgres.NewDatabase, postgres.NewMigrateManager, uptrace.NewProvider, auth.NewApp, post.NewApp, comment.NewApp, user.NewApp), fx.Invoke(func(lifecycle fx.Lifecycle, server *uptrace.Provider, config *configs.Config) {
+}, context.Background, configs.ParseConfig, clock.NewClock, uuid.NewUUIDv7Generator, postgres.NewDatabase, postgres.NewMigrateManager, uptrace.NewProvider, posts.NewApp, articles.NewApp), fx.Invoke(func(lifecycle fx.Lifecycle, server *uptrace.Provider, config *configs.Config) {
 	lifecycle.Append(fx.Hook{OnStart: server.Start, OnStop: server.Stop})
 }))
 
@@ -49,28 +47,14 @@ func NewGRPCContainer(config string) *fx.App {
 		return config
 	}, func(config *configs.Config) *grpc.Config {
 		return config.GRPC
-	}, grpc.NewServer), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, app *auth.App, server *grpc.Server) {
+	}, grpc.NewServer), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, app *posts.App, server *grpc.Server) {
 		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
 			if err := app.RegisterGRPC(server); err != nil {
 				return err
 			}
 			return nil
 		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *post.App, server *grpc.Server) {
-		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
-			if err := app.RegisterGRPC(server); err != nil {
-				return err
-			}
-			return nil
-		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *comment.App, server *grpc.Server) {
-		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
-			if err := app.RegisterGRPC(server); err != nil {
-				return err
-			}
-			return nil
-		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *user.App, server *grpc.Server) {
+	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *articles.App, server *grpc.Server) {
 		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
 			if err := app.RegisterGRPC(server); err != nil {
 				return err
@@ -96,28 +80,14 @@ func NewHTTPContainer(config string) *fx.App {
 		return config
 	}, func(config *configs.Config) *http.Config {
 		return config.HTTP
-	}, http.NewServer), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, app *auth.App, server *http.Server) {
+	}, http.NewServer), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, app *posts.App, server *http.Server) {
 		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
 			if err := app.RegisterHTTP(server); err != nil {
 				return err
 			}
 			return nil
 		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *post.App, server *http.Server) {
-		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
-			if err := app.RegisterHTTP(server); err != nil {
-				return err
-			}
-			return nil
-		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *comment.App, server *http.Server) {
-		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
-			if err := app.RegisterHTTP(server); err != nil {
-				return err
-			}
-			return nil
-		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *user.App, server *http.Server) {
+	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *articles.App, server *http.Server) {
 		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
 			if err := app.RegisterHTTP(server); err != nil {
 				return err
