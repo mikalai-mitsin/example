@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	post "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -44,10 +44,10 @@ func (m *MockpostUseCase) EXPECT() *MockpostUseCaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockpostUseCase) Create(arg0 context.Context, arg1 post.PostCreate) (post.Post, error) {
+func (m *MockpostUseCase) Create(arg0 context.Context, arg1 entities.PostCreate) (entities.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(post.Post)
+	ret0, _ := ret[0].(entities.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -73,10 +73,10 @@ func (mr *MockpostUseCaseMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockpostUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (post.Post, error) {
+func (m *MockpostUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(post.Post)
+	ret0, _ := ret[0].(entities.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -88,10 +88,10 @@ func (mr *MockpostUseCaseMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockpostUseCase) List(arg0 context.Context, arg1 post.PostFilter) ([]post.Post, uint64, error) {
+func (m *MockpostUseCase) List(arg0 context.Context, arg1 entities.PostFilter) ([]entities.Post, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]post.Post)
+	ret0, _ := ret[0].([]entities.Post)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -104,10 +104,10 @@ func (mr *MockpostUseCaseMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockpostUseCase) Update(arg0 context.Context, arg1 post.PostUpdate) (post.Post, error) {
+func (m *MockpostUseCase) Update(arg0 context.Context, arg1 entities.PostUpdate) (entities.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(post.Post)
+	ret0, _ := ret[0].(entities.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

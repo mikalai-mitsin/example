@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	article "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -45,7 +45,7 @@ func (m *MockarticleRepository) EXPECT() *MockarticleRepositoryMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockarticleRepository) Count(arg0 context.Context, arg1 article.ArticleFilter) (uint64, error) {
+func (m *MockarticleRepository) Count(arg0 context.Context, arg1 entities.ArticleFilter) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -60,7 +60,7 @@ func (mr *MockarticleRepositoryMockRecorder) Count(arg0, arg1 any) *gomock.Call 
 }
 
 // Create mocks base method.
-func (m *MockarticleRepository) Create(arg0 context.Context, arg1 article.Article) error {
+func (m *MockarticleRepository) Create(arg0 context.Context, arg1 entities.Article) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -88,10 +88,10 @@ func (mr *MockarticleRepositoryMockRecorder) Delete(arg0, arg1 any) *gomock.Call
 }
 
 // Get mocks base method.
-func (m *MockarticleRepository) Get(arg0 context.Context, arg1 uuid.UUID) (article.Article, error) {
+func (m *MockarticleRepository) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(article.Article)
+	ret0, _ := ret[0].(entities.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -103,10 +103,10 @@ func (mr *MockarticleRepositoryMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockarticleRepository) List(arg0 context.Context, arg1 article.ArticleFilter) ([]article.Article, error) {
+func (m *MockarticleRepository) List(arg0 context.Context, arg1 entities.ArticleFilter) ([]entities.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]article.Article)
+	ret0, _ := ret[0].([]entities.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -118,7 +118,7 @@ func (mr *MockarticleRepositoryMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockarticleRepository) Update(arg0 context.Context, arg1 article.Article) error {
+func (m *MockarticleRepository) Update(arg0 context.Context, arg1 entities.Article) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
 	ret0, _ := ret[0].(error)

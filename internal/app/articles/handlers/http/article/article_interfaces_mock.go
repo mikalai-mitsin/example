@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	article "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -44,10 +44,10 @@ func (m *MockarticleUseCase) EXPECT() *MockarticleUseCaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockarticleUseCase) Create(arg0 context.Context, arg1 article.ArticleCreate) (article.Article, error) {
+func (m *MockarticleUseCase) Create(arg0 context.Context, arg1 entities.ArticleCreate) (entities.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(article.Article)
+	ret0, _ := ret[0].(entities.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -73,10 +73,10 @@ func (mr *MockarticleUseCaseMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockarticleUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (article.Article, error) {
+func (m *MockarticleUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(article.Article)
+	ret0, _ := ret[0].(entities.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -88,10 +88,10 @@ func (mr *MockarticleUseCaseMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockarticleUseCase) List(arg0 context.Context, arg1 article.ArticleFilter) ([]article.Article, uint64, error) {
+func (m *MockarticleUseCase) List(arg0 context.Context, arg1 entities.ArticleFilter) ([]entities.Article, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]article.Article)
+	ret0, _ := ret[0].([]entities.Article)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -104,10 +104,10 @@ func (mr *MockarticleUseCaseMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockarticleUseCase) Update(arg0 context.Context, arg1 article.ArticleUpdate) (article.Article, error) {
+func (m *MockarticleUseCase) Update(arg0 context.Context, arg1 entities.ArticleUpdate) (entities.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(article.Article)
+	ret0, _ := ret[0].(entities.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
