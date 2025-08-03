@@ -81,7 +81,6 @@ func encodePostCreate(input *examplepb.PostCreate) entities.PostCreate {
 }
 func encodePostFilter(input *examplepb.PostFilter) entities.PostFilter {
 	filter := entities.PostFilter{
-		IDs:        nil,
 		PageSize:   nil,
 		PageNumber: nil,
 		OrderBy:    input.GetOrderBy(),
@@ -92,9 +91,6 @@ func encodePostFilter(input *examplepb.PostFilter) entities.PostFilter {
 	}
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
-	}
-	for _, id := range input.GetIds() {
-		filter.IDs = append(filter.IDs, uuid.MustParse(id))
 	}
 	return filter
 }

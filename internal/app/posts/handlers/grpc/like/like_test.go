@@ -306,22 +306,12 @@ func TestLikeServiceServer_List(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockLikeFilter(t)
-	var ids []uuid.UUID
-	var stringIDs []string
 	count := faker.New().UInt64Between(2, 20)
 	response := &examplepb.ListLike{
 		Items: make([]*examplepb.Like, 0, int(count)),
 		Count: count,
 	}
 	listLikes := make([]entities.Like, 0, int(count))
-	for i := 0; i < int(count); i++ {
-		a := entities.NewMockLike(t)
-		ids = append(ids, a.ID)
-		stringIDs = append(stringIDs, a.ID.String())
-		listLikes = append(listLikes, a)
-		response.Items = append(response.Items, decodeLike(a))
-	}
-	filter.IDs = ids
 	type fields struct {
 		UnimplementedLikeServiceServer examplepb.UnimplementedLikeServiceServer
 		likeUseCase                    likeUseCase
@@ -358,7 +348,6 @@ func TestLikeServiceServer_List(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
 					OrderBy:    filter.OrderBy,
-					Ids:        stringIDs,
 				},
 			},
 			want:    response,
@@ -384,7 +373,6 @@ func TestLikeServiceServer_List(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
 					OrderBy:    filter.OrderBy,
-					Ids:        stringIDs,
 				},
 			},
 			want:    nil,
@@ -517,7 +505,6 @@ func Test_decodeLike(t *testing.T) {
 }
 
 func Test_encodeLikeFilter(t *testing.T) {
-	id := uuid.UUID(uuid.NewUUID())
 	type args struct {
 		input *examplepb.LikeFilter
 	}
@@ -533,14 +520,12 @@ func Test_encodeLikeFilter(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(2),
 					PageSize:   wrapperspb.UInt64(5),
 					OrderBy:    []string{"created_at", "id"},
-					Ids:        []string{id.String()},
 				},
 			},
 			want: entities.LikeFilter{
 				PageSize:   pointer.Of(uint64(5)),
 				PageNumber: pointer.Of(uint64(2)),
 				OrderBy:    []string{"created_at", "id"},
-				IDs:        []uuid.UUID{id},
 			},
 		},
 	}

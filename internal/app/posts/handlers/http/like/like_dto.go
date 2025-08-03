@@ -53,14 +53,13 @@ func NewLikeListDto(likes []entities.Like, count uint64) (LikeListDTO, error) {
 }
 
 type LikeFilterDTO struct {
-	PageSize   *uint64     `json:"page_size"`
-	PageNumber *uint64     `json:"page_number"`
-	OrderBy    []string    `json:"order_by"`
-	IDs        []uuid.UUID `json:"ids"`
+	PageSize   *uint64  `json:"page_size"`
+	PageNumber *uint64  `json:"page_number"`
+	OrderBy    []string `json:"order_by"`
 }
 
 func NewLikeFilterDTO(r *http.Request) (LikeFilterDTO, error) {
-	filter := LikeFilterDTO{IDs: nil, PageSize: nil, PageNumber: nil, OrderBy: nil}
+	filter := LikeFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -82,13 +81,6 @@ func NewLikeFilterDTO(r *http.Request) (LikeFilterDTO, error) {
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
-	if r.URL.Query().Has("ids") {
-		ids := strings.Split(r.URL.Query().Get("ids"), ",")
-		filter.IDs = make([]uuid.UUID, len(ids))
-		for i, id := range ids {
-			filter.IDs[i] = uuid.MustParse(id)
-		}
-	}
 	return filter, nil
 }
 func (dto LikeFilterDTO) toEntity() (entities.LikeFilter, error) {
@@ -96,7 +88,6 @@ func (dto LikeFilterDTO) toEntity() (entities.LikeFilter, error) {
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
 		OrderBy:    dto.OrderBy,
-		IDs:        dto.IDs,
 	}
 	return filter, nil
 }

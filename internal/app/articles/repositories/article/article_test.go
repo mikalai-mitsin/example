@@ -264,7 +264,6 @@ func TestArticleRepository_List(t *testing.T) {
 		PageNumber: pointer.Of(uint64(2)),
 		Search:     nil,
 		OrderBy:    []string{"id ASC"},
-		IDs:        nil,
 	}
 	query := "SELECT articles.id, articles.created_at, articles.updated_at, articles.title, articles.subtitle, articles.body, articles.is_published FROM public.articles ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {

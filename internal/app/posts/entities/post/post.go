@@ -30,11 +30,10 @@ func (m *Post) Validate() error {
 }
 
 type PostFilter struct {
-	PageSize   *uint64     `json:"page_size"`
-	PageNumber *uint64     `json:"page_number"`
-	Search     *string     `json:"search"`
-	OrderBy    []string    `json:"order_by"`
-	Ids        []uuid.UUID `json:"ids"`
+	PageSize   *uint64  `json:"page_size"`
+	PageNumber *uint64  `json:"page_number"`
+	Search     *string  `json:"search"`
+	OrderBy    []string `json:"order_by"`
 }
 
 func (m *PostFilter) Validate() error {
@@ -87,21 +86,6 @@ func (m *PostFilter) Validate() error {
 		),
 		validation.Field(
 			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"posts.id ASC",
-					"posts.id DESC",
-					"posts.created_at ASC",
-					"posts.created_at DESC",
-					"posts.updated_at ASC",
-					"posts.updated_at DESC",
-					"posts.body ASC",
-					"posts.body DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.Ids,
 			validation.Each(
 				validation.In(
 					"posts.id ASC",

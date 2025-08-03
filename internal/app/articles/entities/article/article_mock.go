@@ -28,7 +28,6 @@ func NewMockArticleFilter(t *testing.T) ArticleFilter {
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
 		OrderBy:    []string{faker.New().Lorem().Sentence(15), faker.New().Lorem().Sentence(15)},
-		Ids:        []uuid.UUID{uuid.NewUUID(), uuid.NewUUID()},
 	}
 }
 func NewMockArticleCreate(t *testing.T) ArticleCreate {

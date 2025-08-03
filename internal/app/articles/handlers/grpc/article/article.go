@@ -86,7 +86,6 @@ func encodeArticleCreate(input *examplepb.ArticleCreate) entities.ArticleCreate 
 }
 func encodeArticleFilter(input *examplepb.ArticleFilter) entities.ArticleFilter {
 	filter := entities.ArticleFilter{
-		IDs:        nil,
 		PageSize:   nil,
 		PageNumber: nil,
 		OrderBy:    input.GetOrderBy(),
@@ -97,9 +96,6 @@ func encodeArticleFilter(input *examplepb.ArticleFilter) entities.ArticleFilter 
 	}
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
-	}
-	for _, id := range input.GetIds() {
-		filter.IDs = append(filter.IDs, uuid.MustParse(id))
 	}
 	return filter
 }

@@ -102,9 +102,6 @@ func (r *TagRepository) List(
 	q := sq.Select("tags.id", "tags.created_at", "tags.updated_at", "tags.post_id", "tags.value").
 		From("public.tags").
 		Limit(pageSize)
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -123,9 +120,6 @@ func (r *TagRepository) Count(ctx context.Context, filter entities.TagFilter) (u
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.tags")
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {

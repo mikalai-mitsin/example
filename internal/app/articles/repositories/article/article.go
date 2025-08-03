@@ -108,9 +108,6 @@ func (r *ArticleRepository) List(
 	q := sq.Select("articles.id", "articles.created_at", "articles.updated_at", "articles.title", "articles.subtitle", "articles.body", "articles.is_published").
 		From("public.articles").
 		Limit(pageSize)
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -133,9 +130,6 @@ func (r *ArticleRepository) Count(
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.articles")
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {

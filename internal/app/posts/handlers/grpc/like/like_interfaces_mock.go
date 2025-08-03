@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	like "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -44,10 +44,10 @@ func (m *MocklikeUseCase) EXPECT() *MocklikeUseCaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MocklikeUseCase) Create(arg0 context.Context, arg1 entities.LikeCreate) (entities.Like, error) {
+func (m *MocklikeUseCase) Create(arg0 context.Context, arg1 like.LikeCreate) (like.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(entities.Like)
+	ret0, _ := ret[0].(like.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -73,10 +73,10 @@ func (mr *MocklikeUseCaseMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MocklikeUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Like, error) {
+func (m *MocklikeUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (like.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(entities.Like)
+	ret0, _ := ret[0].(like.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -88,10 +88,10 @@ func (mr *MocklikeUseCaseMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MocklikeUseCase) List(arg0 context.Context, arg1 entities.LikeFilter) ([]entities.Like, uint64, error) {
+func (m *MocklikeUseCase) List(arg0 context.Context, arg1 like.LikeFilter) ([]like.Like, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entities.Like)
+	ret0, _ := ret[0].([]like.Like)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -104,10 +104,10 @@ func (mr *MocklikeUseCaseMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MocklikeUseCase) Update(arg0 context.Context, arg1 entities.LikeUpdate) (entities.Like, error) {
+func (m *MocklikeUseCase) Update(arg0 context.Context, arg1 like.LikeUpdate) (like.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(entities.Like)
+	ret0, _ := ret[0].(like.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

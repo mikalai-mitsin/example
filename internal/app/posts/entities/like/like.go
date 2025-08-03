@@ -34,11 +34,10 @@ func (m *Like) Validate() error {
 }
 
 type LikeFilter struct {
-	PageSize   *uint64     `json:"page_size"`
-	PageNumber *uint64     `json:"page_number"`
-	Search     *string     `json:"search"`
-	OrderBy    []string    `json:"order_by"`
-	Ids        []uuid.UUID `json:"ids"`
+	PageSize   *uint64  `json:"page_size"`
+	PageNumber *uint64  `json:"page_number"`
+	Search     *string  `json:"search"`
+	OrderBy    []string `json:"order_by"`
 }
 
 func (m *LikeFilter) Validate() error {
@@ -103,25 +102,6 @@ func (m *LikeFilter) Validate() error {
 		),
 		validation.Field(
 			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"likes.id ASC",
-					"likes.id DESC",
-					"likes.created_at ASC",
-					"likes.created_at DESC",
-					"likes.updated_at ASC",
-					"likes.updated_at DESC",
-					"likes.post_id ASC",
-					"likes.post_id DESC",
-					"likes.value ASC",
-					"likes.value DESC",
-					"likes.user_id ASC",
-					"likes.user_id DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.Ids,
 			validation.Each(
 				validation.In(
 					"likes.id ASC",

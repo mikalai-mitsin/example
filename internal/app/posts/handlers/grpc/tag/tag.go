@@ -81,7 +81,6 @@ func encodeTagCreate(input *examplepb.TagCreate) entities.TagCreate {
 }
 func encodeTagFilter(input *examplepb.TagFilter) entities.TagFilter {
 	filter := entities.TagFilter{
-		IDs:        nil,
 		PageSize:   nil,
 		PageNumber: nil,
 		OrderBy:    input.GetOrderBy(),
@@ -92,9 +91,6 @@ func encodeTagFilter(input *examplepb.TagFilter) entities.TagFilter {
 	}
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
-	}
-	for _, id := range input.GetIds() {
-		filter.IDs = append(filter.IDs, uuid.MustParse(id))
 	}
 	return filter
 }

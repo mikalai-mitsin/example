@@ -36,11 +36,10 @@ func (m *Article) Validate() error {
 }
 
 type ArticleFilter struct {
-	PageSize   *uint64     `json:"page_size"`
-	PageNumber *uint64     `json:"page_number"`
-	Search     *string     `json:"search"`
-	OrderBy    []string    `json:"order_by"`
-	Ids        []uuid.UUID `json:"ids"`
+	PageSize   *uint64  `json:"page_size"`
+	PageNumber *uint64  `json:"page_number"`
+	Search     *string  `json:"search"`
+	OrderBy    []string `json:"order_by"`
 }
 
 func (m *ArticleFilter) Validate() error {
@@ -111,27 +110,6 @@ func (m *ArticleFilter) Validate() error {
 		),
 		validation.Field(
 			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"articles.id ASC",
-					"articles.id DESC",
-					"articles.created_at ASC",
-					"articles.created_at DESC",
-					"articles.updated_at ASC",
-					"articles.updated_at DESC",
-					"articles.title ASC",
-					"articles.title DESC",
-					"articles.subtitle ASC",
-					"articles.subtitle DESC",
-					"articles.body ASC",
-					"articles.body DESC",
-					"articles.is_published ASC",
-					"articles.is_published DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.Ids,
 			validation.Each(
 				validation.In(
 					"articles.id ASC",

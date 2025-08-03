@@ -85,7 +85,6 @@ func encodeLikeCreate(input *examplepb.LikeCreate) entities.LikeCreate {
 }
 func encodeLikeFilter(input *examplepb.LikeFilter) entities.LikeFilter {
 	filter := entities.LikeFilter{
-		IDs:        nil,
 		PageSize:   nil,
 		PageNumber: nil,
 		OrderBy:    input.GetOrderBy(),
@@ -96,9 +95,6 @@ func encodeLikeFilter(input *examplepb.LikeFilter) entities.LikeFilter {
 	}
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
-	}
-	for _, id := range input.GetIds() {
-		filter.IDs = append(filter.IDs, uuid.MustParse(id))
 	}
 	return filter
 }

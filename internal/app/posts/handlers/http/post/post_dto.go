@@ -49,14 +49,13 @@ func NewPostListDto(posts []entities.Post, count uint64) (PostListDTO, error) {
 }
 
 type PostFilterDTO struct {
-	PageSize   *uint64     `json:"page_size"`
-	PageNumber *uint64     `json:"page_number"`
-	OrderBy    []string    `json:"order_by"`
-	IDs        []uuid.UUID `json:"ids"`
+	PageSize   *uint64  `json:"page_size"`
+	PageNumber *uint64  `json:"page_number"`
+	OrderBy    []string `json:"order_by"`
 }
 
 func NewPostFilterDTO(r *http.Request) (PostFilterDTO, error) {
-	filter := PostFilterDTO{IDs: nil, PageSize: nil, PageNumber: nil, OrderBy: nil}
+	filter := PostFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -78,13 +77,6 @@ func NewPostFilterDTO(r *http.Request) (PostFilterDTO, error) {
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
-	if r.URL.Query().Has("ids") {
-		ids := strings.Split(r.URL.Query().Get("ids"), ",")
-		filter.IDs = make([]uuid.UUID, len(ids))
-		for i, id := range ids {
-			filter.IDs[i] = uuid.MustParse(id)
-		}
-	}
 	return filter, nil
 }
 func (dto PostFilterDTO) toEntity() (entities.PostFilter, error) {
@@ -92,7 +84,6 @@ func (dto PostFilterDTO) toEntity() (entities.PostFilter, error) {
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
 		OrderBy:    dto.OrderBy,
-		IDs:        dto.IDs,
 	}
 	return filter, nil
 }

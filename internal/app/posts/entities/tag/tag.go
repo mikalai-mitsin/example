@@ -32,11 +32,10 @@ func (m *Tag) Validate() error {
 }
 
 type TagFilter struct {
-	PageSize   *uint64     `json:"page_size"`
-	PageNumber *uint64     `json:"page_number"`
-	Search     *string     `json:"search"`
-	OrderBy    []string    `json:"order_by"`
-	Ids        []uuid.UUID `json:"ids"`
+	PageSize   *uint64  `json:"page_size"`
+	PageNumber *uint64  `json:"page_number"`
+	Search     *string  `json:"search"`
+	OrderBy    []string `json:"order_by"`
 }
 
 func (m *TagFilter) Validate() error {
@@ -95,23 +94,6 @@ func (m *TagFilter) Validate() error {
 		),
 		validation.Field(
 			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"tags.id ASC",
-					"tags.id DESC",
-					"tags.created_at ASC",
-					"tags.created_at DESC",
-					"tags.updated_at ASC",
-					"tags.updated_at DESC",
-					"tags.post_id ASC",
-					"tags.post_id DESC",
-					"tags.value ASC",
-					"tags.value DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.Ids,
 			validation.Each(
 				validation.In(
 					"tags.id ASC",

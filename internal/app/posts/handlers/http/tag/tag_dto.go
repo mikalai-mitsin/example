@@ -51,14 +51,13 @@ func NewTagListDto(tags []entities.Tag, count uint64) (TagListDTO, error) {
 }
 
 type TagFilterDTO struct {
-	PageSize   *uint64     `json:"page_size"`
-	PageNumber *uint64     `json:"page_number"`
-	OrderBy    []string    `json:"order_by"`
-	IDs        []uuid.UUID `json:"ids"`
+	PageSize   *uint64  `json:"page_size"`
+	PageNumber *uint64  `json:"page_number"`
+	OrderBy    []string `json:"order_by"`
 }
 
 func NewTagFilterDTO(r *http.Request) (TagFilterDTO, error) {
-	filter := TagFilterDTO{IDs: nil, PageSize: nil, PageNumber: nil, OrderBy: nil}
+	filter := TagFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -80,13 +79,6 @@ func NewTagFilterDTO(r *http.Request) (TagFilterDTO, error) {
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
-	if r.URL.Query().Has("ids") {
-		ids := strings.Split(r.URL.Query().Get("ids"), ",")
-		filter.IDs = make([]uuid.UUID, len(ids))
-		for i, id := range ids {
-			filter.IDs[i] = uuid.MustParse(id)
-		}
-	}
 	return filter, nil
 }
 func (dto TagFilterDTO) toEntity() (entities.TagFilter, error) {
@@ -94,7 +86,6 @@ func (dto TagFilterDTO) toEntity() (entities.TagFilter, error) {
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
 		OrderBy:    dto.OrderBy,
-		IDs:        dto.IDs,
 	}
 	return filter, nil
 }

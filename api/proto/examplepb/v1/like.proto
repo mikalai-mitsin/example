@@ -49,7 +49,6 @@ message LikeFilter {
   google.protobuf.UInt64Value page_number = 1;
   google.protobuf.UInt64Value page_size = 2;
   repeated string order_by = 3;
-  repeated string ids = 4;
 }
 
 service LikeService {

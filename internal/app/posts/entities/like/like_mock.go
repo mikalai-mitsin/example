@@ -27,7 +27,6 @@ func NewMockLikeFilter(t *testing.T) LikeFilter {
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
 		OrderBy:    []string{faker.New().Lorem().Sentence(15), faker.New().Lorem().Sentence(15)},
-		Ids:        []uuid.UUID{uuid.NewUUID(), uuid.NewUUID()},
 	}
 }
 func NewMockLikeCreate(t *testing.T) LikeCreate {

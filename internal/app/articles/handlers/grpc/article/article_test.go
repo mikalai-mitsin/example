@@ -306,22 +306,12 @@ func TestArticleServiceServer_List(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockArticleFilter(t)
-	var ids []uuid.UUID
-	var stringIDs []string
 	count := faker.New().UInt64Between(2, 20)
 	response := &examplepb.ListArticle{
 		Items: make([]*examplepb.Article, 0, int(count)),
 		Count: count,
 	}
 	listArticles := make([]entities.Article, 0, int(count))
-	for i := 0; i < int(count); i++ {
-		a := entities.NewMockArticle(t)
-		ids = append(ids, a.ID)
-		stringIDs = append(stringIDs, a.ID.String())
-		listArticles = append(listArticles, a)
-		response.Items = append(response.Items, decodeArticle(a))
-	}
-	filter.IDs = ids
 	type fields struct {
 		UnimplementedArticleServiceServer examplepb.UnimplementedArticleServiceServer
 		articleUseCase                    articleUseCase
@@ -358,7 +348,6 @@ func TestArticleServiceServer_List(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
 					OrderBy:    filter.OrderBy,
-					Ids:        stringIDs,
 				},
 			},
 			want:    response,
@@ -384,7 +373,6 @@ func TestArticleServiceServer_List(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
 					OrderBy:    filter.OrderBy,
-					Ids:        stringIDs,
 				},
 			},
 			want:    nil,
@@ -518,7 +506,6 @@ func Test_decodeArticle(t *testing.T) {
 }
 
 func Test_encodeArticleFilter(t *testing.T) {
-	id := uuid.UUID(uuid.NewUUID())
 	type args struct {
 		input *examplepb.ArticleFilter
 	}
@@ -534,14 +521,12 @@ func Test_encodeArticleFilter(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(2),
 					PageSize:   wrapperspb.UInt64(5),
 					OrderBy:    []string{"created_at", "id"},
-					Ids:        []string{id.String()},
 				},
 			},
 			want: entities.ArticleFilter{
 				PageSize:   pointer.Of(uint64(5)),
 				PageNumber: pointer.Of(uint64(2)),
 				OrderBy:    []string{"created_at", "id"},
-				IDs:        []uuid.UUID{id},
 			},
 		},
 	}

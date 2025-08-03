@@ -105,9 +105,6 @@ func (r *LikeRepository) List(
 	q := sq.Select("likes.id", "likes.created_at", "likes.updated_at", "likes.post_id", "likes.value", "likes.user_id").
 		From("public.likes").
 		Limit(pageSize)
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -126,9 +123,6 @@ func (r *LikeRepository) Count(ctx context.Context, filter entities.LikeFilter) 
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.likes")
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {

@@ -306,22 +306,12 @@ func TestPostServiceServer_List(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockPostFilter(t)
-	var ids []uuid.UUID
-	var stringIDs []string
 	count := faker.New().UInt64Between(2, 20)
 	response := &examplepb.ListPost{
 		Items: make([]*examplepb.Post, 0, int(count)),
 		Count: count,
 	}
 	listPosts := make([]entities.Post, 0, int(count))
-	for i := 0; i < int(count); i++ {
-		a := entities.NewMockPost(t)
-		ids = append(ids, a.ID)
-		stringIDs = append(stringIDs, a.ID.String())
-		listPosts = append(listPosts, a)
-		response.Items = append(response.Items, decodePost(a))
-	}
-	filter.IDs = ids
 	type fields struct {
 		UnimplementedPostServiceServer examplepb.UnimplementedPostServiceServer
 		postUseCase                    postUseCase
@@ -358,7 +348,6 @@ func TestPostServiceServer_List(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
 					OrderBy:    filter.OrderBy,
-					Ids:        stringIDs,
 				},
 			},
 			want:    response,
@@ -384,7 +373,6 @@ func TestPostServiceServer_List(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
 					OrderBy:    filter.OrderBy,
-					Ids:        stringIDs,
 				},
 			},
 			want:    nil,
@@ -515,7 +503,6 @@ func Test_decodePost(t *testing.T) {
 }
 
 func Test_encodePostFilter(t *testing.T) {
-	id := uuid.UUID(uuid.NewUUID())
 	type args struct {
 		input *examplepb.PostFilter
 	}
@@ -531,14 +518,12 @@ func Test_encodePostFilter(t *testing.T) {
 					PageNumber: wrapperspb.UInt64(2),
 					PageSize:   wrapperspb.UInt64(5),
 					OrderBy:    []string{"created_at", "id"},
-					Ids:        []string{id.String()},
 				},
 			},
 			want: entities.PostFilter{
 				PageSize:   pointer.Of(uint64(5)),
 				PageNumber: pointer.Of(uint64(2)),
 				OrderBy:    []string{"created_at", "id"},
-				IDs:        []uuid.UUID{id},
 			},
 		},
 	}

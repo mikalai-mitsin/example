@@ -99,9 +99,6 @@ func (r *PostRepository) List(
 	q := sq.Select("posts.id", "posts.created_at", "posts.updated_at", "posts.body").
 		From("public.posts").
 		Limit(pageSize)
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -120,9 +117,6 @@ func (r *PostRepository) Count(ctx context.Context, filter entities.PostFilter) 
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.posts")
-	if len(filter.IDs) > 0 {
-		q = q.Where(sq.Eq{"id": filter.IDs})
-	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	result := r.database.QueryRowxContext(ctx, query, args...)
 	if err := result.Err(); err != nil {
