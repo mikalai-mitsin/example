@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package examplepb.v1;
+
+option go_package = "github.com/mikalai-mitsin/example/pkg/examplepb/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/api/annotations.proto";
+
+message ArticleCreate {
+  string title = 1;
+  string subtitle = 2;
+  string body = 3;
+  string is_published = 4;
+}
+
+message ArticleGet {
+  string id = 1;
+}
+
+message ArticleUpdate {
+  string id = 1;
+  google.protobuf.StringValue title = 2;
+  google.protobuf.StringValue subtitle = 3;
+  google.protobuf.StringValue body = 4;
+  google.protobuf.StringValue is_published = 5;
+}
+
+message Article {
+  string id = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.Timestamp created_at = 3;
+  string title = 4;
+  string subtitle = 5;
+  string body = 6;
+  string is_published = 7;
+}
+
+message ListArticle {
+  repeated Article items = 1;
+  uint64 count = 2;
+}
+
+message ArticleDelete {
+  string id = 1;
+}
+
+message ArticleFilter {
+  google.protobuf.UInt64Value page_number = 1;
+  google.protobuf.UInt64Value page_size = 2;
+  repeated string order_by = 3;
+  repeated string ids = 4;
+}
+
+service ArticleService {
+  rpc Create(examplepb.v1.ArticleCreate) returns (examplepb.v1.Article) {
+    option (google.api.http) = {
+      post: "/api/v1/articles"
+      body: "*"
+    };
+  }
+  rpc Get(examplepb.v1.ArticleGet) returns (examplepb.v1.Article) {
+    option (google.api.http) = {get: "/api/v1/articles/{id}"};
+  }
+  rpc Update(examplepb.v1.ArticleUpdate) returns (examplepb.v1.Article) {
+    option (google.api.http) = {
+      patch: "/api/v1/articles/{id}"
+      body: "*"
+    };
+  }
+  rpc Delete(examplepb.v1.ArticleDelete) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/articles/{id}"};
+  }
+  rpc List(examplepb.v1.ArticleFilter) returns (examplepb.v1.ListArticle) {
+    option (google.api.http) = {get: "/api/v1/articles"};
+  }
+}

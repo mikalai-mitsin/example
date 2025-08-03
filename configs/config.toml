@@ -1,0 +1,15 @@
+log_level = "debug"
+
+[http]
+address = ":8000"
+
+[grpc]
+address = ":8000"
+
+[database]
+uri = "postgres://@127.0.0.1/example?sslmode=disable"
+
+[otel]
+url = "https://ebD-TR1lkYsQ6eg5LYIyVQ@uptrace.dev/1510"
+enabled = true
+environment = "local"

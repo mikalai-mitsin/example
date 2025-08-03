@@ -1,0 +1,15 @@
+package configs
+
+import "testing"
+
+func NewMockConfig(t *testing.T) *Config {
+	t.Helper()
+	return &Config{
+		LogLevel: "debug",
+		Database: database{
+			URI:                "",
+			MaxOpenConnections: 50,
+			MaxIDLEConnections: 10,
+		},
+	}
+}
