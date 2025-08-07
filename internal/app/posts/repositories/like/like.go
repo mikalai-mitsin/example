@@ -1,4 +1,4 @@
-package postgres
+package repositories
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jmoiron/sqlx"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
@@ -14,11 +13,11 @@ import (
 )
 
 type LikeRepository struct {
-	database *sqlx.DB
+	database database
 	logger   logger
 }
 
-func NewLikeRepository(database *sqlx.DB, logger logger) *LikeRepository {
+func NewLikeRepository(database database, logger logger) *LikeRepository {
 	return &LikeRepository{database: database, logger: logger}
 }
 
@@ -124,13 +123,8 @@ func (r *LikeRepository) Count(ctx context.Context, filter entities.LikeFilter) 
 	defer cancel()
 	q := sq.Select("count(id)").From("public.likes")
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result := r.database.QueryRowxContext(ctx, query, args...)
-	if err := result.Err(); err != nil {
-		e := errs.FromPostgresError(err)
-		return 0, e
-	}
 	var count uint64
-	if err := result.Scan(&count); err != nil {
+	if err := r.database.GetContext(ctx, &count, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return 0, e
 	}

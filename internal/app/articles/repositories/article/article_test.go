@@ -1,4 +1,4 @@
-package postgres
+package repositories
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/jmoiron/sqlx"
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -27,7 +26,7 @@ func TestNewArticleRepository(t *testing.T) {
 	}
 	defer mockDB.Close()
 	type args struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	tests := []struct {
@@ -70,7 +69,7 @@ func TestArticleRepository_Create(t *testing.T) {
 	article := entities.NewMockArticle(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -162,7 +161,7 @@ func TestArticleRepository_Get(t *testing.T) {
 	article := entities.NewMockArticle(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -267,7 +266,7 @@ func TestArticleRepository_List(t *testing.T) {
 	}
 	query := "SELECT articles.id, articles.created_at, articles.updated_at, articles.title, articles.subtitle, articles.body, articles.is_published FROM public.articles ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -365,7 +364,7 @@ func TestArticleRepository_Update(t *testing.T) {
 	query := `UPDATE public.articles SET created_at = $1, updated_at = $2, title = $3, subtitle = $4, body = $5, is_published = $6 WHERE id = $7`
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -533,7 +532,7 @@ func TestArticleRepository_Delete(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	article := entities.NewMockArticle(t)
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -642,7 +641,7 @@ func TestArticleRepository_Count(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.ArticleFilter{}
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {

@@ -1,6 +1,6 @@
 CREATE TABLE public.articles
 (
-    id          uuid                  DEFAULT uuid_generate_v4()
+    id          uuid                  DEFAULT uuidv7()
         CONSTRAINT articles_pk PRIMARY KEY,
     title text NOT NULL,
     subtitle text NOT NULL,

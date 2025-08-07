@@ -1,5 +1,6 @@
 package usecases
 
+//go:generate mockgen -source=tag_interfaces.go -package=usecases -destination=tag_interfaces_mock.go
 import (
 	"context"
 

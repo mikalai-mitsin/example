@@ -1,4 +1,4 @@
-package postgres
+package repositories
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/jmoiron/sqlx"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -27,7 +26,7 @@ func TestNewTagRepository(t *testing.T) {
 	}
 	defer mockDB.Close()
 	type args struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	tests := []struct {
@@ -70,7 +69,7 @@ func TestTagRepository_Create(t *testing.T) {
 	tag := entities.NewMockTag(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -158,7 +157,7 @@ func TestTagRepository_Get(t *testing.T) {
 	tag := entities.NewMockTag(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -261,7 +260,7 @@ func TestTagRepository_List(t *testing.T) {
 	}
 	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.post_id, tags.value FROM public.tags ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -359,7 +358,7 @@ func TestTagRepository_Update(t *testing.T) {
 	query := `UPDATE public.tags SET created_at = $1, updated_at = $2, post_id = $3, value = $4 WHERE id = $5`
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -517,7 +516,7 @@ func TestTagRepository_Delete(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	tag := entities.NewMockTag(t)
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -626,7 +625,7 @@ func TestTagRepository_Count(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.TagFilter{}
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {

@@ -1,4 +1,4 @@
-package postgres
+package repositories
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/jmoiron/sqlx"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -27,7 +26,7 @@ func TestNewPostRepository(t *testing.T) {
 	}
 	defer mockDB.Close()
 	type args struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	tests := []struct {
@@ -70,7 +69,7 @@ func TestPostRepository_Create(t *testing.T) {
 	post := entities.NewMockPost(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -156,7 +155,7 @@ func TestPostRepository_Get(t *testing.T) {
 	post := entities.NewMockPost(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -259,7 +258,7 @@ func TestPostRepository_List(t *testing.T) {
 	}
 	query := "SELECT posts.id, posts.created_at, posts.updated_at, posts.body FROM public.posts ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -357,7 +356,7 @@ func TestPostRepository_Update(t *testing.T) {
 	query := `UPDATE public.posts SET created_at = $1, updated_at = $2, body = $3 WHERE id = $4`
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -510,7 +509,7 @@ func TestPostRepository_Delete(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	post := entities.NewMockPost(t)
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -619,7 +618,7 @@ func TestPostRepository_Count(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.PostFilter{}
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {

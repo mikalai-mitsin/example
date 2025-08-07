@@ -1,4 +1,4 @@
-package postgres
+package repositories
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jmoiron/sqlx"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
@@ -14,11 +13,11 @@ import (
 )
 
 type PostRepository struct {
-	database *sqlx.DB
+	database database
 	logger   logger
 }
 
-func NewPostRepository(database *sqlx.DB, logger logger) *PostRepository {
+func NewPostRepository(database database, logger logger) *PostRepository {
 	return &PostRepository{database: database, logger: logger}
 }
 
@@ -118,13 +117,8 @@ func (r *PostRepository) Count(ctx context.Context, filter entities.PostFilter) 
 	defer cancel()
 	q := sq.Select("count(id)").From("public.posts")
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result := r.database.QueryRowxContext(ctx, query, args...)
-	if err := result.Err(); err != nil {
-		e := errs.FromPostgresError(err)
-		return 0, e
-	}
 	var count uint64
-	if err := result.Scan(&count); err != nil {
+	if err := r.database.GetContext(ctx, &count, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return 0, e
 	}

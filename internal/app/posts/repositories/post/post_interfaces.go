@@ -1,7 +1,12 @@
-package postgres
+package repositories
 
-//go:generate mockgen -source=post_interfaces.go -package=postgres -destination=post_interfaces_mock.go
-import "github.com/mikalai-mitsin/example/internal/pkg/log"
+//go:generate mockgen -source=post_interfaces.go -package=repositories -destination=post_interfaces_mock.go
+import (
+	"context"
+	"database/sql"
+
+	"github.com/mikalai-mitsin/example/internal/pkg/log"
+)
 
 type logger interface {
 	Debug(msg string, fields ...log.Field)
@@ -11,4 +16,14 @@ type logger interface {
 	Error(msg string, fields ...log.Field)
 	Fatal(msg string, fields ...log.Field)
 	Panic(msg string, fields ...log.Field)
+}
+type database interface {
+	ExecContext(ctx context.Context, query string, args ...interface {
+	}) (sql.Result, error)
+	GetContext(ctx context.Context, dest any, query string, args ...interface {
+	}) error
+	SelectContext(ctx context.Context, dest any, query string, args ...interface {
+	}) error
+	QueryRowContext(ctx context.Context, query string, args ...interface {
+	}) *sql.Row
 }

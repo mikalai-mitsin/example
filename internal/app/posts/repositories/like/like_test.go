@@ -1,4 +1,4 @@
-package postgres
+package repositories
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/jmoiron/sqlx"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -27,7 +26,7 @@ func TestNewLikeRepository(t *testing.T) {
 	}
 	defer mockDB.Close()
 	type args struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	tests := []struct {
@@ -70,7 +69,7 @@ func TestLikeRepository_Create(t *testing.T) {
 	like := entities.NewMockLike(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -160,7 +159,7 @@ func TestLikeRepository_Get(t *testing.T) {
 	like := entities.NewMockLike(t)
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -263,7 +262,7 @@ func TestLikeRepository_List(t *testing.T) {
 	}
 	query := "SELECT likes.id, likes.created_at, likes.updated_at, likes.post_id, likes.value, likes.user_id FROM public.likes ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -361,7 +360,7 @@ func TestLikeRepository_Update(t *testing.T) {
 	query := `UPDATE public.likes SET created_at = $1, updated_at = $2, post_id = $3, value = $4, user_id = $5 WHERE id = $6`
 	ctx := context.Background()
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -524,7 +523,7 @@ func TestLikeRepository_Delete(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	like := entities.NewMockLike(t)
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {
@@ -633,7 +632,7 @@ func TestLikeRepository_Count(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.LikeFilter{}
 	type fields struct {
-		database *sqlx.DB
+		database database
 		logger   logger
 	}
 	type args struct {

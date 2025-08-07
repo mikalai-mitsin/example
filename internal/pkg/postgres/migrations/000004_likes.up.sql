@@ -1,6 +1,6 @@
 CREATE TABLE public.likes
 (
-    id          uuid                  DEFAULT uuid_generate_v4()
+    id          uuid                  DEFAULT uuidv7()
         CONSTRAINT likes_pk PRIMARY KEY,
     post_id uuid NOT NULL,
     value text NOT NULL,

@@ -1,6 +1,6 @@
 CREATE TABLE public.tags
 (
-    id          uuid                  DEFAULT uuid_generate_v4()
+    id          uuid                  DEFAULT uuidv7()
         CONSTRAINT tags_pk PRIMARY KEY,
     post_id uuid NOT NULL,
     value text NOT NULL,
