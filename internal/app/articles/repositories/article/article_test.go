@@ -26,8 +26,9 @@ func TestNewArticleRepository(t *testing.T) {
 	}
 	defer mockDB.Close()
 	type args struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	tests := []struct {
 		name  string
@@ -39,17 +40,19 @@ func TestNewArticleRepository(t *testing.T) {
 			name:  "ok",
 			setup: func() {},
 			args: args{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			want: &ArticleRepository{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			got := NewArticleRepository(tt.args.database, tt.args.logger)
+			got := NewArticleRepository(tt.args.readDB, tt.args.writeDB, tt.args.logger)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -69,8 +72,9 @@ func TestArticleRepository_Create(t *testing.T) {
 	article := entities.NewMockArticle(t)
 	ctx := context.Background()
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx     context.Context
@@ -99,8 +103,9 @@ func TestArticleRepository_Create(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:     ctx,
@@ -124,8 +129,9 @@ func TestArticleRepository_Create(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:     ctx,
@@ -138,8 +144,9 @@ func TestArticleRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &ArticleRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			err := r.Create(tt.args.ctx, tt.args.article)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -161,8 +168,9 @@ func TestArticleRepository_Get(t *testing.T) {
 	article := entities.NewMockArticle(t)
 	ctx := context.Background()
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx context.Context
@@ -183,8 +191,9 @@ func TestArticleRepository_Get(t *testing.T) {
 				mock.ExpectQuery(query).WithArgs(article.ID).WillReturnRows(rows)
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -201,8 +210,9 @@ func TestArticleRepository_Get(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -218,8 +228,9 @@ func TestArticleRepository_Get(t *testing.T) {
 				mock.ExpectQuery(query).WithArgs(article.ID).WillReturnError(sql.ErrNoRows)
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -233,8 +244,9 @@ func TestArticleRepository_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &ArticleRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			got, err := r.Get(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -266,8 +278,9 @@ func TestArticleRepository_List(t *testing.T) {
 	}
 	query := "SELECT articles.id, articles.created_at, articles.updated_at, articles.title, articles.subtitle, articles.body, articles.is_published FROM public.articles ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -288,8 +301,9 @@ func TestArticleRepository_List(t *testing.T) {
 					WillReturnRows(newArticleRows(t, listArticles))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -304,8 +318,9 @@ func TestArticleRepository_List(t *testing.T) {
 				mock.ExpectQuery(query).WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -325,8 +340,9 @@ func TestArticleRepository_List(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -340,8 +356,9 @@ func TestArticleRepository_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &ArticleRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			got, err := r.List(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -364,8 +381,9 @@ func TestArticleRepository_Update(t *testing.T) {
 	query := `UPDATE public.articles SET created_at = $1, updated_at = $2, title = $3, subtitle = $4, body = $5, is_published = $6 WHERE id = $7`
 	ctx := context.Background()
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx     context.Context
@@ -394,8 +412,9 @@ func TestArticleRepository_Update(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:     ctx,
@@ -419,8 +438,9 @@ func TestArticleRepository_Update(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:     ctx,
@@ -444,8 +464,9 @@ func TestArticleRepository_Update(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:     ctx,
@@ -470,8 +491,9 @@ func TestArticleRepository_Update(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:     ctx,
@@ -496,8 +518,9 @@ func TestArticleRepository_Update(t *testing.T) {
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:     ctx,
@@ -511,8 +534,9 @@ func TestArticleRepository_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &ArticleRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			err := r.Update(tt.args.ctx, tt.args.article)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -532,8 +556,9 @@ func TestArticleRepository_Delete(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	article := entities.NewMockArticle(t)
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx context.Context
@@ -549,8 +574,9 @@ func TestArticleRepository_Delete(t *testing.T) {
 		{
 			name: "ok",
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			setup: func() {
 				mock.ExpectExec("DELETE FROM public.articles WHERE id = $1").
@@ -571,8 +597,9 @@ func TestArticleRepository_Delete(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -588,8 +615,9 @@ func TestArticleRepository_Delete(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -606,8 +634,9 @@ func TestArticleRepository_Delete(t *testing.T) {
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -621,8 +650,9 @@ func TestArticleRepository_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &ArticleRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			err := r.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -641,8 +671,9 @@ func TestArticleRepository_Count(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.ArticleFilter{}
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -664,7 +695,8 @@ func TestArticleRepository_Count(t *testing.T) {
 						AddRow(1))
 			},
 			fields: fields{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			args: args{
 				ctx:    ctx,
@@ -681,7 +713,8 @@ func TestArticleRepository_Count(t *testing.T) {
 						AddRow("one"))
 			},
 			fields: fields{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			args: args{
 				ctx:    ctx,
@@ -706,7 +739,8 @@ func TestArticleRepository_Count(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			args: args{
 				ctx:    ctx,
@@ -720,8 +754,9 @@ func TestArticleRepository_Count(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &ArticleRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			got, err := r.Count(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)

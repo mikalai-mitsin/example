@@ -26,7 +26,8 @@ import (
 )
 
 type App struct {
-	db              *sqlx.DB
+	readDB          *sqlx.DB
+	writeDB         *sqlx.DB
 	logger          *log.Log
 	postRepository  *postRepositories.PostRepository
 	postService     *postServices.PostService
@@ -46,28 +47,29 @@ type App struct {
 }
 
 func NewApp(
-	db *sqlx.DB,
+	readDB, writeDB *sqlx.DB,
 	logger *log.Log,
 	clock *clock.Clock,
 	uuidGenerator *uuid.UUIDv7Generator,
 ) *App {
-	postRepository := postRepositories.NewPostRepository(db, logger)
+	postRepository := postRepositories.NewPostRepository(readDB, writeDB, logger)
 	postService := postServices.NewPostService(postRepository, clock, logger, uuidGenerator)
 	postUseCase := postUseCases.NewPostUseCase(postService, logger)
 	httpPostHandler := postHttpHandlers.NewPostHandler(postUseCase, logger)
 	grpcPostHandler := postGrpcHandlers.NewPostServiceServer(postUseCase, logger)
-	tagRepository := tagRepositories.NewTagRepository(db, logger)
+	tagRepository := tagRepositories.NewTagRepository(readDB, writeDB, logger)
 	tagService := tagServices.NewTagService(tagRepository, clock, logger, uuidGenerator)
 	tagUseCase := tagUseCases.NewTagUseCase(tagService, logger)
 	httpTagHandler := tagHttpHandlers.NewTagHandler(tagUseCase, logger)
 	grpcTagHandler := tagGrpcHandlers.NewTagServiceServer(tagUseCase, logger)
-	likeRepository := likeRepositories.NewLikeRepository(db, logger)
+	likeRepository := likeRepositories.NewLikeRepository(readDB, writeDB, logger)
 	likeService := likeServices.NewLikeService(likeRepository, clock, logger, uuidGenerator)
 	likeUseCase := likeUseCases.NewLikeUseCase(likeService, logger)
 	httpLikeHandler := likeHttpHandlers.NewLikeHandler(likeUseCase, logger)
 	grpcLikeHandler := likeGrpcHandlers.NewLikeServiceServer(likeUseCase, logger)
 	return &App{
-		db:              db,
+		readDB:          readDB,
+		writeDB:         writeDB,
 		logger:          logger,
 		postRepository:  postRepository,
 		postService:     postService,

@@ -24,6 +24,4 @@ type database interface {
 	}) error
 	SelectContext(ctx context.Context, dest any, query string, args ...interface {
 	}) error
-	QueryRowContext(ctx context.Context, query string, args ...interface {
-	}) *sql.Row
 }

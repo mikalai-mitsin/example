@@ -13,12 +13,13 @@ import (
 )
 
 type ArticleRepository struct {
-	database database
-	logger   logger
+	readDB  database
+	writeDB database
+	logger  logger
 }
 
-func NewArticleRepository(database database, logger logger) *ArticleRepository {
-	return &ArticleRepository{database: database, logger: logger}
+func NewArticleRepository(readDB database, writeDB database, logger logger) *ArticleRepository {
+	return &ArticleRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
 type ArticleDTO struct {
@@ -71,7 +72,7 @@ func (r *ArticleRepository) Create(ctx context.Context, entity entities.Article)
 		Columns("id", "created_at", "updated_at", "title", "subtitle", "body", "is_published").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.Title, dto.Subtitle, dto.Body, dto.IsPublished)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.database.ExecContext(ctx, query, args...); err != nil {
+	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -86,7 +87,7 @@ func (r *ArticleRepository) Get(ctx context.Context, id uuid.UUID) (entities.Art
 		Where(sq.Eq{"id": id}).
 		Limit(1)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("article_id", id.String())
 		return entities.Article{}, e
 	}
@@ -115,7 +116,7 @@ func (r *ArticleRepository) List(
 		q = q.OrderBy(filter.OrderBy...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
+	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
@@ -131,7 +132,7 @@ func (r *ArticleRepository) Count(
 	q := sq.Select("count(id)").From("public.articles")
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
-	if err := r.database.GetContext(ctx, &count, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return 0, e
 	}
@@ -151,7 +152,7 @@ func (r *ArticleRepository) Update(ctx context.Context, entity entities.Article)
 		q = q.Set("is_published", dto.IsPublished)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("article_id", fmt.Sprint(entity.ID))
 		return e
@@ -171,7 +172,7 @@ func (r *ArticleRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	defer cancel()
 	q := sq.Delete("public.articles").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("article_id", fmt.Sprint(id))
 		return e

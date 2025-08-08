@@ -13,12 +13,13 @@ import (
 )
 
 type LikeRepository struct {
-	database database
-	logger   logger
+	readDB  database
+	writeDB database
+	logger  logger
 }
 
-func NewLikeRepository(database database, logger logger) *LikeRepository {
-	return &LikeRepository{database: database, logger: logger}
+func NewLikeRepository(readDB database, writeDB database, logger logger) *LikeRepository {
+	return &LikeRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
 type LikeDTO struct {
@@ -68,7 +69,7 @@ func (r *LikeRepository) Create(ctx context.Context, entity entities.Like) error
 		Columns("id", "created_at", "updated_at", "post_id", "value", "user_id").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.PostId, dto.Value, dto.UserId)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.database.ExecContext(ctx, query, args...); err != nil {
+	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -83,7 +84,7 @@ func (r *LikeRepository) Get(ctx context.Context, id uuid.UUID) (entities.Like, 
 		Where(sq.Eq{"id": id}).
 		Limit(1)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("like_id", id.String())
 		return entities.Like{}, e
 	}
@@ -112,7 +113,7 @@ func (r *LikeRepository) List(
 		q = q.OrderBy(filter.OrderBy...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
+	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
@@ -124,7 +125,7 @@ func (r *LikeRepository) Count(ctx context.Context, filter entities.LikeFilter) 
 	q := sq.Select("count(id)").From("public.likes")
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
-	if err := r.database.GetContext(ctx, &count, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return 0, e
 	}
@@ -143,7 +144,7 @@ func (r *LikeRepository) Update(ctx context.Context, entity entities.Like) error
 		q = q.Set("user_id", dto.UserId)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("like_id", fmt.Sprint(entity.ID))
 		return e
@@ -163,7 +164,7 @@ func (r *LikeRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	defer cancel()
 	q := sq.Delete("public.likes").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("like_id", fmt.Sprint(id))
 		return e

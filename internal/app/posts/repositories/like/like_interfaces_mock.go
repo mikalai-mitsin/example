@@ -224,25 +224,6 @@ func (mr *MockdatabaseMockRecorder) GetContext(ctx, dest, query any, args ...any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContext", reflect.TypeOf((*Mockdatabase)(nil).GetContext), varargs...)
 }
 
-// QueryRowContext mocks base method.
-func (m *Mockdatabase) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx, query}
-	for _, a := range args {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "QueryRowContext", varargs...)
-	ret0, _ := ret[0].(*sql.Row)
-	return ret0
-}
-
-// QueryRowContext indicates an expected call of QueryRowContext.
-func (mr *MockdatabaseMockRecorder) QueryRowContext(ctx, query any, args ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, query}, args...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryRowContext", reflect.TypeOf((*Mockdatabase)(nil).QueryRowContext), varargs...)
-}
-
 // SelectContext mocks base method.
 func (m *Mockdatabase) SelectContext(ctx context.Context, dest any, query string, args ...any) error {
 	m.ctrl.T.Helper()

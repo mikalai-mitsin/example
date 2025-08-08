@@ -16,7 +16,7 @@ type Server struct {
 // NewServer - provide http server
 //
 // @title example
-// @host 127.0.0.1:8000
+// @host http://127.0.0.1:8000
 // @BasePath /
 // @version 0.0.0
 // @securitydefinitions.BearerAuth BearerAuth

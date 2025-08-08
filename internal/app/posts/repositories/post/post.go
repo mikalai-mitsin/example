@@ -13,12 +13,13 @@ import (
 )
 
 type PostRepository struct {
-	database database
-	logger   logger
+	readDB  database
+	writeDB database
+	logger  logger
 }
 
-func NewPostRepository(database database, logger logger) *PostRepository {
-	return &PostRepository{database: database, logger: logger}
+func NewPostRepository(readDB database, writeDB database, logger logger) *PostRepository {
+	return &PostRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
 type PostDTO struct {
@@ -62,7 +63,7 @@ func (r *PostRepository) Create(ctx context.Context, entity entities.Post) error
 		Columns("id", "created_at", "updated_at", "body").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.Body)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.database.ExecContext(ctx, query, args...); err != nil {
+	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -77,7 +78,7 @@ func (r *PostRepository) Get(ctx context.Context, id uuid.UUID) (entities.Post, 
 		Where(sq.Eq{"id": id}).
 		Limit(1)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("post_id", id.String())
 		return entities.Post{}, e
 	}
@@ -106,7 +107,7 @@ func (r *PostRepository) List(
 		q = q.OrderBy(filter.OrderBy...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
+	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
@@ -118,7 +119,7 @@ func (r *PostRepository) Count(ctx context.Context, filter entities.PostFilter) 
 	q := sq.Select("count(id)").From("public.posts")
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
-	if err := r.database.GetContext(ctx, &count, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return 0, e
 	}
@@ -135,7 +136,7 @@ func (r *PostRepository) Update(ctx context.Context, entity entities.Post) error
 		q = q.Set("body", dto.Body)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("post_id", fmt.Sprint(entity.ID))
 		return e
@@ -155,7 +156,7 @@ func (r *PostRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	defer cancel()
 	q := sq.Delete("public.posts").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("post_id", fmt.Sprint(id))
 		return e

@@ -26,8 +26,9 @@ func TestNewTagRepository(t *testing.T) {
 	}
 	defer mockDB.Close()
 	type args struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	tests := []struct {
 		name  string
@@ -39,17 +40,19 @@ func TestNewTagRepository(t *testing.T) {
 			name:  "ok",
 			setup: func() {},
 			args: args{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			want: &TagRepository{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			got := NewTagRepository(tt.args.database, tt.args.logger)
+			got := NewTagRepository(tt.args.readDB, tt.args.writeDB, tt.args.logger)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -69,8 +72,9 @@ func TestTagRepository_Create(t *testing.T) {
 	tag := entities.NewMockTag(t)
 	ctx := context.Background()
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx context.Context
@@ -97,8 +101,9 @@ func TestTagRepository_Create(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -120,8 +125,9 @@ func TestTagRepository_Create(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -134,8 +140,9 @@ func TestTagRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &TagRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			err := r.Create(tt.args.ctx, tt.args.tag)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -157,8 +164,9 @@ func TestTagRepository_Get(t *testing.T) {
 	tag := entities.NewMockTag(t)
 	ctx := context.Background()
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx context.Context
@@ -179,8 +187,9 @@ func TestTagRepository_Get(t *testing.T) {
 				mock.ExpectQuery(query).WithArgs(tag.ID).WillReturnRows(rows)
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -195,8 +204,9 @@ func TestTagRepository_Get(t *testing.T) {
 				mock.ExpectQuery(query).WithArgs(tag.ID).WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -212,8 +222,9 @@ func TestTagRepository_Get(t *testing.T) {
 				mock.ExpectQuery(query).WithArgs(tag.ID).WillReturnError(sql.ErrNoRows)
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -227,8 +238,9 @@ func TestTagRepository_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &TagRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			got, err := r.Get(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -260,8 +272,9 @@ func TestTagRepository_List(t *testing.T) {
 	}
 	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.post_id, tags.value FROM public.tags ORDER BY id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -282,8 +295,9 @@ func TestTagRepository_List(t *testing.T) {
 					WillReturnRows(newTagRows(t, listTags))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -298,8 +312,9 @@ func TestTagRepository_List(t *testing.T) {
 				mock.ExpectQuery(query).WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -319,8 +334,9 @@ func TestTagRepository_List(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -334,8 +350,9 @@ func TestTagRepository_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &TagRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			got, err := r.List(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -358,8 +375,9 @@ func TestTagRepository_Update(t *testing.T) {
 	query := `UPDATE public.tags SET created_at = $1, updated_at = $2, post_id = $3, value = $4 WHERE id = $5`
 	ctx := context.Background()
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx context.Context
@@ -386,8 +404,9 @@ func TestTagRepository_Update(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -409,8 +428,9 @@ func TestTagRepository_Update(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -432,8 +452,9 @@ func TestTagRepository_Update(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -456,8 +477,9 @@ func TestTagRepository_Update(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -480,8 +502,9 @@ func TestTagRepository_Update(t *testing.T) {
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -495,8 +518,9 @@ func TestTagRepository_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &TagRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			err := r.Update(tt.args.ctx, tt.args.tag)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -516,8 +540,9 @@ func TestTagRepository_Delete(t *testing.T) {
 	mockLogger := NewMocklogger(ctrl)
 	tag := entities.NewMockTag(t)
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx context.Context
@@ -533,8 +558,9 @@ func TestTagRepository_Delete(t *testing.T) {
 		{
 			name: "ok",
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			setup: func() {
 				mock.ExpectExec("DELETE FROM public.tags WHERE id = $1").
@@ -555,8 +581,9 @@ func TestTagRepository_Delete(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -572,8 +599,9 @@ func TestTagRepository_Delete(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -590,8 +618,9 @@ func TestTagRepository_Delete(t *testing.T) {
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("test error")))
 			},
 			fields: fields{
-				database: mockDB,
-				logger:   mockLogger,
+				writeDB: mockDB,
+				readDB:  mockDB,
+				logger:  mockLogger,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -605,8 +634,9 @@ func TestTagRepository_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &TagRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			err := r.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -625,8 +655,9 @@ func TestTagRepository_Count(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.TagFilter{}
 	type fields struct {
-		database database
-		logger   logger
+		writeDB database
+		readDB  database
+		logger  logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -648,7 +679,8 @@ func TestTagRepository_Count(t *testing.T) {
 						AddRow(1))
 			},
 			fields: fields{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			args: args{
 				ctx:    ctx,
@@ -665,7 +697,8 @@ func TestTagRepository_Count(t *testing.T) {
 						AddRow("one"))
 			},
 			fields: fields{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			args: args{
 				ctx:    ctx,
@@ -690,7 +723,8 @@ func TestTagRepository_Count(t *testing.T) {
 					WillReturnError(errors.New("test error"))
 			},
 			fields: fields{
-				database: mockDB,
+				writeDB: mockDB,
+				readDB:  mockDB,
 			},
 			args: args{
 				ctx:    ctx,
@@ -704,8 +738,9 @@ func TestTagRepository_Count(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			r := &TagRepository{
-				database: tt.fields.database,
-				logger:   tt.fields.logger,
+				writeDB: tt.fields.writeDB,
+				readDB:  tt.fields.readDB,
+				logger:  tt.fields.logger,
 			}
 			got, err := r.Count(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)

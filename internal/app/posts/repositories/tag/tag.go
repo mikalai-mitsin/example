@@ -13,12 +13,13 @@ import (
 )
 
 type TagRepository struct {
-	database database
-	logger   logger
+	readDB  database
+	writeDB database
+	logger  logger
 }
 
-func NewTagRepository(database database, logger logger) *TagRepository {
-	return &TagRepository{database: database, logger: logger}
+func NewTagRepository(readDB database, writeDB database, logger logger) *TagRepository {
+	return &TagRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
 type TagDTO struct {
@@ -65,7 +66,7 @@ func (r *TagRepository) Create(ctx context.Context, entity entities.Tag) error {
 		Columns("id", "created_at", "updated_at", "post_id", "value").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.PostId, dto.Value)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.database.ExecContext(ctx, query, args...); err != nil {
+	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -80,7 +81,7 @@ func (r *TagRepository) Get(ctx context.Context, id uuid.UUID) (entities.Tag, er
 		Where(sq.Eq{"id": id}).
 		Limit(1)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.GetContext(ctx, dto, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err).WithParam("tag_id", id.String())
 		return entities.Tag{}, e
 	}
@@ -109,7 +110,7 @@ func (r *TagRepository) List(
 		q = q.OrderBy(filter.OrderBy...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if err := r.database.SelectContext(ctx, &dto, query, args...); err != nil {
+	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
@@ -121,7 +122,7 @@ func (r *TagRepository) Count(ctx context.Context, filter entities.TagFilter) (u
 	q := sq.Select("count(id)").From("public.tags")
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
-	if err := r.database.GetContext(ctx, &count, query, args...); err != nil {
+	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return 0, e
 	}
@@ -139,7 +140,7 @@ func (r *TagRepository) Update(ctx context.Context, entity entities.Tag) error {
 		q = q.Set("value", dto.Value)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("tag_id", fmt.Sprint(entity.ID))
 		return e
@@ -159,7 +160,7 @@ func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	defer cancel()
 	q := sq.Delete("public.tags").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.database.ExecContext(ctx, query, args...)
+	result, err := r.writeDB.ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("tag_id", fmt.Sprint(id))
 		return e

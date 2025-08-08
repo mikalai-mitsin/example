@@ -16,7 +16,8 @@ import (
 )
 
 type App struct {
-	db                 *sqlx.DB
+	readDB             *sqlx.DB
+	writeDB            *sqlx.DB
 	logger             *log.Log
 	articleRepository  *articleRepositories.ArticleRepository
 	articleService     *articleServices.ArticleService
@@ -26,12 +27,12 @@ type App struct {
 }
 
 func NewApp(
-	db *sqlx.DB,
+	readDB, writeDB *sqlx.DB,
 	logger *log.Log,
 	clock *clock.Clock,
 	uuidGenerator *uuid.UUIDv7Generator,
 ) *App {
-	articleRepository := articleRepositories.NewArticleRepository(db, logger)
+	articleRepository := articleRepositories.NewArticleRepository(readDB, writeDB, logger)
 	articleService := articleServices.NewArticleService(
 		articleRepository,
 		clock,
@@ -42,7 +43,8 @@ func NewApp(
 	httpArticleHandler := articleHttpHandlers.NewArticleHandler(articleUseCase, logger)
 	grpcArticleHandler := articleGrpcHandlers.NewArticleServiceServer(articleUseCase, logger)
 	return &App{
-		db:                 db,
+		readDB:             readDB,
+		writeDB:            writeDB,
 		logger:             logger,
 		articleRepository:  articleRepository,
 		articleService:     articleService,
