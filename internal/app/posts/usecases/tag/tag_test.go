@@ -17,10 +17,12 @@ func TestNewTagUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockTagService := NewMocktagService(ctrl)
+	mocktagEventProducer := NewMocktagEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	type args struct {
-		tagService tagService
-		logger     logger
+		tagService       tagService
+		tagEventProducer tagEventProducer
+		logger           logger
 	}
 	tests := []struct {
 		name  string
@@ -32,19 +34,21 @@ func TestNewTagUseCase(t *testing.T) {
 			name:  "ok",
 			setup: func() {},
 			args: args{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			want: &TagUseCase{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			got := NewTagUseCase(tt.args.tagService, tt.args.logger)
+			got := NewTagUseCase(tt.args.tagService, tt.args.tagEventProducer, tt.args.logger)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -54,12 +58,14 @@ func TestTagUseCase_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockTagService := NewMocktagService(ctrl)
+	mocktagEventProducer := NewMocktagEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	tag := entities.NewMockTag(t)
 	type fields struct {
-		tagService tagService
-		logger     logger
+		tagService       tagService
+		tagEventProducer tagEventProducer
+		logger           logger
 	}
 	type args struct {
 		ctx context.Context
@@ -81,8 +87,9 @@ func TestTagUseCase_Get(t *testing.T) {
 					Return(tag, nil)
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -99,8 +106,9 @@ func TestTagUseCase_Get(t *testing.T) {
 					Return(entities.Tag{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -114,8 +122,9 @@ func TestTagUseCase_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &TagUseCase{
-				tagService: tt.fields.tagService,
-				logger:     tt.fields.logger,
+				tagService:       tt.fields.tagService,
+				tagEventProducer: tt.fields.tagEventProducer,
+				logger:           tt.fields.logger,
 			}
 			got, err := i.Get(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -128,13 +137,15 @@ func TestTagUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockTagService := NewMocktagService(ctrl)
+	mocktagEventProducer := NewMocktagEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	tag := entities.NewMockTag(t)
 	create := entities.NewMockTagCreate(t)
 	type fields struct {
-		tagService tagService
-		logger     logger
+		tagService       tagService
+		tagEventProducer tagEventProducer
+		logger           logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -152,10 +163,12 @@ func TestTagUseCase_Create(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockTagService.EXPECT().Create(ctx, create).Return(tag, nil)
+				mocktagEventProducer.EXPECT().Created(ctx, tag).Return(nil)
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -172,8 +185,9 @@ func TestTagUseCase_Create(t *testing.T) {
 					Return(entities.Tag{}, errs.NewUnexpectedBehaviorError("c u"))
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -187,8 +201,9 @@ func TestTagUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &TagUseCase{
-				tagService: tt.fields.tagService,
-				logger:     tt.fields.logger,
+				tagService:       tt.fields.tagService,
+				tagEventProducer: tt.fields.tagEventProducer,
+				logger:           tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -201,13 +216,15 @@ func TestTagUseCase_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockTagService := NewMocktagService(ctrl)
+	mocktagEventProducer := NewMocktagEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	tag := entities.NewMockTag(t)
 	update := entities.NewMockTagUpdate(t)
 	type fields struct {
-		tagService tagService
-		logger     logger
+		tagService       tagService
+		tagEventProducer tagEventProducer
+		logger           logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -225,10 +242,12 @@ func TestTagUseCase_Update(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockTagService.EXPECT().Update(ctx, update).Return(tag, nil)
+				mocktagEventProducer.EXPECT().Updated(ctx, tag).Return(nil)
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -245,8 +264,9 @@ func TestTagUseCase_Update(t *testing.T) {
 					Return(entities.Tag{}, errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -260,8 +280,9 @@ func TestTagUseCase_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &TagUseCase{
-				tagService: tt.fields.tagService,
-				logger:     tt.fields.logger,
+				tagService:       tt.fields.tagService,
+				tagEventProducer: tt.fields.tagEventProducer,
+				logger:           tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -274,12 +295,14 @@ func TestTagUseCase_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockTagService := NewMocktagService(ctrl)
+	mocktagEventProducer := NewMocktagEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	tag := entities.NewMockTag(t)
 	type fields struct {
-		tagService tagService
-		logger     logger
+		tagService       tagService
+		tagEventProducer tagEventProducer
+		logger           logger
 	}
 	type args struct {
 		ctx context.Context
@@ -298,10 +321,12 @@ func TestTagUseCase_Delete(t *testing.T) {
 				mockTagService.EXPECT().
 					Delete(ctx, tag.ID).
 					Return(nil)
+				mocktagEventProducer.EXPECT().Deleted(ctx, tag.ID).Return(nil)
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -317,8 +342,9 @@ func TestTagUseCase_Delete(t *testing.T) {
 					Return(errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -331,8 +357,9 @@ func TestTagUseCase_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &TagUseCase{
-				tagService: tt.fields.tagService,
-				logger:     tt.fields.logger,
+				tagService:       tt.fields.tagService,
+				tagEventProducer: tt.fields.tagEventProducer,
+				logger:           tt.fields.logger,
 			}
 			err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -344,6 +371,7 @@ func TestTagUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockTagService := NewMocktagService(ctrl)
+	mocktagEventProducer := NewMocktagEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockTagFilter(t)
@@ -353,8 +381,9 @@ func TestTagUseCase_List(t *testing.T) {
 		listTags = append(listTags, entities.NewMockTag(t))
 	}
 	type fields struct {
-		tagService tagService
-		logger     logger
+		tagService       tagService
+		tagEventProducer tagEventProducer
+		logger           logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -377,8 +406,9 @@ func TestTagUseCase_List(t *testing.T) {
 					Return(listTags, count, nil)
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -396,8 +426,9 @@ func TestTagUseCase_List(t *testing.T) {
 					Return(nil, uint64(0), errs.NewUnexpectedBehaviorError("l e"))
 			},
 			fields: fields{
-				tagService: mockTagService,
-				logger:     mockLogger,
+				tagService:       mockTagService,
+				tagEventProducer: mocktagEventProducer,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -412,8 +443,9 @@ func TestTagUseCase_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &TagUseCase{
-				tagService: tt.fields.tagService,
-				logger:     tt.fields.logger,
+				tagService:       tt.fields.tagService,
+				tagEventProducer: tt.fields.tagEventProducer,
+				logger:           tt.fields.logger,
 			}
 			got, got1, err := i.List(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)

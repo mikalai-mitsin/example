@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/mikalai-mitsin/example/internal/pkg/configs"
 
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jmoiron/sqlx"
@@ -16,22 +15,28 @@ import (
 //go:embed migrations/*.sql
 var MigrationsFS embed.FS
 
-func NewDatabase(config *configs.Config) (*sqlx.DB, error) {
-	database, err := sqlx.Connect("postgres", config.Database.URI)
+type Config struct {
+	URI                string `env:"DATABASE_URI"                  toml:"uri"`
+	MaxOpenConnections int    `env:"DATABASE_MAX_OPEN_CONNECTIONS" toml:"max_open_connections" env-default:"50"`
+	MaxIDLEConnections int    `env:"DATABASE_MAX_IDLE_CONNECTIONS" toml:"max_idle_connections" env-default:"10"`
+}
+
+func NewDatabase(config *Config) (*sqlx.DB, error) {
+	database, err := sqlx.Connect("postgres", config.URI)
 	if err != nil {
 		return nil, err
 	}
-	database.SetMaxOpenConns(config.Database.MaxOpenConnections)
-	database.SetMaxIdleConns(config.Database.MaxIDLEConnections)
+	database.SetMaxOpenConns(config.MaxOpenConnections)
+	database.SetMaxIdleConns(config.MaxIDLEConnections)
 	return database, nil
 }
 
 type MigrateManager struct {
 	database *sqlx.DB
-	config   *configs.Config
+	config   *Config
 }
 
-func NewMigrateManager(database *sqlx.DB, config *configs.Config) *MigrateManager {
+func NewMigrateManager(database *sqlx.DB, config *Config) *MigrateManager {
 	return &MigrateManager{
 		database: database,
 		config:   config,
@@ -43,7 +48,7 @@ func (m MigrateManager) Up(_ context.Context) error {
 	if err != nil {
 		return err
 	}
-	instance, err := migrate.NewWithSourceInstance("iofs", source, m.config.Database.URI)
+	instance, err := migrate.NewWithSourceInstance("iofs", source, m.config.URI)
 	if err != nil {
 		return err
 	}

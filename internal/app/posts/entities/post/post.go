@@ -39,51 +39,9 @@ type PostFilter struct {
 func (m *PostFilter) Validate() error {
 	err := validation.ValidateStruct(
 		m,
-		validation.Field(
-			&m.PageSize,
-			validation.Each(
-				validation.In(
-					"posts.id ASC",
-					"posts.id DESC",
-					"posts.created_at ASC",
-					"posts.created_at DESC",
-					"posts.updated_at ASC",
-					"posts.updated_at DESC",
-					"posts.body ASC",
-					"posts.body DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.PageNumber,
-			validation.Each(
-				validation.In(
-					"posts.id ASC",
-					"posts.id DESC",
-					"posts.created_at ASC",
-					"posts.created_at DESC",
-					"posts.updated_at ASC",
-					"posts.updated_at DESC",
-					"posts.body ASC",
-					"posts.body DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.Search,
-			validation.Each(
-				validation.In(
-					"posts.id ASC",
-					"posts.id DESC",
-					"posts.created_at ASC",
-					"posts.created_at DESC",
-					"posts.updated_at ASC",
-					"posts.updated_at DESC",
-					"posts.body ASC",
-					"posts.body DESC",
-				),
-			),
-		),
+		validation.Field(&m.PageSize),
+		validation.Field(&m.PageNumber),
+		validation.Field(&m.Search),
 		validation.Field(
 			&m.OrderBy,
 			validation.Each(

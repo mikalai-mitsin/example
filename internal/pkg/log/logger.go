@@ -1,11 +1,14 @@
 package log
 
 import (
+	"errors"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"go.uber.org/fx/fxevent"
 )
 
@@ -21,6 +24,10 @@ func String(key, value string) Field {
 	return Field(zap.String(key, value))
 }
 
+func Strings(key string, values []string) Field {
+	return Field(zap.Strings(key, values))
+}
+
 func Any(key string, value interface{}) Field {
 	return Field(zap.Any(key, value))
 }
@@ -29,8 +36,43 @@ func Int64(key string, value int64) Field {
 	return Field(zap.Int64(key, value))
 }
 
+func Duration(key string, value time.Duration) Field {
+	return Field(zap.Duration(key, value))
+}
+func Time(key string, value time.Time) Field {
+	return Field(zap.Time(key, value))
+}
+
+func Int(key string, value int) Field {
+	return Field(zap.Int(key, value))
+}
+
+func Int32(key string, value int32) Field {
+	return Field(zap.Int32(key, value))
+}
+
+func Ints(key string, value []int) Field {
+	return Field(zap.Ints(key, value))
+}
+
+func Bool(key string, value bool) Field {
+	return Field(zap.Bool(key, value))
+}
+
 func Uint64(key string, value uint64) Field {
 	return Field(zap.Uint64(key, value))
+}
+
+func Uint32(key string, value uint32) Field {
+	return Field(zap.Uint32(key, value))
+}
+
+func Error(err error) Field {
+	var domainError *errs.Error
+	if errors.As(err, &domainError) {
+		return Field(zap.Object("error", domainError))
+	}
+	return Field(zap.Error(err))
 }
 
 type Log struct {

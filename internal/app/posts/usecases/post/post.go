@@ -8,12 +8,21 @@ import (
 )
 
 type PostUseCase struct {
-	postService postService
-	logger      logger
+	postService       postService
+	postEventProducer postEventProducer
+	logger            logger
 }
 
-func NewPostUseCase(postService postService, logger logger) *PostUseCase {
-	return &PostUseCase{postService: postService, logger: logger}
+func NewPostUseCase(
+	postService postService,
+	postEventProducer postEventProducer,
+	logger logger,
+) *PostUseCase {
+	return &PostUseCase{
+		postService:       postService,
+		postEventProducer: postEventProducer,
+		logger:            logger,
+	}
 }
 
 func (i *PostUseCase) Create(
@@ -22,6 +31,9 @@ func (i *PostUseCase) Create(
 ) (entities.Post, error) {
 	post, err := i.postService.Create(ctx, create)
 	if err != nil {
+		return entities.Post{}, err
+	}
+	if err := i.postEventProducer.Created(ctx, post); err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
@@ -38,25 +50,31 @@ func (i *PostUseCase) List(
 	ctx context.Context,
 	filter entities.PostFilter,
 ) ([]entities.Post, uint64, error) {
-	items, count, err := i.postService.List(ctx, filter)
+	posts, count, err := i.postService.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	return items, count, nil
+	return posts, count, nil
 }
 
 func (i *PostUseCase) Update(
 	ctx context.Context,
 	update entities.PostUpdate,
 ) (entities.Post, error) {
-	updated, err := i.postService.Update(ctx, update)
+	post, err := i.postService.Update(ctx, update)
 	if err != nil {
 		return entities.Post{}, err
 	}
-	return updated, nil
+	if err := i.postEventProducer.Updated(ctx, post); err != nil {
+		return entities.Post{}, err
+	}
+	return post, nil
 }
 func (i *PostUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := i.postService.Delete(ctx, id); err != nil {
+		return err
+	}
+	if err := i.postEventProducer.Deleted(ctx, id); err != nil {
 		return err
 	}
 	return nil

@@ -41,57 +41,9 @@ type TagFilter struct {
 func (m *TagFilter) Validate() error {
 	err := validation.ValidateStruct(
 		m,
-		validation.Field(
-			&m.PageSize,
-			validation.Each(
-				validation.In(
-					"tags.id ASC",
-					"tags.id DESC",
-					"tags.created_at ASC",
-					"tags.created_at DESC",
-					"tags.updated_at ASC",
-					"tags.updated_at DESC",
-					"tags.post_id ASC",
-					"tags.post_id DESC",
-					"tags.value ASC",
-					"tags.value DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.PageNumber,
-			validation.Each(
-				validation.In(
-					"tags.id ASC",
-					"tags.id DESC",
-					"tags.created_at ASC",
-					"tags.created_at DESC",
-					"tags.updated_at ASC",
-					"tags.updated_at DESC",
-					"tags.post_id ASC",
-					"tags.post_id DESC",
-					"tags.value ASC",
-					"tags.value DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.Search,
-			validation.Each(
-				validation.In(
-					"tags.id ASC",
-					"tags.id DESC",
-					"tags.created_at ASC",
-					"tags.created_at DESC",
-					"tags.updated_at ASC",
-					"tags.updated_at DESC",
-					"tags.post_id ASC",
-					"tags.post_id DESC",
-					"tags.value ASC",
-					"tags.value DESC",
-				),
-			),
-		),
+		validation.Field(&m.PageSize),
+		validation.Field(&m.PageNumber),
+		validation.Field(&m.Search),
 		validation.Field(
 			&m.OrderBy,
 			validation.Each(

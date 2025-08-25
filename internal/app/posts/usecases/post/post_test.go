@@ -17,10 +17,12 @@ func TestNewPostUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
+	mockpostEventProducer := NewMockpostEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	type args struct {
-		postService postService
-		logger      logger
+		postService       postService
+		postEventProducer postEventProducer
+		logger            logger
 	}
 	tests := []struct {
 		name  string
@@ -32,19 +34,21 @@ func TestNewPostUseCase(t *testing.T) {
 			name:  "ok",
 			setup: func() {},
 			args: args{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			want: &PostUseCase{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			got := NewPostUseCase(tt.args.postService, tt.args.logger)
+			got := NewPostUseCase(tt.args.postService, tt.args.postEventProducer, tt.args.logger)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -54,12 +58,14 @@ func TestPostUseCase_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
+	mockpostEventProducer := NewMockpostEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	type fields struct {
-		postService postService
-		logger      logger
+		postService       postService
+		postEventProducer postEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx context.Context
@@ -81,8 +87,9 @@ func TestPostUseCase_Get(t *testing.T) {
 					Return(post, nil)
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -99,8 +106,9 @@ func TestPostUseCase_Get(t *testing.T) {
 					Return(entities.Post{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -114,8 +122,9 @@ func TestPostUseCase_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService: tt.fields.postService,
-				logger:      tt.fields.logger,
+				postService:       tt.fields.postService,
+				postEventProducer: tt.fields.postEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, err := i.Get(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -128,13 +137,15 @@ func TestPostUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
+	mockpostEventProducer := NewMockpostEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	create := entities.NewMockPostCreate(t)
 	type fields struct {
-		postService postService
-		logger      logger
+		postService       postService
+		postEventProducer postEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -152,10 +163,12 @@ func TestPostUseCase_Create(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockPostService.EXPECT().Create(ctx, create).Return(post, nil)
+				mockpostEventProducer.EXPECT().Created(ctx, post).Return(nil)
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -172,8 +185,9 @@ func TestPostUseCase_Create(t *testing.T) {
 					Return(entities.Post{}, errs.NewUnexpectedBehaviorError("c u"))
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -187,8 +201,9 @@ func TestPostUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService: tt.fields.postService,
-				logger:      tt.fields.logger,
+				postService:       tt.fields.postService,
+				postEventProducer: tt.fields.postEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -201,13 +216,15 @@ func TestPostUseCase_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
+	mockpostEventProducer := NewMockpostEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	update := entities.NewMockPostUpdate(t)
 	type fields struct {
-		postService postService
-		logger      logger
+		postService       postService
+		postEventProducer postEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -225,10 +242,12 @@ func TestPostUseCase_Update(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockPostService.EXPECT().Update(ctx, update).Return(post, nil)
+				mockpostEventProducer.EXPECT().Updated(ctx, post).Return(nil)
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -245,8 +264,9 @@ func TestPostUseCase_Update(t *testing.T) {
 					Return(entities.Post{}, errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -260,8 +280,9 @@ func TestPostUseCase_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService: tt.fields.postService,
-				logger:      tt.fields.logger,
+				postService:       tt.fields.postService,
+				postEventProducer: tt.fields.postEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -274,12 +295,14 @@ func TestPostUseCase_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
+	mockpostEventProducer := NewMockpostEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	type fields struct {
-		postService postService
-		logger      logger
+		postService       postService
+		postEventProducer postEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx context.Context
@@ -298,10 +321,12 @@ func TestPostUseCase_Delete(t *testing.T) {
 				mockPostService.EXPECT().
 					Delete(ctx, post.ID).
 					Return(nil)
+				mockpostEventProducer.EXPECT().Deleted(ctx, post.ID).Return(nil)
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -317,8 +342,9 @@ func TestPostUseCase_Delete(t *testing.T) {
 					Return(errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -331,8 +357,9 @@ func TestPostUseCase_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService: tt.fields.postService,
-				logger:      tt.fields.logger,
+				postService:       tt.fields.postService,
+				postEventProducer: tt.fields.postEventProducer,
+				logger:            tt.fields.logger,
 			}
 			err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -344,6 +371,7 @@ func TestPostUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
+	mockpostEventProducer := NewMockpostEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockPostFilter(t)
@@ -353,8 +381,9 @@ func TestPostUseCase_List(t *testing.T) {
 		listPosts = append(listPosts, entities.NewMockPost(t))
 	}
 	type fields struct {
-		postService postService
-		logger      logger
+		postService       postService
+		postEventProducer postEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -377,8 +406,9 @@ func TestPostUseCase_List(t *testing.T) {
 					Return(listPosts, count, nil)
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -396,8 +426,9 @@ func TestPostUseCase_List(t *testing.T) {
 					Return(nil, uint64(0), errs.NewUnexpectedBehaviorError("l e"))
 			},
 			fields: fields{
-				postService: mockPostService,
-				logger:      mockLogger,
+				postService:       mockPostService,
+				postEventProducer: mockpostEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -412,8 +443,9 @@ func TestPostUseCase_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService: tt.fields.postService,
-				logger:      tt.fields.logger,
+				postService:       tt.fields.postService,
+				postEventProducer: tt.fields.postEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, got1, err := i.List(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)

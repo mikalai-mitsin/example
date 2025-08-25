@@ -8,12 +8,21 @@ import (
 )
 
 type LikeUseCase struct {
-	likeService likeService
-	logger      logger
+	likeService       likeService
+	likeEventProducer likeEventProducer
+	logger            logger
 }
 
-func NewLikeUseCase(likeService likeService, logger logger) *LikeUseCase {
-	return &LikeUseCase{likeService: likeService, logger: logger}
+func NewLikeUseCase(
+	likeService likeService,
+	likeEventProducer likeEventProducer,
+	logger logger,
+) *LikeUseCase {
+	return &LikeUseCase{
+		likeService:       likeService,
+		likeEventProducer: likeEventProducer,
+		logger:            logger,
+	}
 }
 
 func (i *LikeUseCase) Create(
@@ -22,6 +31,9 @@ func (i *LikeUseCase) Create(
 ) (entities.Like, error) {
 	like, err := i.likeService.Create(ctx, create)
 	if err != nil {
+		return entities.Like{}, err
+	}
+	if err := i.likeEventProducer.Created(ctx, like); err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
@@ -38,25 +50,31 @@ func (i *LikeUseCase) List(
 	ctx context.Context,
 	filter entities.LikeFilter,
 ) ([]entities.Like, uint64, error) {
-	items, count, err := i.likeService.List(ctx, filter)
+	likes, count, err := i.likeService.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	return items, count, nil
+	return likes, count, nil
 }
 
 func (i *LikeUseCase) Update(
 	ctx context.Context,
 	update entities.LikeUpdate,
 ) (entities.Like, error) {
-	updated, err := i.likeService.Update(ctx, update)
+	like, err := i.likeService.Update(ctx, update)
 	if err != nil {
 		return entities.Like{}, err
 	}
-	return updated, nil
+	if err := i.likeEventProducer.Updated(ctx, like); err != nil {
+		return entities.Like{}, err
+	}
+	return like, nil
 }
 func (i *LikeUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := i.likeService.Delete(ctx, id); err != nil {
+		return err
+	}
+	if err := i.likeEventProducer.Deleted(ctx, id); err != nil {
 		return err
 	}
 	return nil

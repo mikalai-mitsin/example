@@ -17,10 +17,12 @@ func TestNewLikeUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLikeService := NewMocklikeService(ctrl)
+	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	type args struct {
-		likeService likeService
-		logger      logger
+		likeService       likeService
+		likeEventProducer likeEventProducer
+		logger            logger
 	}
 	tests := []struct {
 		name  string
@@ -32,19 +34,21 @@ func TestNewLikeUseCase(t *testing.T) {
 			name:  "ok",
 			setup: func() {},
 			args: args{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			want: &LikeUseCase{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			got := NewLikeUseCase(tt.args.likeService, tt.args.logger)
+			got := NewLikeUseCase(tt.args.likeService, tt.args.likeEventProducer, tt.args.logger)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -54,12 +58,14 @@ func TestLikeUseCase_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLikeService := NewMocklikeService(ctrl)
+	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	type fields struct {
-		likeService likeService
-		logger      logger
+		likeService       likeService
+		likeEventProducer likeEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx context.Context
@@ -81,8 +87,9 @@ func TestLikeUseCase_Get(t *testing.T) {
 					Return(like, nil)
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -99,8 +106,9 @@ func TestLikeUseCase_Get(t *testing.T) {
 					Return(entities.Like{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -114,8 +122,9 @@ func TestLikeUseCase_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &LikeUseCase{
-				likeService: tt.fields.likeService,
-				logger:      tt.fields.logger,
+				likeService:       tt.fields.likeService,
+				likeEventProducer: tt.fields.likeEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, err := i.Get(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -128,13 +137,15 @@ func TestLikeUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLikeService := NewMocklikeService(ctrl)
+	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	create := entities.NewMockLikeCreate(t)
 	type fields struct {
-		likeService likeService
-		logger      logger
+		likeService       likeService
+		likeEventProducer likeEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -152,10 +163,12 @@ func TestLikeUseCase_Create(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockLikeService.EXPECT().Create(ctx, create).Return(like, nil)
+				mocklikeEventProducer.EXPECT().Created(ctx, like).Return(nil)
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -172,8 +185,9 @@ func TestLikeUseCase_Create(t *testing.T) {
 					Return(entities.Like{}, errs.NewUnexpectedBehaviorError("c u"))
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -187,8 +201,9 @@ func TestLikeUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &LikeUseCase{
-				likeService: tt.fields.likeService,
-				logger:      tt.fields.logger,
+				likeService:       tt.fields.likeService,
+				likeEventProducer: tt.fields.likeEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -201,13 +216,15 @@ func TestLikeUseCase_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLikeService := NewMocklikeService(ctrl)
+	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	update := entities.NewMockLikeUpdate(t)
 	type fields struct {
-		likeService likeService
-		logger      logger
+		likeService       likeService
+		likeEventProducer likeEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -225,10 +242,12 @@ func TestLikeUseCase_Update(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockLikeService.EXPECT().Update(ctx, update).Return(like, nil)
+				mocklikeEventProducer.EXPECT().Updated(ctx, like).Return(nil)
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -245,8 +264,9 @@ func TestLikeUseCase_Update(t *testing.T) {
 					Return(entities.Like{}, errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -260,8 +280,9 @@ func TestLikeUseCase_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &LikeUseCase{
-				likeService: tt.fields.likeService,
-				logger:      tt.fields.logger,
+				likeService:       tt.fields.likeService,
+				likeEventProducer: tt.fields.likeEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -274,12 +295,14 @@ func TestLikeUseCase_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLikeService := NewMocklikeService(ctrl)
+	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	type fields struct {
-		likeService likeService
-		logger      logger
+		likeService       likeService
+		likeEventProducer likeEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx context.Context
@@ -298,10 +321,12 @@ func TestLikeUseCase_Delete(t *testing.T) {
 				mockLikeService.EXPECT().
 					Delete(ctx, like.ID).
 					Return(nil)
+				mocklikeEventProducer.EXPECT().Deleted(ctx, like.ID).Return(nil)
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -317,8 +342,9 @@ func TestLikeUseCase_Delete(t *testing.T) {
 					Return(errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -331,8 +357,9 @@ func TestLikeUseCase_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &LikeUseCase{
-				likeService: tt.fields.likeService,
-				logger:      tt.fields.logger,
+				likeService:       tt.fields.likeService,
+				likeEventProducer: tt.fields.likeEventProducer,
+				logger:            tt.fields.logger,
 			}
 			err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -344,6 +371,7 @@ func TestLikeUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLikeService := NewMocklikeService(ctrl)
+	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockLikeFilter(t)
@@ -353,8 +381,9 @@ func TestLikeUseCase_List(t *testing.T) {
 		listLikes = append(listLikes, entities.NewMockLike(t))
 	}
 	type fields struct {
-		likeService likeService
-		logger      logger
+		likeService       likeService
+		likeEventProducer likeEventProducer
+		logger            logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -377,8 +406,9 @@ func TestLikeUseCase_List(t *testing.T) {
 					Return(listLikes, count, nil)
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -396,8 +426,9 @@ func TestLikeUseCase_List(t *testing.T) {
 					Return(nil, uint64(0), errs.NewUnexpectedBehaviorError("l e"))
 			},
 			fields: fields{
-				likeService: mockLikeService,
-				logger:      mockLogger,
+				likeService:       mockLikeService,
+				likeEventProducer: mocklikeEventProducer,
+				logger:            mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -412,8 +443,9 @@ func TestLikeUseCase_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &LikeUseCase{
-				likeService: tt.fields.likeService,
-				logger:      tt.fields.logger,
+				likeService:       tt.fields.likeService,
+				likeEventProducer: tt.fields.likeEventProducer,
+				logger:            tt.fields.logger,
 			}
 			got, got1, err := i.List(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)

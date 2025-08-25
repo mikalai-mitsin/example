@@ -4,7 +4,7 @@ goVersion: "1.24"
 ci: "github"
 gRPC: true
 http: true
-gateway: false
+kafka: true
 uptrace: true
 apps:
   - name: posts
@@ -38,4 +38,4 @@ apps:
           - name: "Body"
             type: "string"
           - name: "is_published"
-            type: "string"
+            type: bool

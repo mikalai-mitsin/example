@@ -25,3 +25,8 @@ type logger interface {
 	Fatal(msg string, fields ...log.Field)
 	Panic(msg string, fields ...log.Field)
 }
+type tagEventProducer interface {
+	Created(context.Context, entities.Tag) error
+	Updated(context.Context, entities.Tag) error
+	Deleted(context.Context, uuid.UUID) error
+}

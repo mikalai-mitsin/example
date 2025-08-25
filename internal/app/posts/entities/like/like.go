@@ -43,63 +43,9 @@ type LikeFilter struct {
 func (m *LikeFilter) Validate() error {
 	err := validation.ValidateStruct(
 		m,
-		validation.Field(
-			&m.PageSize,
-			validation.Each(
-				validation.In(
-					"likes.id ASC",
-					"likes.id DESC",
-					"likes.created_at ASC",
-					"likes.created_at DESC",
-					"likes.updated_at ASC",
-					"likes.updated_at DESC",
-					"likes.post_id ASC",
-					"likes.post_id DESC",
-					"likes.value ASC",
-					"likes.value DESC",
-					"likes.user_id ASC",
-					"likes.user_id DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.PageNumber,
-			validation.Each(
-				validation.In(
-					"likes.id ASC",
-					"likes.id DESC",
-					"likes.created_at ASC",
-					"likes.created_at DESC",
-					"likes.updated_at ASC",
-					"likes.updated_at DESC",
-					"likes.post_id ASC",
-					"likes.post_id DESC",
-					"likes.value ASC",
-					"likes.value DESC",
-					"likes.user_id ASC",
-					"likes.user_id DESC",
-				),
-			),
-		),
-		validation.Field(
-			&m.Search,
-			validation.Each(
-				validation.In(
-					"likes.id ASC",
-					"likes.id DESC",
-					"likes.created_at ASC",
-					"likes.created_at DESC",
-					"likes.updated_at ASC",
-					"likes.updated_at DESC",
-					"likes.post_id ASC",
-					"likes.post_id DESC",
-					"likes.value ASC",
-					"likes.value DESC",
-					"likes.user_id ASC",
-					"likes.user_id DESC",
-				),
-			),
-		),
+		validation.Field(&m.PageSize),
+		validation.Field(&m.PageNumber),
+		validation.Field(&m.Search),
 		validation.Field(
 			&m.OrderBy,
 			validation.Each(

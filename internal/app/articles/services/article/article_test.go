@@ -363,7 +363,6 @@ func TestArticleService_Create(t *testing.T) {
 				errs.Param{Key: "title", Value: "cannot be blank"},
 				errs.Param{Key: "subtitle", Value: "cannot be blank"},
 				errs.Param{Key: "body", Value: "cannot be blank"},
-				errs.Param{Key: "is_published", Value: "cannot be blank"},
 			),
 		},
 	}

@@ -17,10 +17,12 @@ func TestNewArticleUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockArticleService := NewMockarticleService(ctrl)
+	mockarticleEventProducer := NewMockarticleEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	type args struct {
-		articleService articleService
-		logger         logger
+		articleService       articleService
+		articleEventProducer articleEventProducer
+		logger               logger
 	}
 	tests := []struct {
 		name  string
@@ -32,19 +34,25 @@ func TestNewArticleUseCase(t *testing.T) {
 			name:  "ok",
 			setup: func() {},
 			args: args{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			want: &ArticleUseCase{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			got := NewArticleUseCase(tt.args.articleService, tt.args.logger)
+			got := NewArticleUseCase(
+				tt.args.articleService,
+				tt.args.articleEventProducer,
+				tt.args.logger,
+			)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -54,12 +62,14 @@ func TestArticleUseCase_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockArticleService := NewMockarticleService(ctrl)
+	mockarticleEventProducer := NewMockarticleEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	article := entities.NewMockArticle(t)
 	type fields struct {
-		articleService articleService
-		logger         logger
+		articleService       articleService
+		articleEventProducer articleEventProducer
+		logger               logger
 	}
 	type args struct {
 		ctx context.Context
@@ -81,8 +91,9 @@ func TestArticleUseCase_Get(t *testing.T) {
 					Return(article, nil)
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -99,8 +110,9 @@ func TestArticleUseCase_Get(t *testing.T) {
 					Return(entities.Article{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -114,8 +126,9 @@ func TestArticleUseCase_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &ArticleUseCase{
-				articleService: tt.fields.articleService,
-				logger:         tt.fields.logger,
+				articleService:       tt.fields.articleService,
+				articleEventProducer: tt.fields.articleEventProducer,
+				logger:               tt.fields.logger,
 			}
 			got, err := i.Get(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -128,13 +141,15 @@ func TestArticleUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockArticleService := NewMockarticleService(ctrl)
+	mockarticleEventProducer := NewMockarticleEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	article := entities.NewMockArticle(t)
 	create := entities.NewMockArticleCreate(t)
 	type fields struct {
-		articleService articleService
-		logger         logger
+		articleService       articleService
+		articleEventProducer articleEventProducer
+		logger               logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -152,10 +167,12 @@ func TestArticleUseCase_Create(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockArticleService.EXPECT().Create(ctx, create).Return(article, nil)
+				mockarticleEventProducer.EXPECT().Created(ctx, article).Return(nil)
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -172,8 +189,9 @@ func TestArticleUseCase_Create(t *testing.T) {
 					Return(entities.Article{}, errs.NewUnexpectedBehaviorError("c u"))
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -187,8 +205,9 @@ func TestArticleUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &ArticleUseCase{
-				articleService: tt.fields.articleService,
-				logger:         tt.fields.logger,
+				articleService:       tt.fields.articleService,
+				articleEventProducer: tt.fields.articleEventProducer,
+				logger:               tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -201,13 +220,15 @@ func TestArticleUseCase_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockArticleService := NewMockarticleService(ctrl)
+	mockarticleEventProducer := NewMockarticleEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	article := entities.NewMockArticle(t)
 	update := entities.NewMockArticleUpdate(t)
 	type fields struct {
-		articleService articleService
-		logger         logger
+		articleService       articleService
+		articleEventProducer articleEventProducer
+		logger               logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -225,10 +246,12 @@ func TestArticleUseCase_Update(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockArticleService.EXPECT().Update(ctx, update).Return(article, nil)
+				mockarticleEventProducer.EXPECT().Updated(ctx, article).Return(nil)
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -245,8 +268,9 @@ func TestArticleUseCase_Update(t *testing.T) {
 					Return(entities.Article{}, errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -260,8 +284,9 @@ func TestArticleUseCase_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &ArticleUseCase{
-				articleService: tt.fields.articleService,
-				logger:         tt.fields.logger,
+				articleService:       tt.fields.articleService,
+				articleEventProducer: tt.fields.articleEventProducer,
+				logger:               tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -274,12 +299,14 @@ func TestArticleUseCase_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockArticleService := NewMockarticleService(ctrl)
+	mockarticleEventProducer := NewMockarticleEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	article := entities.NewMockArticle(t)
 	type fields struct {
-		articleService articleService
-		logger         logger
+		articleService       articleService
+		articleEventProducer articleEventProducer
+		logger               logger
 	}
 	type args struct {
 		ctx context.Context
@@ -298,10 +325,12 @@ func TestArticleUseCase_Delete(t *testing.T) {
 				mockArticleService.EXPECT().
 					Delete(ctx, article.ID).
 					Return(nil)
+				mockarticleEventProducer.EXPECT().Deleted(ctx, article.ID).Return(nil)
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -317,8 +346,9 @@ func TestArticleUseCase_Delete(t *testing.T) {
 					Return(errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -331,8 +361,9 @@ func TestArticleUseCase_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &ArticleUseCase{
-				articleService: tt.fields.articleService,
-				logger:         tt.fields.logger,
+				articleService:       tt.fields.articleService,
+				articleEventProducer: tt.fields.articleEventProducer,
+				logger:               tt.fields.logger,
 			}
 			err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -344,6 +375,7 @@ func TestArticleUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockArticleService := NewMockarticleService(ctrl)
+	mockarticleEventProducer := NewMockarticleEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockArticleFilter(t)
@@ -353,8 +385,9 @@ func TestArticleUseCase_List(t *testing.T) {
 		listArticles = append(listArticles, entities.NewMockArticle(t))
 	}
 	type fields struct {
-		articleService articleService
-		logger         logger
+		articleService       articleService
+		articleEventProducer articleEventProducer
+		logger               logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -377,8 +410,9 @@ func TestArticleUseCase_List(t *testing.T) {
 					Return(listArticles, count, nil)
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -396,8 +430,9 @@ func TestArticleUseCase_List(t *testing.T) {
 					Return(nil, uint64(0), errs.NewUnexpectedBehaviorError("l e"))
 			},
 			fields: fields{
-				articleService: mockArticleService,
-				logger:         mockLogger,
+				articleService:       mockArticleService,
+				articleEventProducer: mockarticleEventProducer,
+				logger:               mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -412,8 +447,9 @@ func TestArticleUseCase_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &ArticleUseCase{
-				articleService: tt.fields.articleService,
-				logger:         tt.fields.logger,
+				articleService:       tt.fields.articleService,
+				articleEventProducer: tt.fields.articleEventProducer,
+				logger:               tt.fields.logger,
 			}
 			got, got1, err := i.List(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)

@@ -5,6 +5,8 @@ import (
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/http"
+	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 )
 
 type otel struct {
@@ -13,18 +15,13 @@ type otel struct {
 	Environment string `env:"OTEL_ENVIRONMENT" toml:"environment"`
 }
 
-type database struct {
-	URI                string `env:"DATABASE_URI"                  toml:"uri"`
-	MaxOpenConnections int    `env:"DATABASE_MAX_OPEN_CONNECTIONS" toml:"max_open_connections" env-default:"50"`
-	MaxIDLEConnections int    `env:"DATABASE_MAX_IDLE_CONNECTIONS" toml:"max_idle_connections" env-default:"10"`
-}
-
 type Config struct {
-	LogLevel string       `env:"LOG_LEVEL" toml:"log_level" env-default:"debug"`
-	Database database     `                toml:"database"`
-	Otel     otel         `                toml:"otel"`
-	HTTP     *http.Config `                toml:"http"`
-	GRPC     *grpc.Config `                toml:"grpc"`
+	LogLevel string           `env:"LOG_LEVEL" toml:"log_level" env-default:"debug"`
+	Database *postgres.Config `                toml:"database"`
+	Otel     otel             `                toml:"otel"`
+	Kafka    *kafka.Config    `                toml:"kafka"`
+	HTTP     *http.Config     `                toml:"http"`
+	GRPC     *grpc.Config     `                toml:"grpc"`
 }
 
 func ParseConfig(configPath string) (*Config, error) {

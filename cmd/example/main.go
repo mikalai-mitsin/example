@@ -29,7 +29,7 @@ func main() {
 				HasBeenSet:  false,
 			},
 		},
-		Action: runApp,
+		Action: runServer,
 		Commands: []*cli.Command{
 			{
 				Name:      "migrate",
@@ -38,15 +38,9 @@ func main() {
 				ArgsUsage: "",
 			},
 			{
-				Name:      "grpc",
-				Usage:     "Run gRPC server",
-				Action:    runGRPC,
-				ArgsUsage: "",
-			},
-			{
-				Name:      "http",
-				Usage:     "Run HTTP server",
-				Action:    runHTTP,
+				Name:      "server",
+				Usage:     "Run API server",
+				Action:    runServer,
 				ArgsUsage: "",
 			},
 		},
@@ -56,23 +50,9 @@ func main() {
 	}
 }
 
-// runApp - run app
-func runApp(context *cli.Context) error {
-	app := containers.NewGRPCContainer(configPath)
-	app.Run()
-	return nil
-}
-
-// runGRPC - run grpc api
-func runGRPC(context *cli.Context) error {
-	app := containers.NewGRPCContainer(configPath)
-	app.Run()
-	return nil
-}
-
-// runGateway - run gateway api
-func runHTTP(context *cli.Context) error {
-	app := containers.NewHTTPContainer(configPath)
+// runServer - run api server
+func runServer(context *cli.Context) error {
+	app := containers.NewServerContainer(configPath)
 	app.Run()
 	return nil
 }

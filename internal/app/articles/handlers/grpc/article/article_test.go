@@ -479,7 +479,7 @@ func Test_decodeArticle(t *testing.T) {
 		Title:       string(article.Title),
 		Subtitle:    string(article.Subtitle),
 		Body:        string(article.Body),
-		IsPublished: string(article.IsPublished),
+		IsPublished: bool(article.IsPublished),
 	}
 	type args struct {
 		article entities.Article

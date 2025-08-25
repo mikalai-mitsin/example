@@ -29,7 +29,7 @@ type ArticleDTO struct {
 	Title       string    `db:"title"`
 	Subtitle    string    `db:"subtitle"`
 	Body        string    `db:"body"`
-	IsPublished string    `db:"is_published"`
+	IsPublished bool      `db:"is_published"`
 }
 type ArticleListDTO []ArticleDTO
 

@@ -260,3 +260,69 @@ func (mr *MockloggerMockRecorder) Warn(msg any, fields ...any) *gomock.Call {
 	varargs := append([]any{msg}, fields...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warn", reflect.TypeOf((*Mocklogger)(nil).Warn), varargs...)
 }
+
+// MocklikeEventProducer is a mock of likeEventProducer interface.
+type MocklikeEventProducer struct {
+	ctrl     *gomock.Controller
+	recorder *MocklikeEventProducerMockRecorder
+	isgomock struct{}
+}
+
+// MocklikeEventProducerMockRecorder is the mock recorder for MocklikeEventProducer.
+type MocklikeEventProducerMockRecorder struct {
+	mock *MocklikeEventProducer
+}
+
+// NewMocklikeEventProducer creates a new mock instance.
+func NewMocklikeEventProducer(ctrl *gomock.Controller) *MocklikeEventProducer {
+	mock := &MocklikeEventProducer{ctrl: ctrl}
+	mock.recorder = &MocklikeEventProducerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MocklikeEventProducer) EXPECT() *MocklikeEventProducerMockRecorder {
+	return m.recorder
+}
+
+// Created mocks base method.
+func (m *MocklikeEventProducer) Created(arg0 context.Context, arg1 like.Like) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Created", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Created indicates an expected call of Created.
+func (mr *MocklikeEventProducerMockRecorder) Created(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Created", reflect.TypeOf((*MocklikeEventProducer)(nil).Created), arg0, arg1)
+}
+
+// Deleted mocks base method.
+func (m *MocklikeEventProducer) Deleted(arg0 context.Context, arg1 uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deleted", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Deleted indicates an expected call of Deleted.
+func (mr *MocklikeEventProducerMockRecorder) Deleted(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deleted", reflect.TypeOf((*MocklikeEventProducer)(nil).Deleted), arg0, arg1)
+}
+
+// Updated mocks base method.
+func (m *MocklikeEventProducer) Updated(arg0 context.Context, arg1 like.Like) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Updated", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Updated indicates an expected call of Updated.
+func (mr *MocklikeEventProducerMockRecorder) Updated(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Updated", reflect.TypeOf((*MocklikeEventProducer)(nil).Updated), arg0, arg1)
+}

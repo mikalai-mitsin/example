@@ -21,7 +21,7 @@ type ArticleDTO struct {
 	Title       string    `json:"title"`
 	Subtitle    string    `json:"subtitle"`
 	Body        string    `json:"body"`
-	IsPublished string    `json:"is_published"`
+	IsPublished bool      `json:"is_published"`
 }
 
 func NewArticleDTO(entity entities.Article) (ArticleDTO, error) {
@@ -99,7 +99,7 @@ type ArticleUpdateDTO struct {
 	Title       *string   `json:"title"`
 	Subtitle    *string   `json:"subtitle"`
 	Body        *string   `json:"body"`
-	IsPublished *string   `json:"is_published"`
+	IsPublished *bool     `json:"is_published"`
 }
 
 func NewArticleUpdateDTO(r *http.Request) (ArticleUpdateDTO, error) {
@@ -125,7 +125,7 @@ type ArticleCreateDTO struct {
 	Title       string `json:"title"`
 	Subtitle    string `json:"subtitle"`
 	Body        string `json:"body"`
-	IsPublished string `json:"is_published"`
+	IsPublished bool   `json:"is_published"`
 }
 
 func NewArticleCreateDTO(r *http.Request) (ArticleCreateDTO, error) {

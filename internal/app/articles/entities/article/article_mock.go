@@ -18,7 +18,7 @@ func NewMockArticle(t *testing.T) Article {
 		Title:       faker.New().Lorem().Sentence(15),
 		Subtitle:    faker.New().Lorem().Sentence(15),
 		Body:        faker.New().Lorem().Sentence(15),
-		IsPublished: faker.New().Lorem().Sentence(15),
+		IsPublished: faker.New().Bool(),
 	}
 }
 func NewMockArticleFilter(t *testing.T) ArticleFilter {
@@ -36,7 +36,7 @@ func NewMockArticleCreate(t *testing.T) ArticleCreate {
 		Title:       faker.New().Lorem().Sentence(15),
 		Subtitle:    faker.New().Lorem().Sentence(15),
 		Body:        faker.New().Lorem().Sentence(15),
-		IsPublished: faker.New().Lorem().Sentence(15),
+		IsPublished: faker.New().Bool(),
 	}
 }
 func NewMockArticleUpdate(t *testing.T) ArticleUpdate {
@@ -46,6 +46,6 @@ func NewMockArticleUpdate(t *testing.T) ArticleUpdate {
 		Title:       pointer.Of(faker.New().Lorem().Sentence(15)),
 		Subtitle:    pointer.Of(faker.New().Lorem().Sentence(15)),
 		Body:        pointer.Of(faker.New().Lorem().Sentence(15)),
-		IsPublished: pointer.Of(faker.New().Lorem().Sentence(15)),
+		IsPublished: pointer.Of(faker.New().Bool()),
 	}
 }

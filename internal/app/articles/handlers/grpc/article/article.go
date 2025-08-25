@@ -111,7 +111,7 @@ func encodeArticleUpdate(input *examplepb.ArticleUpdate) entities.ArticleUpdate 
 		update.Body = pointer.Of(string(input.GetBody().GetValue()))
 	}
 	if input.GetIsPublished() != nil {
-		update.IsPublished = pointer.Of(string(input.GetIsPublished().GetValue()))
+		update.IsPublished = pointer.Of(bool(input.GetIsPublished().GetValue()))
 	}
 	return update
 }
@@ -143,7 +143,7 @@ func decodeArticleUpdate(update entities.ArticleUpdate) *examplepb.ArticleUpdate
 		Title:       wrapperspb.String(*update.Title),
 		Subtitle:    wrapperspb.String(*update.Subtitle),
 		Body:        wrapperspb.String(*update.Body),
-		IsPublished: wrapperspb.String(*update.IsPublished),
+		IsPublished: wrapperspb.Bool(*update.IsPublished),
 	}
 	return result
 }
