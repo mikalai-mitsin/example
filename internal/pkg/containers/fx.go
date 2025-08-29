@@ -18,9 +18,9 @@ import (
 	"go.uber.org/fx/fxevent"
 )
 
-var FXModule = fx.Options(fx.WithLogger(func(logger *log.Log) fxevent.Logger {
+var FXModule = fx.Options(fx.WithLogger(func(logger log.Logger) fxevent.Logger {
 	return logger
-}), fx.Provide(func(config *configs.Config) (*log.Log, error) {
+}), fx.Provide(func(config *configs.Config) (log.Logger, error) {
 	return log.NewLog(config.LogLevel)
 }, context.Background, configs.ParseConfig, clock.NewClock, uuid.NewUUIDv7Generator, func(config *configs.Config) *postgres.Config {
 	return config.Database
@@ -31,7 +31,7 @@ var FXModule = fx.Options(fx.WithLogger(func(logger *log.Log) fxevent.Logger {
 func NewMigrateContainer(config string) *fx.App {
 	app := fx.New(fx.Provide(func() string {
 		return config
-	}), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, logger *log.Log, manager *postgres.MigrateManager, shutdowner fx.Shutdowner) {
+	}), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, logger log.Logger, manager *postgres.MigrateManager, shutdowner fx.Shutdowner) {
 		lifecycle.Append(fx.Hook{OnStart: func(ctx context.Context) error {
 			go func() {
 				err := manager.Up(ctx)
@@ -50,19 +50,6 @@ func NewServerContainer(config string) *fx.App {
 		return config
 	}), FXModule, fx.Invoke(func(lifecycle fx.Lifecycle, server *uptrace.Provider, config *configs.Config) {
 		lifecycle.Append(fx.Hook{OnStart: server.Start, OnStop: server.Stop})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, producer *kafka.Producer) {
-		lifecycle.Append(fx.Hook{OnStart: producer.Start, OnStop: producer.Stop})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, logger *log.Log, consumer *kafka.Consumer, shutdowner fx.Shutdowner) {
-		lifecycle.Append(fx.Hook{OnStart: func(ctx context.Context) error {
-			go func() {
-				err := consumer.Start(ctx)
-				if err != nil {
-					logger.Error("shutdown", log.Any("error", err))
-					_ = shutdowner.Shutdown()
-				}
-			}()
-			return nil
-		}, OnStop: consumer.Stop})
 	}), fx.Invoke(func(lifecycle fx.Lifecycle, app *posts.App, consumer *kafka.Consumer) {
 		lifecycle.Append(fx.Hook{OnStart: func(_ context.Context) error {
 			if err := app.RegisterKafka(consumer); err != nil {
@@ -77,6 +64,19 @@ func NewServerContainer(config string) *fx.App {
 			}
 			return nil
 		}})
+	}), fx.Invoke(func(lifecycle fx.Lifecycle, producer *kafka.Producer) {
+		lifecycle.Append(fx.Hook{OnStart: producer.Start, OnStop: producer.Stop})
+	}), fx.Invoke(func(lifecycle fx.Lifecycle, logger log.Logger, consumer *kafka.Consumer, shutdowner fx.Shutdowner) {
+		lifecycle.Append(fx.Hook{OnStart: func(ctx context.Context) error {
+			go func() {
+				err := consumer.Start(ctx)
+				if err != nil {
+					logger.Error("shutdown", log.Any("error", err))
+					_ = shutdowner.Shutdown()
+				}
+			}()
+			return nil
+		}, OnStop: consumer.Stop})
 	}), fx.Provide(func(config *configs.Config) *grpc.Config {
 		return config.GRPC
 	}, grpc.NewServer), fx.Invoke(func(lifecycle fx.Lifecycle, app *posts.App, server *grpc.Server) {
@@ -93,7 +93,7 @@ func NewServerContainer(config string) *fx.App {
 			}
 			return nil
 		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, logger *log.Log, server *grpc.Server, shutdowner fx.Shutdowner) {
+	}), fx.Invoke(func(lifecycle fx.Lifecycle, logger log.Logger, server *grpc.Server, shutdowner fx.Shutdowner) {
 		lifecycle.Append(fx.Hook{OnStart: func(ctx context.Context) error {
 			go func() {
 				err := server.Start(ctx)
@@ -120,7 +120,7 @@ func NewServerContainer(config string) *fx.App {
 			}
 			return nil
 		}})
-	}), fx.Invoke(func(lifecycle fx.Lifecycle, logger *log.Log, server *http.Server, shutdowner fx.Shutdowner) {
+	}), fx.Invoke(func(lifecycle fx.Lifecycle, logger log.Logger, server *http.Server, shutdowner fx.Shutdowner) {
 		lifecycle.Append(fx.Hook{OnStart: func(ctx context.Context) error {
 			go func() {
 				err := server.Start(ctx)

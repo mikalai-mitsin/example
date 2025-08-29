@@ -14,14 +14,14 @@ import (
 )
 
 type Server struct {
-	logger            *log.Log
+	logger            log.Logger
 	server            *grpc.Server
 	config            *Config
 	handlers          map[*grpc.ServiceDesc]any
 	unaryInterceptors []grpc.UnaryServerInterceptor
 }
 
-func NewServer(logger *log.Log, config *Config) *Server {
+func NewServer(logger log.Logger, config *Config) *Server {
 	return &Server{
 		logger:   logger,
 		server:   nil,

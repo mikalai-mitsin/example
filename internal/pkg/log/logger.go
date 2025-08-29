@@ -1,10 +1,12 @@
 package log
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -12,11 +14,22 @@ import (
 	"go.uber.org/fx/fxevent"
 )
 
-type ctxKey int
-
-const (
-	RequestIDKey ctxKey = iota + 1
-)
+type Logger interface {
+	Debug(msg string, fields ...Field)
+	Info(msg string, fields ...Field)
+	Print(msg string, fields ...Field)
+	Warn(msg string, fields ...Field)
+	Warning(msg string, fields ...Field)
+	Error(msg string, fields ...Field)
+	Fatal(msg string, fields ...Field)
+	Panic(msg string, fields ...Field)
+	Logger() *zap.Logger
+	Named(name string) Logger
+	SetLevel(lvl string) error
+	With(fields ...Field) Logger
+	WithContext(ctx context.Context) Logger
+	LogEvent(event fxevent.Event)
+}
 
 type Field zapcore.Field
 
@@ -77,74 +90,7 @@ func Error(err error) Field {
 
 type Log struct {
 	logger *zap.Logger
-}
-
-func (l Log) Logger() *zap.Logger {
-	return l.logger
-}
-
-func (l Log) Debug(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Debug(msg, zf...)
-}
-
-func (l Log) Info(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Info(msg, zf...)
-}
-
-func (l Log) Print(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Info(msg, zf...)
-}
-
-func (l Log) Warn(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Warn(msg, zf...)
-}
-
-func (l Log) Warning(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Warn(msg, zf...)
-}
-
-func (l Log) Error(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Error(msg, zf...)
-}
-
-func (l Log) Fatal(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Fatal(msg, zf...)
-}
-
-func (l Log) Panic(msg string, fields ...Field) {
-	var zf []zap.Field
-	for _, f := range fields {
-		zf = append(zf, zap.Field(f))
-	}
-	l.logger.Panic(msg, zf...)
+	level  zap.AtomicLevel
 }
 
 func NewLog(level string) (*Log, error) {
@@ -165,10 +111,121 @@ func NewLog(level string) (*Log, error) {
 	defer func(logger *zap.Logger) {
 		_ = logger.Sync()
 	}(logger)
-	return &Log{logger: logger}, nil
+	return &Log{logger: logger, level: lvl}, nil
 }
 
-func (l Log) LogEvent(event fxevent.Event) {
+func (l *Log) Logger() *zap.Logger {
+	return l.logger
+}
+
+func (l *Log) Named(name string) Logger {
+	return &Log{
+		logger: l.logger.Named(name),
+		level:  l.level,
+	}
+}
+
+func (l *Log) With(fields ...Field) Logger {
+	if len(fields) == 0 {
+		return l
+	}
+	zapFields := make([]zap.Field, len(fields))
+	for i, field := range fields {
+		zapFields[i] = zap.Field(field)
+	}
+	return &Log{
+		logger: l.logger.With(zapFields...),
+		level:  l.level,
+	}
+}
+
+func (l *Log) WithContext(ctx context.Context) Logger {
+	span := trace.SpanFromContext(ctx)
+	if span.SpanContext().IsValid() {
+		return l.With(
+			String("trace_id", span.SpanContext().TraceID().String()),
+			String("span_id", span.SpanContext().SpanID().String()),
+		)
+	}
+	return l
+}
+
+func (l *Log) SetLevel(lvl string) error {
+	if err := l.level.UnmarshalText([]byte(lvl)); err != nil {
+		return err
+	}
+	_, err := zap.RedirectStdLogAt(l.logger, l.level.Level())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *Log) Debug(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Debug(msg, zf...)
+}
+
+func (l *Log) Info(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Info(msg, zf...)
+}
+
+func (l *Log) Print(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Info(msg, zf...)
+}
+
+func (l *Log) Warn(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Warn(msg, zf...)
+}
+
+func (l *Log) Warning(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Warn(msg, zf...)
+}
+
+func (l *Log) Error(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Error(msg, zf...)
+}
+
+func (l *Log) Fatal(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Fatal(msg, zf...)
+}
+
+func (l *Log) Panic(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Panic(msg, zf...)
+}
+
+func (l *Log) LogEvent(event fxevent.Event) {
 	switch e := event.(type) {
 	case *fxevent.OnStartExecuting:
 		l.logger.Info("OnStart hook executing",

@@ -35,7 +35,7 @@ import (
 type App struct {
 	readDB            *sqlx.DB
 	writeDB           *sqlx.DB
-	logger            *log.Log
+	logger            log.Logger
 	kafkaProducer     *kafka.Producer
 	postRepository    *postRepositories.PostRepository
 	postService       *postServices.PostService
@@ -62,7 +62,7 @@ type App struct {
 
 func NewApp(
 	readDB, writeDB *sqlx.DB,
-	logger *log.Log,
+	logger log.Logger,
 	clock *clock.Clock,
 	uuidGenerator *uuid.UUIDv7Generator,
 	kafkaProducer *kafka.Producer,
@@ -130,25 +130,67 @@ func (a *App) RegisterGRPC(grpcServer *grpc.Server) error {
 }
 func (a *App) RegisterKafka(consumer *kafka.Consumer) error {
 	consumer.AddHandler(
-		kafka.Handler{
-			Topic:   "example.posts.post.created",
-			GroupID: "example.posts.post",
-			Handler: a.kafkaPostHandler,
-		},
+		kafka.NewHandler(
+			"example.posts.post.created",
+			"example.posts.post.created",
+			a.kafkaPostHandler.Created,
+		),
 	)
 	consumer.AddHandler(
-		kafka.Handler{
-			Topic:   "example.posts.tag.created",
-			GroupID: "example.posts.tag",
-			Handler: a.kafkaTagHandler,
-		},
+		kafka.NewHandler(
+			"example.posts.post.updated",
+			"example.posts.post.updated",
+			a.kafkaPostHandler.Updated,
+		),
 	)
 	consumer.AddHandler(
-		kafka.Handler{
-			Topic:   "example.posts.like.created",
-			GroupID: "example.posts.like",
-			Handler: a.kafkaLikeHandler,
-		},
+		kafka.NewHandler(
+			"example.posts.post.deleted",
+			"example.posts.post.deleted",
+			a.kafkaPostHandler.Deleted,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.posts.tag.created",
+			"example.posts.tag.created",
+			a.kafkaTagHandler.Created,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.posts.tag.updated",
+			"example.posts.tag.updated",
+			a.kafkaTagHandler.Updated,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.posts.tag.deleted",
+			"example.posts.tag.deleted",
+			a.kafkaTagHandler.Deleted,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.posts.like.created",
+			"example.posts.like.created",
+			a.kafkaLikeHandler.Created,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.posts.like.updated",
+			"example.posts.like.updated",
+			a.kafkaLikeHandler.Updated,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.posts.like.deleted",
+			"example.posts.like.deleted",
+			a.kafkaLikeHandler.Deleted,
+		),
 	)
 	return nil
 }

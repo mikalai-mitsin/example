@@ -9,13 +9,7 @@ import (
 )
 
 type logger interface {
-	Debug(msg string, fields ...log.Field)
-	Info(msg string, fields ...log.Field)
-	Print(msg string, fields ...log.Field)
-	Warn(msg string, fields ...log.Field)
-	Error(msg string, fields ...log.Field)
-	Fatal(msg string, fields ...log.Field)
-	Panic(msg string, fields ...log.Field)
+	log.Logger
 }
 type database interface {
 	ExecContext(ctx context.Context, query string, args ...interface {

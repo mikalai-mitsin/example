@@ -16,10 +16,10 @@ type Message struct {
 type Producer struct {
 	config   *Config
 	producer sarama.SyncProducer
-	logger   *log.Log
+	logger   log.Logger
 }
 
-func NewProducer(cfg *Config, logger *log.Log) (*Producer, error) {
+func NewProducer(cfg *Config, logger log.Logger) (*Producer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll

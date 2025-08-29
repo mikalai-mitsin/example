@@ -6,7 +6,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
-	"github.com/mikalai-mitsin/example/internal/pkg/log"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -24,11 +24,14 @@ func defaultMessageProducer(
 	duration zapcore.Field,
 ) {
 	logger := ctxzap.Extract(ctx)
-	params := []zap.Field{
-		zap.String("grpc.code", code.String()),
-		duration,
-		zap.Any("request_id", ctx.Value(log.RequestIDKey)),
+	span := trace.SpanFromContext(ctx)
+	if span.SpanContext().IsValid() {
+		logger = logger.With(
+			zap.String("trace_id", span.SpanContext().TraceID().String()),
+			zap.String("span_id", span.SpanContext().SpanID().String()),
+		)
 	}
+	params := []zap.Field{zap.String("grpc.code", code.String()), duration}
 	if err != nil {
 		sts := status.Convert(err)
 		msg = sts.Message()

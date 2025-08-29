@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/IBM/sarama"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 )
@@ -13,28 +15,39 @@ type ArticleHandler struct {
 func NewArticleHandler(articleUseCase articleUseCase, logger logger) *ArticleHandler {
 	return &ArticleHandler{articleUseCase: articleUseCase, logger: logger}
 }
-func (h *ArticleHandler) Setup(_ sarama.ConsumerGroupSession) error {
+func (h *ArticleHandler) Created(ctx context.Context, msg *sarama.ConsumerMessage) error {
+	logger := h.logger.WithContext(ctx)
+	logger.Info(
+		"received created message",
+		log.String("topic", msg.Topic),
+		log.Int32("partition", msg.Partition),
+		log.Int64("offset", msg.Offset),
+		log.String("key", string(msg.Key)),
+		log.String("value", string(msg.Value)),
+	)
 	return nil
 }
-func (h *ArticleHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
+func (h *ArticleHandler) Updated(ctx context.Context, msg *sarama.ConsumerMessage) error {
+	logger := h.logger.WithContext(ctx)
+	logger.Info(
+		"received updated message",
+		log.String("topic", msg.Topic),
+		log.Int32("partition", msg.Partition),
+		log.Int64("offset", msg.Offset),
+		log.String("key", string(msg.Key)),
+		log.String("value", string(msg.Value)),
+	)
 	return nil
 }
-
-func (h *ArticleHandler) ConsumeClaim(
-	session sarama.ConsumerGroupSession,
-	claim sarama.ConsumerGroupClaim,
-) error {
-	for msg := range claim.Messages() {
-		logger := h.logger
-		logger.Info(
-			"received message",
-			log.String("topic", msg.Topic),
-			log.Int32("partition", msg.Partition),
-			log.Int64("offset", msg.Offset),
-			log.String("key", string(msg.Key)),
-			log.String("value", string(msg.Value)),
-		)
-		session.MarkMessage(msg, "")
-	}
+func (h *ArticleHandler) Deleted(ctx context.Context, msg *sarama.ConsumerMessage) error {
+	logger := h.logger.WithContext(ctx)
+	logger.Info(
+		"received deleted message",
+		log.String("topic", msg.Topic),
+		log.Int32("partition", msg.Partition),
+		log.Int64("offset", msg.Offset),
+		log.String("key", string(msg.Key)),
+		log.String("value", string(msg.Value)),
+	)
 	return nil
 }

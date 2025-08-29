@@ -21,7 +21,7 @@ import (
 type App struct {
 	readDB               *sqlx.DB
 	writeDB              *sqlx.DB
-	logger               *log.Log
+	logger               log.Logger
 	kafkaProducer        *kafka.Producer
 	articleRepository    *articleRepositories.ArticleRepository
 	articleService       *articleServices.ArticleService
@@ -34,7 +34,7 @@ type App struct {
 
 func NewApp(
 	readDB, writeDB *sqlx.DB,
-	logger *log.Log,
+	logger log.Logger,
 	clock *clock.Clock,
 	uuidGenerator *uuid.UUIDv7Generator,
 	kafkaProducer *kafka.Producer,
@@ -79,11 +79,25 @@ func (a *App) RegisterGRPC(grpcServer *grpc.Server) error {
 }
 func (a *App) RegisterKafka(consumer *kafka.Consumer) error {
 	consumer.AddHandler(
-		kafka.Handler{
-			Topic:   "example.articles.article.created",
-			GroupID: "example.articles.article",
-			Handler: a.kafkaArticleHandler,
-		},
+		kafka.NewHandler(
+			"example.articles.article.created",
+			"example.articles.article.created",
+			a.kafkaArticleHandler.Created,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.articles.article.updated",
+			"example.articles.article.updated",
+			a.kafkaArticleHandler.Updated,
+		),
+	)
+	consumer.AddHandler(
+		kafka.NewHandler(
+			"example.articles.article.deleted",
+			"example.articles.article.deleted",
+			a.kafkaArticleHandler.Deleted,
+		),
 	)
 	return nil
 }

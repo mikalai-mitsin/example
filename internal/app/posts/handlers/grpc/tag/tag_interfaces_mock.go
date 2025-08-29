@@ -16,7 +16,9 @@ import (
 	tag "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	fxevent "go.uber.org/fx/fxevent"
 	gomock "go.uber.org/mock/gomock"
+	zap "go.uber.org/zap"
 )
 
 // MocktagUseCase is a mock of tagUseCase interface.
@@ -210,6 +212,46 @@ func (mr *MockloggerMockRecorder) Info(msg any, fields ...any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*Mocklogger)(nil).Info), varargs...)
 }
 
+// LogEvent mocks base method.
+func (m *Mocklogger) LogEvent(event fxevent.Event) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "LogEvent", event)
+}
+
+// LogEvent indicates an expected call of LogEvent.
+func (mr *MockloggerMockRecorder) LogEvent(event any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogEvent", reflect.TypeOf((*Mocklogger)(nil).LogEvent), event)
+}
+
+// Logger mocks base method.
+func (m *Mocklogger) Logger() *zap.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Logger")
+	ret0, _ := ret[0].(*zap.Logger)
+	return ret0
+}
+
+// Logger indicates an expected call of Logger.
+func (mr *MockloggerMockRecorder) Logger() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logger", reflect.TypeOf((*Mocklogger)(nil).Logger))
+}
+
+// Named mocks base method.
+func (m *Mocklogger) Named(name string) log.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Named", name)
+	ret0, _ := ret[0].(log.Logger)
+	return ret0
+}
+
+// Named indicates an expected call of Named.
+func (mr *MockloggerMockRecorder) Named(name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Named", reflect.TypeOf((*Mocklogger)(nil).Named), name)
+}
+
 // Panic mocks base method.
 func (m *Mocklogger) Panic(msg string, fields ...log.Field) {
 	m.ctrl.T.Helper()
@@ -244,6 +286,20 @@ func (mr *MockloggerMockRecorder) Print(msg any, fields ...any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Print", reflect.TypeOf((*Mocklogger)(nil).Print), varargs...)
 }
 
+// SetLevel mocks base method.
+func (m *Mocklogger) SetLevel(lvl string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLevel", lvl)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLevel indicates an expected call of SetLevel.
+func (mr *MockloggerMockRecorder) SetLevel(lvl any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLevel", reflect.TypeOf((*Mocklogger)(nil).SetLevel), lvl)
+}
+
 // Warn mocks base method.
 func (m *Mocklogger) Warn(msg string, fields ...log.Field) {
 	m.ctrl.T.Helper()
@@ -259,4 +315,53 @@ func (mr *MockloggerMockRecorder) Warn(msg any, fields ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{msg}, fields...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warn", reflect.TypeOf((*Mocklogger)(nil).Warn), varargs...)
+}
+
+// Warning mocks base method.
+func (m *Mocklogger) Warning(msg string, fields ...log.Field) {
+	m.ctrl.T.Helper()
+	varargs := []any{msg}
+	for _, a := range fields {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Warning", varargs...)
+}
+
+// Warning indicates an expected call of Warning.
+func (mr *MockloggerMockRecorder) Warning(msg any, fields ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{msg}, fields...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warning", reflect.TypeOf((*Mocklogger)(nil).Warning), varargs...)
+}
+
+// With mocks base method.
+func (m *Mocklogger) With(fields ...log.Field) log.Logger {
+	m.ctrl.T.Helper()
+	varargs := []any{}
+	for _, a := range fields {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "With", varargs...)
+	ret0, _ := ret[0].(log.Logger)
+	return ret0
+}
+
+// With indicates an expected call of With.
+func (mr *MockloggerMockRecorder) With(fields ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "With", reflect.TypeOf((*Mocklogger)(nil).With), fields...)
+}
+
+// WithContext mocks base method.
+func (m *Mocklogger) WithContext(ctx context.Context) log.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithContext", ctx)
+	ret0, _ := ret[0].(log.Logger)
+	return ret0
+}
+
+// WithContext indicates an expected call of WithContext.
+func (mr *MockloggerMockRecorder) WithContext(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithContext", reflect.TypeOf((*Mocklogger)(nil).WithContext), ctx)
 }
