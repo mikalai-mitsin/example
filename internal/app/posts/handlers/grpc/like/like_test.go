@@ -347,7 +347,7 @@ func TestLikeServiceServer_List(t *testing.T) {
 				input: &examplepb.LikeFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
-					OrderBy:    filter.OrderBy,
+					OrderBy:    nil,
 				},
 			},
 			want:    response,
@@ -372,7 +372,7 @@ func TestLikeServiceServer_List(t *testing.T) {
 				input: &examplepb.LikeFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
-					OrderBy:    filter.OrderBy,
+					OrderBy:    nil,
 				},
 			},
 			want:    nil,
@@ -525,7 +525,7 @@ func Test_encodeLikeFilter(t *testing.T) {
 			want: entities.LikeFilter{
 				PageSize:   pointer.Of(uint64(5)),
 				PageNumber: pointer.Of(uint64(2)),
-				OrderBy:    []string{"created_at", "id"},
+				OrderBy:    []entities.LikeOrdering{"created_at", "id"},
 			},
 		},
 	}

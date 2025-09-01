@@ -24,7 +24,16 @@ func NewMockPostFilter(t *testing.T) PostFilter {
 		PageSize:   pointer.Of(faker.New().UInt64()),
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
-		OrderBy:    []string{faker.New().Lorem().Sentence(15), faker.New().Lorem().Sentence(15)},
+		OrderBy: []PostOrdering{
+			PostOrderingCreatedAtASC,
+			PostOrderingCreatedAtDESC,
+			PostOrderingUpdatedAtASC,
+			PostOrderingUpdatedAtDESC,
+			PostOrderingBodyASC,
+			PostOrderingBodyDESC,
+			PostOrderingIdASC,
+			PostOrderingIdDESC,
+		},
 	}
 }
 func NewMockPostCreate(t *testing.T) PostCreate {

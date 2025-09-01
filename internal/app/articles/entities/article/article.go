@@ -35,11 +35,38 @@ func (m *Article) Validate() error {
 	return nil
 }
 
+type ArticleOrdering string
+
+func (o ArticleOrdering) Validate() error {
+	if err := validation.Validate(o.String(), validation.In(ArticleOrderingIsPublishedDESC.String(), ArticleOrderingIdDESC.String(), ArticleOrderingUpdatedAtASC.String(), ArticleOrderingTitleASC.String(), ArticleOrderingTitleDESC.String(), ArticleOrderingBodyASC.String(), ArticleOrderingBodyDESC.String(), ArticleOrderingIdASC.String(), ArticleOrderingCreatedAtASC.String(), ArticleOrderingCreatedAtDESC.String(), ArticleOrderingUpdatedAtDESC.String(), ArticleOrderingSubtitleASC.String(), ArticleOrderingSubtitleDESC.String(), ArticleOrderingIsPublishedASC.String())); err != nil {
+		return err
+	}
+	return nil
+}
+func (o ArticleOrdering) String() string {
+	return string(o)
+}
+
+const ArticleOrderingBodyASC ArticleOrdering = "body"
+const ArticleOrderingBodyDESC ArticleOrdering = "-body"
+const ArticleOrderingIsPublishedASC ArticleOrdering = "is_published"
+const ArticleOrderingIsPublishedDESC ArticleOrdering = "-is_published"
+const ArticleOrderingIdDESC ArticleOrdering = "-id"
+const ArticleOrderingCreatedAtASC ArticleOrdering = "created_at"
+const ArticleOrderingCreatedAtDESC ArticleOrdering = "-created_at"
+const ArticleOrderingUpdatedAtASC ArticleOrdering = "updated_at"
+const ArticleOrderingUpdatedAtDESC ArticleOrdering = "-updated_at"
+const ArticleOrderingTitleDESC ArticleOrdering = "-title"
+const ArticleOrderingSubtitleASC ArticleOrdering = "subtitle"
+const ArticleOrderingSubtitleDESC ArticleOrdering = "-subtitle"
+const ArticleOrderingIdASC ArticleOrdering = "id"
+const ArticleOrderingTitleASC ArticleOrdering = "title"
+
 type ArticleFilter struct {
-	PageSize   *uint64  `json:"page_size"`
-	PageNumber *uint64  `json:"page_number"`
-	Search     *string  `json:"search"`
-	OrderBy    []string `json:"order_by"`
+	PageSize   *uint64           `json:"page_size"`
+	PageNumber *uint64           `json:"page_number"`
+	Search     *string           `json:"search"`
+	OrderBy    []ArticleOrdering `json:"order_by"`
 }
 
 func (m *ArticleFilter) Validate() error {
@@ -48,27 +75,7 @@ func (m *ArticleFilter) Validate() error {
 		validation.Field(&m.PageSize),
 		validation.Field(&m.PageNumber),
 		validation.Field(&m.Search),
-		validation.Field(
-			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"articles.id ASC",
-					"articles.id DESC",
-					"articles.created_at ASC",
-					"articles.created_at DESC",
-					"articles.updated_at ASC",
-					"articles.updated_at DESC",
-					"articles.title ASC",
-					"articles.title DESC",
-					"articles.subtitle ASC",
-					"articles.subtitle DESC",
-					"articles.body ASC",
-					"articles.body DESC",
-					"articles.is_published ASC",
-					"articles.is_published DESC",
-				),
-			),
-		),
+		validation.Field(&m.OrderBy),
 	)
 	if err != nil {
 		return errs.NewFromValidationError(err)

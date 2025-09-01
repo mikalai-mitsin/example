@@ -83,7 +83,7 @@ func encodePostFilter(input *examplepb.PostFilter) entities.PostFilter {
 	filter := entities.PostFilter{
 		PageSize:   nil,
 		PageNumber: nil,
-		OrderBy:    input.GetOrderBy(),
+		OrderBy:    []entities.PostOrdering{},
 		Search:     nil,
 	}
 	if input.GetPageSize() != nil {
@@ -91,6 +91,9 @@ func encodePostFilter(input *examplepb.PostFilter) entities.PostFilter {
 	}
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
+	}
+	for _, orderBy := range input.GetOrderBy() {
+		filter.OrderBy = append(filter.OrderBy, entities.PostOrdering(orderBy))
 	}
 	return filter
 }

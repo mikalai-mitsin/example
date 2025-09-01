@@ -270,9 +270,9 @@ func TestLikeRepository_List(t *testing.T) {
 		PageSize:   pointer.Of(uint64(10)),
 		PageNumber: pointer.Of(uint64(2)),
 		Search:     nil,
-		OrderBy:    []string{"id ASC"},
+		OrderBy:    []entities.LikeOrdering{"id"},
 	}
-	query := "SELECT likes.id, likes.created_at, likes.updated_at, likes.post_id, likes.value, likes.user_id FROM public.likes ORDER BY id ASC LIMIT 10 OFFSET 10"
+	query := "SELECT likes.id, likes.created_at, likes.updated_at, likes.post_id, likes.value, likes.user_id FROM public.likes ORDER BY likes.id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		writeDB database
 		readDB  database

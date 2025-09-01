@@ -56,6 +56,9 @@ func (u *LikeService) List(
 	ctx context.Context,
 	filter entities.LikeFilter,
 ) ([]entities.Like, uint64, error) {
+	if err := filter.Validate(); err != nil {
+		return nil, 0, err
+	}
 	like, err := u.likeRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err

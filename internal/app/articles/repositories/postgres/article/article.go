@@ -22,6 +22,35 @@ func NewArticleRepository(readDB database, writeDB database, logger logger) *Art
 	return &ArticleRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
+var orderByMap = map[entities.ArticleOrdering]string{
+	entities.ArticleOrderingTitleASC:        "articles.title ASC",
+	entities.ArticleOrderingSubtitleASC:     "articles.subtitle ASC",
+	entities.ArticleOrderingSubtitleDESC:    "articles.subtitle DESC",
+	entities.ArticleOrderingBodyASC:         "articles.body ASC",
+	entities.ArticleOrderingIdDESC:          "articles.id DESC",
+	entities.ArticleOrderingUpdatedAtASC:    "articles.updated_at ASC",
+	entities.ArticleOrderingTitleDESC:       "articles.title DESC",
+	entities.ArticleOrderingBodyDESC:        "articles.body DESC",
+	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
+	entities.ArticleOrderingIsPublishedDESC: "articles.is_published DESC",
+	entities.ArticleOrderingIdASC:           "articles.id ASC",
+	entities.ArticleOrderingCreatedAtASC:    "articles.created_at ASC",
+	entities.ArticleOrderingCreatedAtDESC:   "articles.created_at DESC",
+	entities.ArticleOrderingUpdatedAtDESC:   "articles.updated_at DESC",
+}
+
+func encodeOrderBy(orderBy []entities.ArticleOrdering) []string {
+	columns := make([]string, len(orderBy))
+	for i, item := range orderBy {
+		column, exists := orderByMap[item]
+		if !exists {
+			continue
+		}
+		columns[i] = column
+	}
+	return columns
+}
+
 type ArticleDTO struct {
 	ID          uuid.UUID `db:"id,omitempty"`
 	UpdatedAt   time.Time `db:"updated_at,omitempty"`
@@ -33,7 +62,7 @@ type ArticleDTO struct {
 }
 type ArticleListDTO []ArticleDTO
 
-func (list ArticleListDTO) ToEntities() []entities.Article {
+func (list ArticleListDTO) toEntities() []entities.Article {
 	items := make([]entities.Article, len(list))
 	for i := range list {
 		items[i] = list[i].toEntity()
@@ -113,14 +142,14 @@ func (r *ArticleRepository) List(
 	}
 	q = q.Limit(*filter.PageSize)
 	if len(filter.OrderBy) > 0 {
-		q = q.OrderBy(filter.OrderBy...)
+		q = q.OrderBy(encodeOrderBy(filter.OrderBy)...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
-	return dto.ToEntities(), nil
+	return dto.toEntities(), nil
 }
 
 func (r *ArticleRepository) Count(

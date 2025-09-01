@@ -85,7 +85,10 @@ func (dto TagFilterDTO) toEntity() (entities.TagFilter, error) {
 	filter := entities.TagFilter{
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
-		OrderBy:    dto.OrderBy,
+		OrderBy:    []entities.TagOrdering{},
+	}
+	for _, orderBy := range dto.OrderBy {
+		filter.OrderBy = append(filter.OrderBy, entities.TagOrdering(orderBy))
 	}
 	return filter, nil
 }

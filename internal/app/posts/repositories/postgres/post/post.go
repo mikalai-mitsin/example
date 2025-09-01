@@ -22,6 +22,29 @@ func NewPostRepository(readDB database, writeDB database, logger logger) *PostRe
 	return &PostRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
+var orderByMap = map[entities.PostOrdering]string{
+	entities.PostOrderingCreatedAtASC:  "posts.created_at ASC",
+	entities.PostOrderingCreatedAtDESC: "posts.created_at DESC",
+	entities.PostOrderingUpdatedAtASC:  "posts.updated_at ASC",
+	entities.PostOrderingUpdatedAtDESC: "posts.updated_at DESC",
+	entities.PostOrderingBodyASC:       "posts.body ASC",
+	entities.PostOrderingBodyDESC:      "posts.body DESC",
+	entities.PostOrderingIdASC:         "posts.id ASC",
+	entities.PostOrderingIdDESC:        "posts.id DESC",
+}
+
+func encodeOrderBy(orderBy []entities.PostOrdering) []string {
+	columns := make([]string, len(orderBy))
+	for i, item := range orderBy {
+		column, exists := orderByMap[item]
+		if !exists {
+			continue
+		}
+		columns[i] = column
+	}
+	return columns
+}
+
 type PostDTO struct {
 	ID        uuid.UUID `db:"id,omitempty"`
 	UpdatedAt time.Time `db:"updated_at,omitempty"`
@@ -30,7 +53,7 @@ type PostDTO struct {
 }
 type PostListDTO []PostDTO
 
-func (list PostListDTO) ToEntities() []entities.Post {
+func (list PostListDTO) toEntities() []entities.Post {
 	items := make([]entities.Post, len(list))
 	for i := range list {
 		items[i] = list[i].toEntity()
@@ -104,14 +127,14 @@ func (r *PostRepository) List(
 	}
 	q = q.Limit(*filter.PageSize)
 	if len(filter.OrderBy) > 0 {
-		q = q.OrderBy(filter.OrderBy...)
+		q = q.OrderBy(encodeOrderBy(filter.OrderBy)...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
-	return dto.ToEntities(), nil
+	return dto.toEntities(), nil
 }
 func (r *PostRepository) Count(ctx context.Context, filter entities.PostFilter) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)

@@ -266,9 +266,9 @@ func TestPostRepository_List(t *testing.T) {
 		PageSize:   pointer.Of(uint64(10)),
 		PageNumber: pointer.Of(uint64(2)),
 		Search:     nil,
-		OrderBy:    []string{"id ASC"},
+		OrderBy:    []entities.PostOrdering{"id"},
 	}
-	query := "SELECT posts.id, posts.created_at, posts.updated_at, posts.body FROM public.posts ORDER BY id ASC LIMIT 10 OFFSET 10"
+	query := "SELECT posts.id, posts.created_at, posts.updated_at, posts.body FROM public.posts ORDER BY posts.id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		writeDB database
 		readDB  database

@@ -88,7 +88,7 @@ func encodeArticleFilter(input *examplepb.ArticleFilter) entities.ArticleFilter 
 	filter := entities.ArticleFilter{
 		PageSize:   nil,
 		PageNumber: nil,
-		OrderBy:    input.GetOrderBy(),
+		OrderBy:    []entities.ArticleOrdering{},
 		Search:     nil,
 	}
 	if input.GetPageSize() != nil {
@@ -96,6 +96,9 @@ func encodeArticleFilter(input *examplepb.ArticleFilter) entities.ArticleFilter 
 	}
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
+	}
+	for _, orderBy := range input.GetOrderBy() {
+		filter.OrderBy = append(filter.OrderBy, entities.ArticleOrdering(orderBy))
 	}
 	return filter
 }

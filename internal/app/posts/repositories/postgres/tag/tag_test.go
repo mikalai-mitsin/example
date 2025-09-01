@@ -268,9 +268,9 @@ func TestTagRepository_List(t *testing.T) {
 		PageSize:   pointer.Of(uint64(10)),
 		PageNumber: pointer.Of(uint64(2)),
 		Search:     nil,
-		OrderBy:    []string{"id ASC"},
+		OrderBy:    []entities.TagOrdering{"id"},
 	}
-	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.post_id, tags.value FROM public.tags ORDER BY id ASC LIMIT 10 OFFSET 10"
+	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.post_id, tags.value FROM public.tags ORDER BY tags.id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		writeDB database
 		readDB  database

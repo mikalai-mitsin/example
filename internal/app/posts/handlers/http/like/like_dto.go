@@ -87,7 +87,10 @@ func (dto LikeFilterDTO) toEntity() (entities.LikeFilter, error) {
 	filter := entities.LikeFilter{
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
-		OrderBy:    dto.OrderBy,
+		OrderBy:    []entities.LikeOrdering{},
+	}
+	for _, orderBy := range dto.OrderBy {
+		filter.OrderBy = append(filter.OrderBy, entities.LikeOrdering(orderBy))
 	}
 	return filter, nil
 }

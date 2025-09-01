@@ -347,7 +347,7 @@ func TestPostServiceServer_List(t *testing.T) {
 				input: &examplepb.PostFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
-					OrderBy:    filter.OrderBy,
+					OrderBy:    nil,
 				},
 			},
 			want:    response,
@@ -372,7 +372,7 @@ func TestPostServiceServer_List(t *testing.T) {
 				input: &examplepb.PostFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
-					OrderBy:    filter.OrderBy,
+					OrderBy:    nil,
 				},
 			},
 			want:    nil,
@@ -523,7 +523,7 @@ func Test_encodePostFilter(t *testing.T) {
 			want: entities.PostFilter{
 				PageSize:   pointer.Of(uint64(5)),
 				PageNumber: pointer.Of(uint64(2)),
-				OrderBy:    []string{"created_at", "id"},
+				OrderBy:    []entities.PostOrdering{"created_at", "id"},
 			},
 		},
 	}

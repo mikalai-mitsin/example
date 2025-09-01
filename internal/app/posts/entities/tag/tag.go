@@ -31,11 +31,34 @@ func (m *Tag) Validate() error {
 	return nil
 }
 
+type TagOrdering string
+
+func (o TagOrdering) Validate() error {
+	if err := validation.Validate(o.String(), validation.In(TagOrderingCreatedAtASC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingPostIdASC.String(), TagOrderingPostIdDESC.String(), TagOrderingValueASC.String(), TagOrderingIdASC.String(), TagOrderingIdDESC.String(), TagOrderingValueDESC.String())); err != nil {
+		return err
+	}
+	return nil
+}
+func (o TagOrdering) String() string {
+	return string(o)
+}
+
+const TagOrderingIdDESC TagOrdering = "-id"
+const TagOrderingCreatedAtASC TagOrdering = "created_at"
+const TagOrderingUpdatedAtDESC TagOrdering = "-updated_at"
+const TagOrderingPostIdASC TagOrdering = "post_id"
+const TagOrderingCreatedAtDESC TagOrdering = "-created_at"
+const TagOrderingUpdatedAtASC TagOrdering = "updated_at"
+const TagOrderingPostIdDESC TagOrdering = "-post_id"
+const TagOrderingValueASC TagOrdering = "value"
+const TagOrderingValueDESC TagOrdering = "-value"
+const TagOrderingIdASC TagOrdering = "id"
+
 type TagFilter struct {
-	PageSize   *uint64  `json:"page_size"`
-	PageNumber *uint64  `json:"page_number"`
-	Search     *string  `json:"search"`
-	OrderBy    []string `json:"order_by"`
+	PageSize   *uint64       `json:"page_size"`
+	PageNumber *uint64       `json:"page_number"`
+	Search     *string       `json:"search"`
+	OrderBy    []TagOrdering `json:"order_by"`
 }
 
 func (m *TagFilter) Validate() error {
@@ -44,23 +67,7 @@ func (m *TagFilter) Validate() error {
 		validation.Field(&m.PageSize),
 		validation.Field(&m.PageNumber),
 		validation.Field(&m.Search),
-		validation.Field(
-			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"tags.id ASC",
-					"tags.id DESC",
-					"tags.created_at ASC",
-					"tags.created_at DESC",
-					"tags.updated_at ASC",
-					"tags.updated_at DESC",
-					"tags.post_id ASC",
-					"tags.post_id DESC",
-					"tags.value ASC",
-					"tags.value DESC",
-				),
-			),
-		),
+		validation.Field(&m.OrderBy),
 	)
 	if err != nil {
 		return errs.NewFromValidationError(err)

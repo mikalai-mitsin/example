@@ -51,6 +51,9 @@ func (u *TagService) List(
 	ctx context.Context,
 	filter entities.TagFilter,
 ) ([]entities.Tag, uint64, error) {
+	if err := filter.Validate(); err != nil {
+		return nil, 0, err
+	}
 	tag, err := u.tagRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err

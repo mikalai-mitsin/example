@@ -83,7 +83,10 @@ func (dto PostFilterDTO) toEntity() (entities.PostFilter, error) {
 	filter := entities.PostFilter{
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
-		OrderBy:    dto.OrderBy,
+		OrderBy:    []entities.PostOrdering{},
+	}
+	for _, orderBy := range dto.OrderBy {
+		filter.OrderBy = append(filter.OrderBy, entities.PostOrdering(orderBy))
 	}
 	return filter, nil
 }

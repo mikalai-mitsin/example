@@ -33,11 +33,36 @@ func (m *Like) Validate() error {
 	return nil
 }
 
+type LikeOrdering string
+
+func (o LikeOrdering) Validate() error {
+	if err := validation.Validate(o.String(), validation.In(LikeOrderingValueASC.String(), LikeOrderingUserIdASC.String(), LikeOrderingUserIdDESC.String(), LikeOrderingCreatedAtASC.String(), LikeOrderingCreatedAtDESC.String(), LikeOrderingPostIdASC.String(), LikeOrderingPostIdDESC.String(), LikeOrderingValueDESC.String(), LikeOrderingIdASC.String(), LikeOrderingIdDESC.String(), LikeOrderingUpdatedAtASC.String(), LikeOrderingUpdatedAtDESC.String())); err != nil {
+		return err
+	}
+	return nil
+}
+func (o LikeOrdering) String() string {
+	return string(o)
+}
+
+const LikeOrderingUserIdDESC LikeOrdering = "-user_id"
+const LikeOrderingIdASC LikeOrdering = "id"
+const LikeOrderingIdDESC LikeOrdering = "-id"
+const LikeOrderingUpdatedAtASC LikeOrdering = "updated_at"
+const LikeOrderingUpdatedAtDESC LikeOrdering = "-updated_at"
+const LikeOrderingPostIdASC LikeOrdering = "post_id"
+const LikeOrderingValueASC LikeOrdering = "value"
+const LikeOrderingUserIdASC LikeOrdering = "user_id"
+const LikeOrderingCreatedAtASC LikeOrdering = "created_at"
+const LikeOrderingCreatedAtDESC LikeOrdering = "-created_at"
+const LikeOrderingPostIdDESC LikeOrdering = "-post_id"
+const LikeOrderingValueDESC LikeOrdering = "-value"
+
 type LikeFilter struct {
-	PageSize   *uint64  `json:"page_size"`
-	PageNumber *uint64  `json:"page_number"`
-	Search     *string  `json:"search"`
-	OrderBy    []string `json:"order_by"`
+	PageSize   *uint64        `json:"page_size"`
+	PageNumber *uint64        `json:"page_number"`
+	Search     *string        `json:"search"`
+	OrderBy    []LikeOrdering `json:"order_by"`
 }
 
 func (m *LikeFilter) Validate() error {
@@ -46,25 +71,7 @@ func (m *LikeFilter) Validate() error {
 		validation.Field(&m.PageSize),
 		validation.Field(&m.PageNumber),
 		validation.Field(&m.Search),
-		validation.Field(
-			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"likes.id ASC",
-					"likes.id DESC",
-					"likes.created_at ASC",
-					"likes.created_at DESC",
-					"likes.updated_at ASC",
-					"likes.updated_at DESC",
-					"likes.post_id ASC",
-					"likes.post_id DESC",
-					"likes.value ASC",
-					"likes.value DESC",
-					"likes.user_id ASC",
-					"likes.user_id DESC",
-				),
-			),
-		),
+		validation.Field(&m.OrderBy),
 	)
 	if err != nil {
 		return errs.NewFromValidationError(err)

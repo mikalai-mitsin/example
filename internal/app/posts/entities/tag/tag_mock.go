@@ -25,7 +25,18 @@ func NewMockTagFilter(t *testing.T) TagFilter {
 		PageSize:   pointer.Of(faker.New().UInt64()),
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
-		OrderBy:    []string{faker.New().Lorem().Sentence(15), faker.New().Lorem().Sentence(15)},
+		OrderBy: []TagOrdering{
+			TagOrderingUpdatedAtASC,
+			TagOrderingUpdatedAtDESC,
+			TagOrderingPostIdASC,
+			TagOrderingIdASC,
+			TagOrderingIdDESC,
+			TagOrderingPostIdDESC,
+			TagOrderingValueASC,
+			TagOrderingValueDESC,
+			TagOrderingCreatedAtASC,
+			TagOrderingCreatedAtDESC,
+		},
 	}
 }
 func NewMockTagCreate(t *testing.T) TagCreate {

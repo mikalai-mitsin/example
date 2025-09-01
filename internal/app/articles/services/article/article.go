@@ -62,6 +62,9 @@ func (u *ArticleService) List(
 	ctx context.Context,
 	filter entities.ArticleFilter,
 ) ([]entities.Article, uint64, error) {
+	if err := filter.Validate(); err != nil {
+		return nil, 0, err
+	}
 	article, err := u.articleRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err

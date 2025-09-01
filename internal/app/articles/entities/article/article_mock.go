@@ -27,7 +27,22 @@ func NewMockArticleFilter(t *testing.T) ArticleFilter {
 		PageSize:   pointer.Of(faker.New().UInt64()),
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
-		OrderBy:    []string{faker.New().Lorem().Sentence(15), faker.New().Lorem().Sentence(15)},
+		OrderBy: []ArticleOrdering{
+			ArticleOrderingIdASC,
+			ArticleOrderingUpdatedAtASC,
+			ArticleOrderingUpdatedAtDESC,
+			ArticleOrderingBodyASC,
+			ArticleOrderingBodyDESC,
+			ArticleOrderingIsPublishedASC,
+			ArticleOrderingIsPublishedDESC,
+			ArticleOrderingIdDESC,
+			ArticleOrderingCreatedAtASC,
+			ArticleOrderingCreatedAtDESC,
+			ArticleOrderingTitleASC,
+			ArticleOrderingTitleDESC,
+			ArticleOrderingSubtitleASC,
+			ArticleOrderingSubtitleDESC,
+		},
 	}
 }
 func NewMockArticleCreate(t *testing.T) ArticleCreate {

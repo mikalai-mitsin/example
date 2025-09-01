@@ -87,7 +87,7 @@ func encodeLikeFilter(input *examplepb.LikeFilter) entities.LikeFilter {
 	filter := entities.LikeFilter{
 		PageSize:   nil,
 		PageNumber: nil,
-		OrderBy:    input.GetOrderBy(),
+		OrderBy:    []entities.LikeOrdering{},
 		Search:     nil,
 	}
 	if input.GetPageSize() != nil {
@@ -95,6 +95,9 @@ func encodeLikeFilter(input *examplepb.LikeFilter) entities.LikeFilter {
 	}
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
+	}
+	for _, orderBy := range input.GetOrderBy() {
+		filter.OrderBy = append(filter.OrderBy, entities.LikeOrdering(orderBy))
 	}
 	return filter
 }

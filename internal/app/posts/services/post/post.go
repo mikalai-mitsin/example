@@ -49,6 +49,9 @@ func (u *PostService) List(
 	ctx context.Context,
 	filter entities.PostFilter,
 ) ([]entities.Post, uint64, error) {
+	if err := filter.Validate(); err != nil {
+		return nil, 0, err
+	}
 	post, err := u.postRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err

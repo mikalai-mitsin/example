@@ -22,6 +22,31 @@ func NewTagRepository(readDB database, writeDB database, logger logger) *TagRepo
 	return &TagRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
+var orderByMap = map[entities.TagOrdering]string{
+	entities.TagOrderingIdDESC:        "tags.id DESC",
+	entities.TagOrderingCreatedAtDESC: "tags.created_at DESC",
+	entities.TagOrderingUpdatedAtDESC: "tags.updated_at DESC",
+	entities.TagOrderingPostIdASC:     "tags.post_id ASC",
+	entities.TagOrderingValueASC:      "tags.value ASC",
+	entities.TagOrderingIdASC:         "tags.id ASC",
+	entities.TagOrderingCreatedAtASC:  "tags.created_at ASC",
+	entities.TagOrderingUpdatedAtASC:  "tags.updated_at ASC",
+	entities.TagOrderingPostIdDESC:    "tags.post_id DESC",
+	entities.TagOrderingValueDESC:     "tags.value DESC",
+}
+
+func encodeOrderBy(orderBy []entities.TagOrdering) []string {
+	columns := make([]string, len(orderBy))
+	for i, item := range orderBy {
+		column, exists := orderByMap[item]
+		if !exists {
+			continue
+		}
+		columns[i] = column
+	}
+	return columns
+}
+
 type TagDTO struct {
 	ID        uuid.UUID `db:"id,omitempty"`
 	UpdatedAt time.Time `db:"updated_at,omitempty"`
@@ -31,7 +56,7 @@ type TagDTO struct {
 }
 type TagListDTO []TagDTO
 
-func (list TagListDTO) ToEntities() []entities.Tag {
+func (list TagListDTO) toEntities() []entities.Tag {
 	items := make([]entities.Tag, len(list))
 	for i := range list {
 		items[i] = list[i].toEntity()
@@ -107,14 +132,14 @@ func (r *TagRepository) List(
 	}
 	q = q.Limit(*filter.PageSize)
 	if len(filter.OrderBy) > 0 {
-		q = q.OrderBy(filter.OrderBy...)
+		q = q.OrderBy(encodeOrderBy(filter.OrderBy)...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
-	return dto.ToEntities(), nil
+	return dto.toEntities(), nil
 }
 func (r *TagRepository) Count(ctx context.Context, filter entities.TagFilter) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)

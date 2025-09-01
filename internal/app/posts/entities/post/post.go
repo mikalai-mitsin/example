@@ -29,11 +29,32 @@ func (m *Post) Validate() error {
 	return nil
 }
 
+type PostOrdering string
+
+func (o PostOrdering) Validate() error {
+	if err := validation.Validate(o.String(), validation.In(PostOrderingIdDESC.String(), PostOrderingCreatedAtASC.String(), PostOrderingCreatedAtDESC.String(), PostOrderingUpdatedAtASC.String(), PostOrderingUpdatedAtDESC.String(), PostOrderingBodyASC.String(), PostOrderingBodyDESC.String(), PostOrderingIdASC.String())); err != nil {
+		return err
+	}
+	return nil
+}
+func (o PostOrdering) String() string {
+	return string(o)
+}
+
+const PostOrderingUpdatedAtASC PostOrdering = "updated_at"
+const PostOrderingUpdatedAtDESC PostOrdering = "-updated_at"
+const PostOrderingBodyASC PostOrdering = "body"
+const PostOrderingBodyDESC PostOrdering = "-body"
+const PostOrderingIdASC PostOrdering = "id"
+const PostOrderingIdDESC PostOrdering = "-id"
+const PostOrderingCreatedAtASC PostOrdering = "created_at"
+const PostOrderingCreatedAtDESC PostOrdering = "-created_at"
+
 type PostFilter struct {
-	PageSize   *uint64  `json:"page_size"`
-	PageNumber *uint64  `json:"page_number"`
-	Search     *string  `json:"search"`
-	OrderBy    []string `json:"order_by"`
+	PageSize   *uint64        `json:"page_size"`
+	PageNumber *uint64        `json:"page_number"`
+	Search     *string        `json:"search"`
+	OrderBy    []PostOrdering `json:"order_by"`
 }
 
 func (m *PostFilter) Validate() error {
@@ -42,21 +63,7 @@ func (m *PostFilter) Validate() error {
 		validation.Field(&m.PageSize),
 		validation.Field(&m.PageNumber),
 		validation.Field(&m.Search),
-		validation.Field(
-			&m.OrderBy,
-			validation.Each(
-				validation.In(
-					"posts.id ASC",
-					"posts.id DESC",
-					"posts.created_at ASC",
-					"posts.created_at DESC",
-					"posts.updated_at ASC",
-					"posts.updated_at DESC",
-					"posts.body ASC",
-					"posts.body DESC",
-				),
-			),
-		),
+		validation.Field(&m.OrderBy),
 	)
 	if err != nil {
 		return errs.NewFromValidationError(err)

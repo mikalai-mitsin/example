@@ -347,7 +347,7 @@ func TestTagServiceServer_List(t *testing.T) {
 				input: &examplepb.TagFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
-					OrderBy:    filter.OrderBy,
+					OrderBy:    nil,
 				},
 			},
 			want:    response,
@@ -372,7 +372,7 @@ func TestTagServiceServer_List(t *testing.T) {
 				input: &examplepb.TagFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
-					OrderBy:    filter.OrderBy,
+					OrderBy:    nil,
 				},
 			},
 			want:    nil,
@@ -524,7 +524,7 @@ func Test_encodeTagFilter(t *testing.T) {
 			want: entities.TagFilter{
 				PageSize:   pointer.Of(uint64(5)),
 				PageNumber: pointer.Of(uint64(2)),
-				OrderBy:    []string{"created_at", "id"},
+				OrderBy:    []entities.TagOrdering{"created_at", "id"},
 			},
 		},
 	}

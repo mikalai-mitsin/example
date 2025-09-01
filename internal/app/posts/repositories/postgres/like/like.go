@@ -22,6 +22,33 @@ func NewLikeRepository(readDB database, writeDB database, logger logger) *LikeRe
 	return &LikeRepository{readDB: readDB, writeDB: writeDB, logger: logger}
 }
 
+var orderByMap = map[entities.LikeOrdering]string{
+	entities.LikeOrderingIdASC:         "likes.id ASC",
+	entities.LikeOrderingIdDESC:        "likes.id DESC",
+	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
+	entities.LikeOrderingUpdatedAtASC:  "likes.updated_at ASC",
+	entities.LikeOrderingUpdatedAtDESC: "likes.updated_at DESC",
+	entities.LikeOrderingPostIdASC:     "likes.post_id ASC",
+	entities.LikeOrderingPostIdDESC:    "likes.post_id DESC",
+	entities.LikeOrderingValueASC:      "likes.value ASC",
+	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
+	entities.LikeOrderingValueDESC:     "likes.value DESC",
+	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
+	entities.LikeOrderingUserIdDESC:    "likes.user_id DESC",
+}
+
+func encodeOrderBy(orderBy []entities.LikeOrdering) []string {
+	columns := make([]string, len(orderBy))
+	for i, item := range orderBy {
+		column, exists := orderByMap[item]
+		if !exists {
+			continue
+		}
+		columns[i] = column
+	}
+	return columns
+}
+
 type LikeDTO struct {
 	ID        uuid.UUID `db:"id,omitempty"`
 	UpdatedAt time.Time `db:"updated_at,omitempty"`
@@ -32,7 +59,7 @@ type LikeDTO struct {
 }
 type LikeListDTO []LikeDTO
 
-func (list LikeListDTO) ToEntities() []entities.Like {
+func (list LikeListDTO) toEntities() []entities.Like {
 	items := make([]entities.Like, len(list))
 	for i := range list {
 		items[i] = list[i].toEntity()
@@ -110,14 +137,14 @@ func (r *LikeRepository) List(
 	}
 	q = q.Limit(*filter.PageSize)
 	if len(filter.OrderBy) > 0 {
-		q = q.OrderBy(filter.OrderBy...)
+		q = q.OrderBy(encodeOrderBy(filter.OrderBy)...)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if err := r.readDB.SelectContext(ctx, &dto, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return nil, e
 	}
-	return dto.ToEntities(), nil
+	return dto.toEntities(), nil
 }
 func (r *LikeRepository) Count(ctx context.Context, filter entities.LikeFilter) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
