@@ -23,20 +23,20 @@ func NewArticleRepository(readDB database, writeDB database, logger logger) *Art
 }
 
 var orderByMap = map[entities.ArticleOrdering]string{
-	entities.ArticleOrderingTitleASC:        "articles.title ASC",
-	entities.ArticleOrderingSubtitleASC:     "articles.subtitle ASC",
-	entities.ArticleOrderingSubtitleDESC:    "articles.subtitle DESC",
-	entities.ArticleOrderingBodyASC:         "articles.body ASC",
-	entities.ArticleOrderingIdDESC:          "articles.id DESC",
 	entities.ArticleOrderingUpdatedAtASC:    "articles.updated_at ASC",
 	entities.ArticleOrderingTitleDESC:       "articles.title DESC",
-	entities.ArticleOrderingBodyDESC:        "articles.body DESC",
-	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
+	entities.ArticleOrderingSubtitleASC:     "articles.subtitle ASC",
+	entities.ArticleOrderingSubtitleDESC:    "articles.subtitle DESC",
 	entities.ArticleOrderingIsPublishedDESC: "articles.is_published DESC",
-	entities.ArticleOrderingIdASC:           "articles.id ASC",
+	entities.ArticleOrderingIdDESC:          "articles.id DESC",
 	entities.ArticleOrderingCreatedAtASC:    "articles.created_at ASC",
 	entities.ArticleOrderingCreatedAtDESC:   "articles.created_at DESC",
 	entities.ArticleOrderingUpdatedAtDESC:   "articles.updated_at DESC",
+	entities.ArticleOrderingTitleASC:        "articles.title ASC",
+	entities.ArticleOrderingBodyASC:         "articles.body ASC",
+	entities.ArticleOrderingBodyDESC:        "articles.body DESC",
+	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
+	entities.ArticleOrderingIdASC:           "articles.id ASC",
 }
 
 func encodeOrderBy(orderBy []entities.ArticleOrdering) []string {

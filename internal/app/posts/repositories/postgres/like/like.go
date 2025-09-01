@@ -24,16 +24,16 @@ func NewLikeRepository(readDB database, writeDB database, logger logger) *LikeRe
 
 var orderByMap = map[entities.LikeOrdering]string{
 	entities.LikeOrderingIdASC:         "likes.id ASC",
-	entities.LikeOrderingIdDESC:        "likes.id DESC",
 	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
 	entities.LikeOrderingUpdatedAtASC:  "likes.updated_at ASC",
 	entities.LikeOrderingUpdatedAtDESC: "likes.updated_at DESC",
+	entities.LikeOrderingValueASC:      "likes.value ASC",
+	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
+	entities.LikeOrderingIdDESC:        "likes.id DESC",
+	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
 	entities.LikeOrderingPostIdASC:     "likes.post_id ASC",
 	entities.LikeOrderingPostIdDESC:    "likes.post_id DESC",
-	entities.LikeOrderingValueASC:      "likes.value ASC",
-	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
 	entities.LikeOrderingValueDESC:     "likes.value DESC",
-	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
 	entities.LikeOrderingUserIdDESC:    "likes.user_id DESC",
 }
 

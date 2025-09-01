@@ -26,16 +26,16 @@ func NewMockTagFilter(t *testing.T) TagFilter {
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
 		OrderBy: []TagOrdering{
-			TagOrderingUpdatedAtASC,
-			TagOrderingUpdatedAtDESC,
 			TagOrderingPostIdASC,
-			TagOrderingIdASC,
-			TagOrderingIdDESC,
-			TagOrderingPostIdDESC,
 			TagOrderingValueASC,
 			TagOrderingValueDESC,
-			TagOrderingCreatedAtASC,
 			TagOrderingCreatedAtDESC,
+			TagOrderingPostIdDESC,
+			TagOrderingIdASC,
+			TagOrderingIdDESC,
+			TagOrderingCreatedAtASC,
+			TagOrderingUpdatedAtASC,
+			TagOrderingUpdatedAtDESC,
 		},
 	}
 }
