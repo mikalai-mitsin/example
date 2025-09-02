@@ -36,6 +36,7 @@ func (p *LikeEventProducer) Created(ctx context.Context, like entities.Like) err
 	message := &kafka.Message{
 		Topic: topicEventCreated,
 		Value: data,
+		Key:   like.ID.String(),
 	}
 	if err := p.producer.Send(ctx, message); err != nil {
 		return errs.FromKafkaError(err)
@@ -51,6 +52,7 @@ func (p *LikeEventProducer) Updated(ctx context.Context, like entities.Like) err
 	message := &kafka.Message{
 		Topic: topicEventUpdated,
 		Value: data,
+		Key:   like.ID.String(),
 	}
 	if err := p.producer.Send(ctx, message); err != nil {
 		return errs.FromKafkaError(err)
@@ -62,6 +64,7 @@ func (p *LikeEventProducer) Deleted(ctx context.Context, id uuid.UUID) error {
 	message := &kafka.Message{
 		Topic: topicEventDeleted,
 		Value: []byte(id.String()),
+		Key:   id.String(),
 	}
 	if err := p.producer.Send(ctx, message); err != nil {
 		return errs.FromKafkaError(err)
