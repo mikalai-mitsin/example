@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -25,6 +26,7 @@ func NewPostService(
 
 func (u *PostService) Create(
 	ctx context.Context,
+	tx dtx.TX,
 	create entities.PostCreate,
 ) (entities.Post, error) {
 	if err := create.Validate(); err != nil {
@@ -32,7 +34,7 @@ func (u *PostService) Create(
 	}
 	now := u.clock.Now().UTC()
 	post := entities.Post{ID: u.uuid.NewUUID(), UpdatedAt: now, CreatedAt: now, Body: create.Body}
-	if err := u.postRepository.Create(ctx, post); err != nil {
+	if err := u.postRepository.Create(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
@@ -65,6 +67,7 @@ func (u *PostService) List(
 
 func (u *PostService) Update(
 	ctx context.Context,
+	tx dtx.TX,
 	update entities.PostUpdate,
 ) (entities.Post, error) {
 	if err := update.Validate(); err != nil {
@@ -80,13 +83,13 @@ func (u *PostService) Update(
 		}
 	}
 	post.UpdatedAt = u.clock.Now().UTC()
-	if err := u.postRepository.Update(ctx, post); err != nil {
+	if err := u.postRepository.Update(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
 }
-func (u *PostService) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := u.postRepository.Delete(ctx, id); err != nil {
+func (u *PostService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := u.postRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

@@ -7,6 +7,7 @@ import (
 
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
@@ -240,6 +241,7 @@ func TestTagService_Create(t *testing.T) {
 	mockClock := NewMockclock(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockUUID := NewMockuuidGenerator(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	create := entities.NewMockTagCreate(t)
 	now := time.Now().UTC()
@@ -251,6 +253,7 @@ func TestTagService_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		create entities.TagCreate
 	}
 	tests := []struct {
@@ -271,6 +274,7 @@ func TestTagService_Create(t *testing.T) {
 				mockTagRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Tag{
 							ID:        uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 							PostId:    create.PostId,
@@ -289,6 +293,7 @@ func TestTagService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want: entities.Tag{
@@ -310,6 +315,7 @@ func TestTagService_Create(t *testing.T) {
 				mockTagRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Tag{
 							ID:        uuid.MustParse("00000000-0000-0000-0000-000000000002"),
 							PostId:    create.PostId,
@@ -328,6 +334,7 @@ func TestTagService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want:    entities.Tag{},
@@ -345,6 +352,7 @@ func TestTagService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: entities.TagCreate{},
 			},
 			want: entities.Tag{},
@@ -363,7 +371,7 @@ func TestTagService_Create(t *testing.T) {
 				logger:        tt.fields.logger,
 				uuid:          tt.fields.uuid,
 			}
-			got, err := u.Create(tt.args.ctx, tt.args.create)
+			got, err := u.Create(tt.args.ctx, tt.args.tx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -378,6 +386,7 @@ func TestTagService_Update(t *testing.T) {
 	ctx := context.Background()
 	tag := entities.NewMockTag(t)
 	mockClock := NewMockclock(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	update := entities.NewMockTagUpdate(t)
 	now := time.Now().UTC()
 	updatedTag := entities.Tag{
@@ -395,6 +404,7 @@ func TestTagService_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		update entities.TagUpdate
 	}
 	tests := []struct {
@@ -412,7 +422,7 @@ func TestTagService_Update(t *testing.T) {
 				mockTagRepository.EXPECT().
 					Get(ctx, update.ID).Return(tag, nil)
 				mockTagRepository.EXPECT().
-					Update(ctx, updatedTag).Return(nil)
+					Update(ctx, mockTx, updatedTag).Return(nil)
 			},
 			fields: fields{
 				tagRepository: mockTagRepository,
@@ -421,6 +431,7 @@ func TestTagService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    updatedTag,
@@ -434,7 +445,7 @@ func TestTagService_Update(t *testing.T) {
 					Get(ctx, update.ID).
 					Return(tag, nil)
 				mockTagRepository.EXPECT().
-					Update(ctx, updatedTag).
+					Update(ctx, mockTx, updatedTag).
 					Return(errs.NewUnexpectedBehaviorError("test error"))
 			},
 			fields: fields{
@@ -444,6 +455,7 @@ func TestTagService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Tag{},
@@ -463,6 +475,7 @@ func TestTagService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Tag{},
@@ -477,7 +490,7 @@ func TestTagService_Update(t *testing.T) {
 				clock:         tt.fields.clock,
 				logger:        tt.fields.logger,
 			}
-			got, err := u.Update(tt.args.ctx, tt.args.update)
+			got, err := u.Update(tt.args.ctx, tt.args.tx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -489,6 +502,7 @@ func TestTagService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockTagRepository := NewMocktagRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	tag := entities.NewMockTag(t)
 	type fields struct {
@@ -497,6 +511,7 @@ func TestTagService_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -510,7 +525,7 @@ func TestTagService_Delete(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockTagRepository.EXPECT().
-					Delete(ctx, tag.ID).
+					Delete(ctx, mockTx, tag.ID).
 					Return(nil)
 			},
 			fields: fields{
@@ -519,6 +534,7 @@ func TestTagService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  tag.ID,
 			},
 			wantErr: nil,
@@ -527,7 +543,7 @@ func TestTagService_Delete(t *testing.T) {
 			name: "Tag not found",
 			setup: func() {
 				mockTagRepository.EXPECT().
-					Delete(ctx, tag.ID).
+					Delete(ctx, mockTx, tag.ID).
 					Return(errs.NewEntityNotFoundError())
 			},
 			fields: fields{
@@ -536,6 +552,7 @@ func TestTagService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  tag.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError(),
@@ -548,7 +565,7 @@ func TestTagService_Delete(t *testing.T) {
 				tagRepository: tt.fields.tagRepository,
 				logger:        tt.fields.logger,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.id)
+			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

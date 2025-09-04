@@ -8,6 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,9 @@ func TestPostRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	query := "INSERT INTO public.posts (id,created_at,updated_at,body) VALUES ($1,$2,$3,$4)"
 	post := entities.NewMockPost(t)
 	ctx := context.Background()
@@ -78,6 +82,7 @@ func TestPostRepository_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
+		tx   dtx.TX
 		post entities.Post
 	}
 	tests := []struct {
@@ -106,6 +111,7 @@ func TestPostRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				post: post,
 			},
 			wantErr: nil,
@@ -129,6 +135,7 @@ func TestPostRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				post: post,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")),
@@ -142,7 +149,7 @@ func TestPostRepository_Create(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Create(tt.args.ctx, tt.args.post)
+			err := r.Create(tt.args.ctx, tt.args.tx, tt.args.post)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -369,6 +376,9 @@ func TestPostRepository_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	post := entities.NewMockPost(t)
 	query := `UPDATE public.posts SET created_at = $1, updated_at = $2, body = $3 WHERE id = $4`
 	ctx := context.Background()
@@ -379,6 +389,7 @@ func TestPostRepository_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
+		tx   dtx.TX
 		post entities.Post
 	}
 	tests := []struct {
@@ -407,6 +418,7 @@ func TestPostRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				post: post,
 			},
 			wantErr: nil,
@@ -430,6 +442,7 @@ func TestPostRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				post: post,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("post_id", post.ID.String()),
@@ -453,6 +466,7 @@ func TestPostRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				post: post,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -477,6 +491,7 @@ func TestPostRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				post: post,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -501,6 +516,7 @@ func TestPostRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				post: post,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -515,7 +531,7 @@ func TestPostRepository_Update(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Update(tt.args.ctx, tt.args.post)
+			err := r.Update(tt.args.ctx, tt.args.tx, tt.args.post)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -531,6 +547,9 @@ func TestPostRepository_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	post := entities.NewMockPost(t)
 	type fields struct {
 		writeDB database
@@ -539,6 +558,7 @@ func TestPostRepository_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -562,6 +582,7 @@ func TestPostRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  post.ID,
 			},
 			wantErr: nil,
@@ -580,6 +601,7 @@ func TestPostRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  post.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("post_id", post.ID.String()),
@@ -598,6 +620,7 @@ func TestPostRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  post.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -617,6 +640,7 @@ func TestPostRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  post.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -631,7 +655,7 @@ func TestPostRepository_Delete(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Delete(tt.args.ctx, tt.args.id)
+			err := r.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

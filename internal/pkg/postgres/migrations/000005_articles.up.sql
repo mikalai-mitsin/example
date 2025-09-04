@@ -9,3 +9,6 @@ CREATE TABLE public.articles
     updated_at  timestamp    NOT NULL DEFAULT (now() at time zone 'utc'),
     created_at  timestamp    NOT NULL DEFAULT (now() at time zone 'utc')
 );
+CREATE INDEX search_articles
+    ON public.articles
+        USING GIN (to_tsvector('english', title || subtitle || body));

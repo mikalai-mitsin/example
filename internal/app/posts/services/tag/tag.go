@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -22,7 +23,12 @@ func NewTagService(
 ) *TagService {
 	return &TagService{tagRepository: tagRepository, clock: clock, logger: logger, uuid: uuid}
 }
-func (u *TagService) Create(ctx context.Context, create entities.TagCreate) (entities.Tag, error) {
+
+func (u *TagService) Create(
+	ctx context.Context,
+	tx dtx.TX,
+	create entities.TagCreate,
+) (entities.Tag, error) {
 	if err := create.Validate(); err != nil {
 		return entities.Tag{}, err
 	}
@@ -34,7 +40,7 @@ func (u *TagService) Create(ctx context.Context, create entities.TagCreate) (ent
 		PostId:    create.PostId,
 		Value:     create.Value,
 	}
-	if err := u.tagRepository.Create(ctx, tag); err != nil {
+	if err := u.tagRepository.Create(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
@@ -64,7 +70,12 @@ func (u *TagService) List(
 	}
 	return tag, count, nil
 }
-func (u *TagService) Update(ctx context.Context, update entities.TagUpdate) (entities.Tag, error) {
+
+func (u *TagService) Update(
+	ctx context.Context,
+	tx dtx.TX,
+	update entities.TagUpdate,
+) (entities.Tag, error) {
 	if err := update.Validate(); err != nil {
 		return entities.Tag{}, err
 	}
@@ -81,13 +92,13 @@ func (u *TagService) Update(ctx context.Context, update entities.TagUpdate) (ent
 		}
 	}
 	tag.UpdatedAt = u.clock.Now().UTC()
-	if err := u.tagRepository.Update(ctx, tag); err != nil {
+	if err := u.tagRepository.Update(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
 }
-func (u *TagService) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := u.tagRepository.Delete(ctx, id); err != nil {
+func (u *TagService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := u.tagRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

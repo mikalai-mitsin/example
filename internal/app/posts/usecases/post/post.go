@@ -4,77 +4,112 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
+	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type PostUseCase struct {
 	postService       postService
 	postEventProducer postEventProducer
+	dtxManager        dtxManager
 	logger            logger
 }
 
 func NewPostUseCase(
 	postService postService,
 	postEventProducer postEventProducer,
+	dtxManager dtxManager,
 	logger logger,
 ) *PostUseCase {
 	return &PostUseCase{
 		postService:       postService,
 		postEventProducer: postEventProducer,
+		dtxManager:        dtxManager,
 		logger:            logger,
 	}
 }
 
-func (i *PostUseCase) Create(
+func (u *PostUseCase) Create(
 	ctx context.Context,
 	create entities.PostCreate,
 ) (entities.Post, error) {
-	post, err := i.postService.Create(ctx, create)
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	post, err := u.postService.Create(ctx, tx, create)
 	if err != nil {
 		return entities.Post{}, err
 	}
-	if err := i.postEventProducer.Created(ctx, post); err != nil {
+	if err := u.postEventProducer.Created(ctx, tx, post); err != nil {
+		return entities.Post{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
 }
-func (i *PostUseCase) Get(ctx context.Context, id uuid.UUID) (entities.Post, error) {
-	post, err := i.postService.Get(ctx, id)
+func (u *PostUseCase) Get(ctx context.Context, id uuid.UUID) (entities.Post, error) {
+	post, err := u.postService.Get(ctx, id)
 	if err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
 }
 
-func (i *PostUseCase) List(
+func (u *PostUseCase) List(
 	ctx context.Context,
 	filter entities.PostFilter,
 ) ([]entities.Post, uint64, error) {
-	posts, count, err := i.postService.List(ctx, filter)
+	posts, count, err := u.postService.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	return posts, count, nil
 }
 
-func (i *PostUseCase) Update(
+func (u *PostUseCase) Update(
 	ctx context.Context,
 	update entities.PostUpdate,
 ) (entities.Post, error) {
-	post, err := i.postService.Update(ctx, update)
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	post, err := u.postService.Update(ctx, tx, update)
 	if err != nil {
 		return entities.Post{}, err
 	}
-	if err := i.postEventProducer.Updated(ctx, post); err != nil {
+	if err := u.postEventProducer.Updated(ctx, tx, post); err != nil {
+		return entities.Post{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
 }
-func (i *PostUseCase) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := i.postService.Delete(ctx, id); err != nil {
+func (u *PostUseCase) Delete(ctx context.Context, id uuid.UUID) error {
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	if err := u.postService.Delete(ctx, tx, id); err != nil {
 		return err
 	}
-	if err := i.postEventProducer.Deleted(ctx, id); err != nil {
+	if err := u.postEventProducer.Deleted(ctx, tx, id); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 	return nil

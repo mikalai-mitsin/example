@@ -7,6 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -23,14 +24,14 @@ func NewPostRepository(readDB database, writeDB database, logger logger) *PostRe
 }
 
 var orderByMap = map[entities.PostOrdering]string{
+	entities.PostOrderingCreatedAtDESC: "posts.created_at DESC",
+	entities.PostOrderingUpdatedAtASC:  "posts.updated_at ASC",
 	entities.PostOrderingUpdatedAtDESC: "posts.updated_at DESC",
 	entities.PostOrderingBodyASC:       "posts.body ASC",
 	entities.PostOrderingBodyDESC:      "posts.body DESC",
 	entities.PostOrderingIdASC:         "posts.id ASC",
 	entities.PostOrderingIdDESC:        "posts.id DESC",
 	entities.PostOrderingCreatedAtASC:  "posts.created_at ASC",
-	entities.PostOrderingCreatedAtDESC: "posts.created_at DESC",
-	entities.PostOrderingUpdatedAtASC:  "posts.updated_at ASC",
 }
 
 func encodeOrderBy(orderBy []entities.PostOrdering) []string {
@@ -78,7 +79,7 @@ func (dto PostDTO) toEntity() entities.Post {
 	}
 	return entity
 }
-func (r *PostRepository) Create(ctx context.Context, entity entities.Post) error {
+func (r *PostRepository) Create(ctx context.Context, tx dtx.TX, entity entities.Post) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewPostDTOFromEntity(entity)
@@ -86,7 +87,7 @@ func (r *PostRepository) Create(ctx context.Context, entity entities.Post) error
 		Columns("id", "created_at", "updated_at", "body").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.Body)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
+	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -148,7 +149,7 @@ func (r *PostRepository) Count(ctx context.Context, filter entities.PostFilter) 
 	}
 	return count, nil
 }
-func (r *PostRepository) Update(ctx context.Context, entity entities.Post) error {
+func (r *PostRepository) Update(ctx context.Context, tx dtx.TX, entity entities.Post) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewPostDTOFromEntity(entity)
@@ -159,7 +160,7 @@ func (r *PostRepository) Update(ctx context.Context, entity entities.Post) error
 		q = q.Set("body", dto.Body)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("post_id", fmt.Sprint(entity.ID))
 		return e
@@ -174,12 +175,12 @@ func (r *PostRepository) Update(ctx context.Context, entity entities.Post) error
 	}
 	return nil
 }
-func (r *PostRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *PostRepository) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.posts").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("post_id", fmt.Sprint(id))
 		return e

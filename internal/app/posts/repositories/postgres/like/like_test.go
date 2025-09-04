@@ -8,6 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,9 @@ func TestLikeRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	query := "INSERT INTO public.likes (id,created_at,updated_at,post_id,value,user_id) VALUES ($1,$2,$3,$4,$5,$6)"
 	like := entities.NewMockLike(t)
 	ctx := context.Background()
@@ -78,6 +82,7 @@ func TestLikeRepository_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
+		tx   dtx.TX
 		like entities.Like
 	}
 	tests := []struct {
@@ -108,6 +113,7 @@ func TestLikeRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				like: like,
 			},
 			wantErr: nil,
@@ -133,6 +139,7 @@ func TestLikeRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				like: like,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")),
@@ -146,7 +153,7 @@ func TestLikeRepository_Create(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Create(tt.args.ctx, tt.args.like)
+			err := r.Create(tt.args.ctx, tt.args.tx, tt.args.like)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -373,6 +380,9 @@ func TestLikeRepository_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	like := entities.NewMockLike(t)
 	query := `UPDATE public.likes SET created_at = $1, updated_at = $2, post_id = $3, value = $4, user_id = $5 WHERE id = $6`
 	ctx := context.Background()
@@ -383,6 +393,7 @@ func TestLikeRepository_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
+		tx   dtx.TX
 		like entities.Like
 	}
 	tests := []struct {
@@ -413,6 +424,7 @@ func TestLikeRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				like: like,
 			},
 			wantErr: nil,
@@ -438,6 +450,7 @@ func TestLikeRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				like: like,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("like_id", like.ID.String()),
@@ -463,6 +476,7 @@ func TestLikeRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				like: like,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -489,6 +503,7 @@ func TestLikeRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				like: like,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -515,6 +530,7 @@ func TestLikeRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:  ctx,
+				tx:   mockTX,
 				like: like,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -529,7 +545,7 @@ func TestLikeRepository_Update(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Update(tt.args.ctx, tt.args.like)
+			err := r.Update(tt.args.ctx, tt.args.tx, tt.args.like)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -545,6 +561,9 @@ func TestLikeRepository_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	like := entities.NewMockLike(t)
 	type fields struct {
 		writeDB database
@@ -553,6 +572,7 @@ func TestLikeRepository_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -576,6 +596,7 @@ func TestLikeRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  like.ID,
 			},
 			wantErr: nil,
@@ -594,6 +615,7 @@ func TestLikeRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  like.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("like_id", like.ID.String()),
@@ -612,6 +634,7 @@ func TestLikeRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  like.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -631,6 +654,7 @@ func TestLikeRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  like.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -645,7 +669,7 @@ func TestLikeRepository_Delete(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Delete(tt.args.ctx, tt.args.id)
+			err := r.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

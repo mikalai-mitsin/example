@@ -24,6 +24,7 @@ import (
 	postUseCases "github.com/mikalai-mitsin/example/internal/app/posts/usecases/post"
 	tagUseCases "github.com/mikalai-mitsin/example/internal/app/posts/usecases/tag"
 	"github.com/mikalai-mitsin/example/internal/pkg/clock"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/http"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
@@ -35,6 +36,7 @@ import (
 type App struct {
 	readDB            *sqlx.DB
 	writeDB           *sqlx.DB
+	dtxManager        *dtx.Manager
 	logger            log.Logger
 	kafkaProducer     *kafka.Producer
 	postRepository    *postRepositories.PostRepository
@@ -62,6 +64,7 @@ type App struct {
 
 func NewApp(
 	readDB, writeDB *sqlx.DB,
+	dtxManager *dtx.Manager,
 	logger log.Logger,
 	clock *clock.Clock,
 	uuidGenerator *uuid.UUIDv7Generator,
@@ -70,27 +73,28 @@ func NewApp(
 	postRepository := postRepositories.NewPostRepository(readDB, writeDB, logger)
 	postService := postServices.NewPostService(postRepository, clock, logger, uuidGenerator)
 	postEventProducer := postEvents.NewPostEventProducer(kafkaProducer, logger)
-	postUseCase := postUseCases.NewPostUseCase(postService, postEventProducer, logger)
+	postUseCase := postUseCases.NewPostUseCase(postService, postEventProducer, dtxManager, logger)
 	httpPostHandler := postHttpHandlers.NewPostHandler(postUseCase, logger)
 	kafkaPostHandler := postKafkaHandlers.NewPostHandler(postUseCase, logger)
 	grpcPostHandler := postGrpcHandlers.NewPostServiceServer(postUseCase, logger)
 	tagRepository := tagRepositories.NewTagRepository(readDB, writeDB, logger)
 	tagService := tagServices.NewTagService(tagRepository, clock, logger, uuidGenerator)
 	tagEventProducer := tagEvents.NewTagEventProducer(kafkaProducer, logger)
-	tagUseCase := tagUseCases.NewTagUseCase(tagService, tagEventProducer, logger)
+	tagUseCase := tagUseCases.NewTagUseCase(tagService, tagEventProducer, dtxManager, logger)
 	httpTagHandler := tagHttpHandlers.NewTagHandler(tagUseCase, logger)
 	kafkaTagHandler := tagKafkaHandlers.NewTagHandler(tagUseCase, logger)
 	grpcTagHandler := tagGrpcHandlers.NewTagServiceServer(tagUseCase, logger)
 	likeRepository := likeRepositories.NewLikeRepository(readDB, writeDB, logger)
 	likeService := likeServices.NewLikeService(likeRepository, clock, logger, uuidGenerator)
 	likeEventProducer := likeEvents.NewLikeEventProducer(kafkaProducer, logger)
-	likeUseCase := likeUseCases.NewLikeUseCase(likeService, likeEventProducer, logger)
+	likeUseCase := likeUseCases.NewLikeUseCase(likeService, likeEventProducer, dtxManager, logger)
 	httpLikeHandler := likeHttpHandlers.NewLikeHandler(likeUseCase, logger)
 	kafkaLikeHandler := likeKafkaHandlers.NewLikeHandler(likeUseCase, logger)
 	grpcLikeHandler := likeGrpcHandlers.NewLikeServiceServer(likeUseCase, logger)
 	return &App{
 		readDB:            readDB,
 		writeDB:           writeDB,
+		dtxManager:        dtxManager,
 		logger:            logger,
 		kafkaProducer:     kafkaProducer,
 		postRepository:    postRepository,

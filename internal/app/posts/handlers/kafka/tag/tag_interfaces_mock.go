@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	tag "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
+	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	fxevent "go.uber.org/fx/fxevent"
@@ -46,10 +46,10 @@ func (m *MocktagUseCase) EXPECT() *MocktagUseCaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MocktagUseCase) Create(arg0 context.Context, arg1 tag.TagCreate) (tag.Tag, error) {
+func (m *MocktagUseCase) Create(arg0 context.Context, arg1 entities.TagCreate) (entities.Tag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(tag.Tag)
+	ret0, _ := ret[0].(entities.Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -75,10 +75,10 @@ func (mr *MocktagUseCaseMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MocktagUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (tag.Tag, error) {
+func (m *MocktagUseCase) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Tag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(tag.Tag)
+	ret0, _ := ret[0].(entities.Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -90,10 +90,10 @@ func (mr *MocktagUseCaseMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MocktagUseCase) List(arg0 context.Context, arg1 tag.TagFilter) ([]tag.Tag, uint64, error) {
+func (m *MocktagUseCase) List(arg0 context.Context, arg1 entities.TagFilter) ([]entities.Tag, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]tag.Tag)
+	ret0, _ := ret[0].([]entities.Tag)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -106,10 +106,10 @@ func (mr *MocktagUseCaseMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MocktagUseCase) Update(arg0 context.Context, arg1 tag.TagUpdate) (tag.Tag, error) {
+func (m *MocktagUseCase) Update(arg0 context.Context, arg1 entities.TagUpdate) (entities.Tag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
-	ret0, _ := ret[0].(tag.Tag)
+	ret0, _ := ret[0].(entities.Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

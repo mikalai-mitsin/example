@@ -10,6 +10,7 @@ import (
 	articleServices "github.com/mikalai-mitsin/example/internal/app/articles/services/article"
 	articleUseCases "github.com/mikalai-mitsin/example/internal/app/articles/usecases/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/clock"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/http"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
@@ -21,6 +22,7 @@ import (
 type App struct {
 	readDB               *sqlx.DB
 	writeDB              *sqlx.DB
+	dtxManager           *dtx.Manager
 	logger               log.Logger
 	kafkaProducer        *kafka.Producer
 	articleRepository    *articleRepositories.ArticleRepository
@@ -34,6 +36,7 @@ type App struct {
 
 func NewApp(
 	readDB, writeDB *sqlx.DB,
+	dtxManager *dtx.Manager,
 	logger log.Logger,
 	clock *clock.Clock,
 	uuidGenerator *uuid.UUIDv7Generator,
@@ -50,6 +53,7 @@ func NewApp(
 	articleUseCase := articleUseCases.NewArticleUseCase(
 		articleService,
 		articleEventProducer,
+		dtxManager,
 		logger,
 	)
 	httpArticleHandler := articleHttpHandlers.NewArticleHandler(articleUseCase, logger)
@@ -58,6 +62,7 @@ func NewApp(
 	return &App{
 		readDB:               readDB,
 		writeDB:              writeDB,
+		dtxManager:           dtxManager,
 		logger:               logger,
 		kafkaProducer:        kafkaProducer,
 		articleRepository:    articleRepository,

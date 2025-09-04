@@ -7,6 +7,7 @@ import (
 	posts "github.com/mikalai-mitsin/example/internal/app/posts"
 	"github.com/mikalai-mitsin/example/internal/pkg/clock"
 	"github.com/mikalai-mitsin/example/internal/pkg/configs"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/http"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
@@ -24,7 +25,7 @@ var FXModule = fx.Options(fx.WithLogger(func(logger log.Logger) fxevent.Logger {
 	return log.NewLog(config.LogLevel)
 }, context.Background, configs.ParseConfig, clock.NewClock, uuid.NewUUIDv7Generator, func(config *configs.Config) *postgres.Config {
 	return config.Database
-}, postgres.NewDatabase, postgres.NewMigrateManager, kafka.NewConsumer, kafka.NewProducer, func(config *configs.Config) *kafka.Config {
+}, postgres.NewDatabase, postgres.NewMigrateManager, dtx.NewManager, kafka.NewConsumer, kafka.NewProducer, func(config *configs.Config) *kafka.Config {
 	return config.Kafka
 }, uptrace.NewProvider, posts.NewApp, articles.NewApp))
 

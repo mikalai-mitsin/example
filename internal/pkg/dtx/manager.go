@@ -1,0 +1,18 @@
+package dtx
+
+import (
+	"github.com/jmoiron/sqlx"
+)
+
+type Manager struct {
+	db *sqlx.DB
+}
+
+func NewManager(db *sqlx.DB) *Manager {
+	return &Manager{db: db}
+}
+
+func (m *Manager) NewTx() TX {
+	tx, _ := m.db.Begin()
+	return NewTXWithSQL(tx)
+}

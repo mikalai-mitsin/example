@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -28,7 +29,7 @@ func NewLikeEventProducer(
 	return &LikeEventProducer{producer: producer, logger: logger}
 }
 
-func (p *LikeEventProducer) Created(ctx context.Context, like entities.Like) error {
+func (p *LikeEventProducer) Created(ctx context.Context, _ dtx.TX, like entities.Like) error {
 	data, err := json.Marshal(like)
 	if err != nil {
 		return err
@@ -44,7 +45,7 @@ func (p *LikeEventProducer) Created(ctx context.Context, like entities.Like) err
 	return nil
 }
 
-func (p *LikeEventProducer) Updated(ctx context.Context, like entities.Like) error {
+func (p *LikeEventProducer) Updated(ctx context.Context, _ dtx.TX, like entities.Like) error {
 	data, err := json.Marshal(like)
 	if err != nil {
 		return err
@@ -60,7 +61,7 @@ func (p *LikeEventProducer) Updated(ctx context.Context, like entities.Like) err
 	return nil
 }
 
-func (p *LikeEventProducer) Deleted(ctx context.Context, id uuid.UUID) error {
+func (p *LikeEventProducer) Deleted(ctx context.Context, _ dtx.TX, id uuid.UUID) error {
 	message := &kafka.Message{
 		Topic: topicEventDeleted,
 		Value: []byte(id.String()),

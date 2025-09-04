@@ -7,6 +7,7 @@ import (
 
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
@@ -245,6 +246,7 @@ func TestPostService_Create(t *testing.T) {
 	mockClock := NewMockclock(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockUUID := NewMockuuidGenerator(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	create := entities.NewMockPostCreate(t)
 	now := time.Now().UTC()
@@ -256,6 +258,7 @@ func TestPostService_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		create entities.PostCreate
 	}
 	tests := []struct {
@@ -276,6 +279,7 @@ func TestPostService_Create(t *testing.T) {
 				mockPostRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Post{
 							ID:        uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 							Body:      create.Body,
@@ -293,6 +297,7 @@ func TestPostService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want: entities.Post{
@@ -313,6 +318,7 @@ func TestPostService_Create(t *testing.T) {
 				mockPostRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Post{
 							ID:        uuid.MustParse("00000000-0000-0000-0000-000000000002"),
 							Body:      create.Body,
@@ -330,6 +336,7 @@ func TestPostService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want:    entities.Post{},
@@ -347,6 +354,7 @@ func TestPostService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: entities.PostCreate{},
 			},
 			want: entities.Post{},
@@ -364,7 +372,7 @@ func TestPostService_Create(t *testing.T) {
 				logger:         tt.fields.logger,
 				uuid:           tt.fields.uuid,
 			}
-			got, err := u.Create(tt.args.ctx, tt.args.create)
+			got, err := u.Create(tt.args.ctx, tt.args.tx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -379,6 +387,7 @@ func TestPostService_Update(t *testing.T) {
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	mockClock := NewMockclock(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	update := entities.NewMockPostUpdate(t)
 	now := time.Now().UTC()
 	updatedPost := entities.Post{
@@ -395,6 +404,7 @@ func TestPostService_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		update entities.PostUpdate
 	}
 	tests := []struct {
@@ -412,7 +422,7 @@ func TestPostService_Update(t *testing.T) {
 				mockPostRepository.EXPECT().
 					Get(ctx, update.ID).Return(post, nil)
 				mockPostRepository.EXPECT().
-					Update(ctx, updatedPost).Return(nil)
+					Update(ctx, mockTx, updatedPost).Return(nil)
 			},
 			fields: fields{
 				postRepository: mockPostRepository,
@@ -421,6 +431,7 @@ func TestPostService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    updatedPost,
@@ -434,7 +445,7 @@ func TestPostService_Update(t *testing.T) {
 					Get(ctx, update.ID).
 					Return(post, nil)
 				mockPostRepository.EXPECT().
-					Update(ctx, updatedPost).
+					Update(ctx, mockTx, updatedPost).
 					Return(errs.NewUnexpectedBehaviorError("test error"))
 			},
 			fields: fields{
@@ -444,6 +455,7 @@ func TestPostService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Post{},
@@ -463,6 +475,7 @@ func TestPostService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Post{},
@@ -477,7 +490,7 @@ func TestPostService_Update(t *testing.T) {
 				clock:          tt.fields.clock,
 				logger:         tt.fields.logger,
 			}
-			got, err := u.Update(tt.args.ctx, tt.args.update)
+			got, err := u.Update(tt.args.ctx, tt.args.tx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -489,6 +502,7 @@ func TestPostService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockPostRepository := NewMockpostRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	type fields struct {
@@ -497,6 +511,7 @@ func TestPostService_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -510,7 +525,7 @@ func TestPostService_Delete(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockPostRepository.EXPECT().
-					Delete(ctx, post.ID).
+					Delete(ctx, mockTx, post.ID).
 					Return(nil)
 			},
 			fields: fields{
@@ -519,6 +534,7 @@ func TestPostService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  post.ID,
 			},
 			wantErr: nil,
@@ -527,7 +543,7 @@ func TestPostService_Delete(t *testing.T) {
 			name: "Post not found",
 			setup: func() {
 				mockPostRepository.EXPECT().
-					Delete(ctx, post.ID).
+					Delete(ctx, mockTx, post.ID).
 					Return(errs.NewEntityNotFoundError())
 			},
 			fields: fields{
@@ -536,6 +552,7 @@ func TestPostService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  post.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError(),
@@ -548,7 +565,7 @@ func TestPostService_Delete(t *testing.T) {
 				postRepository: tt.fields.postRepository,
 				logger:         tt.fields.logger,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.id)
+			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

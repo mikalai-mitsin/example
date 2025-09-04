@@ -4,65 +4,104 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
+	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type TagUseCase struct {
 	tagService       tagService
 	tagEventProducer tagEventProducer
+	dtxManager       dtxManager
 	logger           logger
 }
 
 func NewTagUseCase(
 	tagService tagService,
 	tagEventProducer tagEventProducer,
+	dtxManager dtxManager,
 	logger logger,
 ) *TagUseCase {
-	return &TagUseCase{tagService: tagService, tagEventProducer: tagEventProducer, logger: logger}
+	return &TagUseCase{
+		tagService:       tagService,
+		tagEventProducer: tagEventProducer,
+		dtxManager:       dtxManager,
+		logger:           logger,
+	}
 }
-func (i *TagUseCase) Create(ctx context.Context, create entities.TagCreate) (entities.Tag, error) {
-	tag, err := i.tagService.Create(ctx, create)
+func (u *TagUseCase) Create(ctx context.Context, create entities.TagCreate) (entities.Tag, error) {
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	tag, err := u.tagService.Create(ctx, tx, create)
 	if err != nil {
 		return entities.Tag{}, err
 	}
-	if err := i.tagEventProducer.Created(ctx, tag); err != nil {
+	if err := u.tagEventProducer.Created(ctx, tx, tag); err != nil {
+		return entities.Tag{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
 }
-func (i *TagUseCase) Get(ctx context.Context, id uuid.UUID) (entities.Tag, error) {
-	tag, err := i.tagService.Get(ctx, id)
+func (u *TagUseCase) Get(ctx context.Context, id uuid.UUID) (entities.Tag, error) {
+	tag, err := u.tagService.Get(ctx, id)
 	if err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
 }
 
-func (i *TagUseCase) List(
+func (u *TagUseCase) List(
 	ctx context.Context,
 	filter entities.TagFilter,
 ) ([]entities.Tag, uint64, error) {
-	tags, count, err := i.tagService.List(ctx, filter)
+	tags, count, err := u.tagService.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	return tags, count, nil
 }
-func (i *TagUseCase) Update(ctx context.Context, update entities.TagUpdate) (entities.Tag, error) {
-	tag, err := i.tagService.Update(ctx, update)
+func (u *TagUseCase) Update(ctx context.Context, update entities.TagUpdate) (entities.Tag, error) {
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	tag, err := u.tagService.Update(ctx, tx, update)
 	if err != nil {
 		return entities.Tag{}, err
 	}
-	if err := i.tagEventProducer.Updated(ctx, tag); err != nil {
+	if err := u.tagEventProducer.Updated(ctx, tx, tag); err != nil {
+		return entities.Tag{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
 }
-func (i *TagUseCase) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := i.tagService.Delete(ctx, id); err != nil {
+func (u *TagUseCase) Delete(ctx context.Context, id uuid.UUID) error {
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	if err := u.tagService.Delete(ctx, tx, id); err != nil {
 		return err
 	}
-	if err := i.tagEventProducer.Deleted(ctx, id); err != nil {
+	if err := u.tagEventProducer.Deleted(ctx, tx, id); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 	return nil

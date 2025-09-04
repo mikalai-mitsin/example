@@ -8,6 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,9 @@ func TestArticleRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	query := "INSERT INTO public.articles (id,created_at,updated_at,title,subtitle,body,is_published) VALUES ($1,$2,$3,$4,$5,$6,$7)"
 	article := entities.NewMockArticle(t)
 	ctx := context.Background()
@@ -78,6 +82,7 @@ func TestArticleRepository_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx     context.Context
+		tx      dtx.TX
 		article entities.Article
 	}
 	tests := []struct {
@@ -109,6 +114,7 @@ func TestArticleRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:     ctx,
+				tx:      mockTX,
 				article: article,
 			},
 			wantErr: nil,
@@ -135,6 +141,7 @@ func TestArticleRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:     ctx,
+				tx:      mockTX,
 				article: article,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")),
@@ -148,7 +155,7 @@ func TestArticleRepository_Create(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Create(tt.args.ctx, tt.args.article)
+			err := r.Create(tt.args.ctx, tt.args.tx, tt.args.article)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -377,6 +384,9 @@ func TestArticleRepository_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	article := entities.NewMockArticle(t)
 	query := `UPDATE public.articles SET created_at = $1, updated_at = $2, title = $3, subtitle = $4, body = $5, is_published = $6 WHERE id = $7`
 	ctx := context.Background()
@@ -387,6 +397,7 @@ func TestArticleRepository_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx     context.Context
+		tx      dtx.TX
 		article entities.Article
 	}
 	tests := []struct {
@@ -418,6 +429,7 @@ func TestArticleRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:     ctx,
+				tx:      mockTX,
 				article: article,
 			},
 			wantErr: nil,
@@ -444,6 +456,7 @@ func TestArticleRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:     ctx,
+				tx:      mockTX,
 				article: article,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("article_id", article.ID.String()),
@@ -470,6 +483,7 @@ func TestArticleRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:     ctx,
+				tx:      mockTX,
 				article: article,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -497,6 +511,7 @@ func TestArticleRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:     ctx,
+				tx:      mockTX,
 				article: article,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -524,6 +539,7 @@ func TestArticleRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:     ctx,
+				tx:      mockTX,
 				article: article,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -538,7 +554,7 @@ func TestArticleRepository_Update(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Update(tt.args.ctx, tt.args.article)
+			err := r.Update(tt.args.ctx, tt.args.tx, tt.args.article)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -554,6 +570,9 @@ func TestArticleRepository_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	article := entities.NewMockArticle(t)
 	type fields struct {
 		writeDB database
@@ -562,6 +581,7 @@ func TestArticleRepository_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -585,6 +605,7 @@ func TestArticleRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  article.ID,
 			},
 			wantErr: nil,
@@ -603,6 +624,7 @@ func TestArticleRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  article.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("article_id", article.ID.String()),
@@ -621,6 +643,7 @@ func TestArticleRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  article.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -640,6 +663,7 @@ func TestArticleRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  article.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -654,7 +678,7 @@ func TestArticleRepository_Delete(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Delete(tt.args.ctx, tt.args.id)
+			err := r.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

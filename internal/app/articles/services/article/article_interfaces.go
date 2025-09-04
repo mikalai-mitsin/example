@@ -6,17 +6,18 @@ import (
 	"time"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type articleRepository interface {
-	Create(context.Context, entities.Article) error
+	Create(context.Context, dtx.TX, entities.Article) error
 	Get(context.Context, uuid.UUID) (entities.Article, error)
 	List(context.Context, entities.ArticleFilter) ([]entities.Article, error)
 	Count(context.Context, entities.ArticleFilter) (uint64, error)
-	Update(context.Context, entities.Article) error
-	Delete(context.Context, uuid.UUID) error
+	Update(context.Context, dtx.TX, entities.Article) error
+	Delete(context.Context, dtx.TX, uuid.UUID) error
 }
 
 // clock - clock interface

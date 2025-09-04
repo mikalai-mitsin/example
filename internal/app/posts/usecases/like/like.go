@@ -4,77 +4,112 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
+	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type LikeUseCase struct {
 	likeService       likeService
 	likeEventProducer likeEventProducer
+	dtxManager        dtxManager
 	logger            logger
 }
 
 func NewLikeUseCase(
 	likeService likeService,
 	likeEventProducer likeEventProducer,
+	dtxManager dtxManager,
 	logger logger,
 ) *LikeUseCase {
 	return &LikeUseCase{
 		likeService:       likeService,
 		likeEventProducer: likeEventProducer,
+		dtxManager:        dtxManager,
 		logger:            logger,
 	}
 }
 
-func (i *LikeUseCase) Create(
+func (u *LikeUseCase) Create(
 	ctx context.Context,
 	create entities.LikeCreate,
 ) (entities.Like, error) {
-	like, err := i.likeService.Create(ctx, create)
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	like, err := u.likeService.Create(ctx, tx, create)
 	if err != nil {
 		return entities.Like{}, err
 	}
-	if err := i.likeEventProducer.Created(ctx, like); err != nil {
+	if err := u.likeEventProducer.Created(ctx, tx, like); err != nil {
+		return entities.Like{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
 }
-func (i *LikeUseCase) Get(ctx context.Context, id uuid.UUID) (entities.Like, error) {
-	like, err := i.likeService.Get(ctx, id)
+func (u *LikeUseCase) Get(ctx context.Context, id uuid.UUID) (entities.Like, error) {
+	like, err := u.likeService.Get(ctx, id)
 	if err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
 }
 
-func (i *LikeUseCase) List(
+func (u *LikeUseCase) List(
 	ctx context.Context,
 	filter entities.LikeFilter,
 ) ([]entities.Like, uint64, error) {
-	likes, count, err := i.likeService.List(ctx, filter)
+	likes, count, err := u.likeService.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	return likes, count, nil
 }
 
-func (i *LikeUseCase) Update(
+func (u *LikeUseCase) Update(
 	ctx context.Context,
 	update entities.LikeUpdate,
 ) (entities.Like, error) {
-	like, err := i.likeService.Update(ctx, update)
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	like, err := u.likeService.Update(ctx, tx, update)
 	if err != nil {
 		return entities.Like{}, err
 	}
-	if err := i.likeEventProducer.Updated(ctx, like); err != nil {
+	if err := u.likeEventProducer.Updated(ctx, tx, like); err != nil {
+		return entities.Like{}, err
+	}
+	if err := tx.Commit(); err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
 }
-func (i *LikeUseCase) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := i.likeService.Delete(ctx, id); err != nil {
+func (u *LikeUseCase) Delete(ctx context.Context, id uuid.UUID) error {
+	logger := u.logger.WithContext(ctx)
+	tx := u.dtxManager.NewTx()
+	defer func(tx dtx.TX) {
+		if err := tx.Rollback(); err != nil {
+			logger.Error("cant rollback transaction", log.Error(err))
+		}
+	}(tx)
+	if err := u.likeService.Delete(ctx, tx, id); err != nil {
 		return err
 	}
-	if err := i.likeEventProducer.Deleted(ctx, id); err != nil {
+	if err := u.likeEventProducer.Deleted(ctx, tx, id); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 	return nil

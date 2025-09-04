@@ -7,6 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -23,16 +24,16 @@ func NewTagRepository(readDB database, writeDB database, logger logger) *TagRepo
 }
 
 var orderByMap = map[entities.TagOrdering]string{
+	entities.TagOrderingIdDESC:        "tags.id DESC",
 	entities.TagOrderingCreatedAtASC:  "tags.created_at ASC",
 	entities.TagOrderingCreatedAtDESC: "tags.created_at DESC",
-	entities.TagOrderingUpdatedAtDESC: "tags.updated_at DESC",
 	entities.TagOrderingPostIdASC:     "tags.post_id ASC",
-	entities.TagOrderingValueDESC:     "tags.value DESC",
-	entities.TagOrderingIdASC:         "tags.id ASC",
-	entities.TagOrderingUpdatedAtASC:  "tags.updated_at ASC",
 	entities.TagOrderingPostIdDESC:    "tags.post_id DESC",
 	entities.TagOrderingValueASC:      "tags.value ASC",
-	entities.TagOrderingIdDESC:        "tags.id DESC",
+	entities.TagOrderingUpdatedAtASC:  "tags.updated_at ASC",
+	entities.TagOrderingUpdatedAtDESC: "tags.updated_at DESC",
+	entities.TagOrderingValueDESC:     "tags.value DESC",
+	entities.TagOrderingIdASC:         "tags.id ASC",
 }
 
 func encodeOrderBy(orderBy []entities.TagOrdering) []string {
@@ -83,7 +84,7 @@ func (dto TagDTO) toEntity() entities.Tag {
 	}
 	return entity
 }
-func (r *TagRepository) Create(ctx context.Context, entity entities.Tag) error {
+func (r *TagRepository) Create(ctx context.Context, tx dtx.TX, entity entities.Tag) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewTagDTOFromEntity(entity)
@@ -91,7 +92,7 @@ func (r *TagRepository) Create(ctx context.Context, entity entities.Tag) error {
 		Columns("id", "created_at", "updated_at", "post_id", "value").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.PostId, dto.Value)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
+	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -153,7 +154,7 @@ func (r *TagRepository) Count(ctx context.Context, filter entities.TagFilter) (u
 	}
 	return count, nil
 }
-func (r *TagRepository) Update(ctx context.Context, entity entities.Tag) error {
+func (r *TagRepository) Update(ctx context.Context, tx dtx.TX, entity entities.Tag) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewTagDTOFromEntity(entity)
@@ -165,7 +166,7 @@ func (r *TagRepository) Update(ctx context.Context, entity entities.Tag) error {
 		q = q.Set("value", dto.Value)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("tag_id", fmt.Sprint(entity.ID))
 		return e
@@ -180,12 +181,12 @@ func (r *TagRepository) Update(ctx context.Context, entity entities.Tag) error {
 	}
 	return nil
 }
-func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *TagRepository) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.tags").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("tag_id", fmt.Sprint(id))
 		return e

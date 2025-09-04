@@ -14,7 +14,8 @@ import (
 	reflect "reflect"
 	time "time"
 
-	like "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	fxevent "go.uber.org/fx/fxevent"
@@ -47,7 +48,7 @@ func (m *MocklikeRepository) EXPECT() *MocklikeRepositoryMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MocklikeRepository) Count(arg0 context.Context, arg1 like.LikeFilter) (uint64, error) {
+func (m *MocklikeRepository) Count(arg0 context.Context, arg1 entities.LikeFilter) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -62,38 +63,38 @@ func (mr *MocklikeRepositoryMockRecorder) Count(arg0, arg1 any) *gomock.Call {
 }
 
 // Create mocks base method.
-func (m *MocklikeRepository) Create(arg0 context.Context, arg1 like.Like) error {
+func (m *MocklikeRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.Like) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Create indicates an expected call of Create.
-func (mr *MocklikeRepositoryMockRecorder) Create(arg0, arg1 any) *gomock.Call {
+func (mr *MocklikeRepositoryMockRecorder) Create(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MocklikeRepository)(nil).Create), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MocklikeRepository)(nil).Create), arg0, arg1, arg2)
 }
 
 // Delete mocks base method.
-func (m *MocklikeRepository) Delete(arg0 context.Context, arg1 uuid.UUID) error {
+func (m *MocklikeRepository) Delete(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MocklikeRepositoryMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
+func (mr *MocklikeRepositoryMockRecorder) Delete(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MocklikeRepository)(nil).Delete), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MocklikeRepository)(nil).Delete), arg0, arg1, arg2)
 }
 
 // Get mocks base method.
-func (m *MocklikeRepository) Get(arg0 context.Context, arg1 uuid.UUID) (like.Like, error) {
+func (m *MocklikeRepository) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(like.Like)
+	ret0, _ := ret[0].(entities.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -105,10 +106,10 @@ func (mr *MocklikeRepositoryMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MocklikeRepository) List(arg0 context.Context, arg1 like.LikeFilter) ([]like.Like, error) {
+func (m *MocklikeRepository) List(arg0 context.Context, arg1 entities.LikeFilter) ([]entities.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]like.Like)
+	ret0, _ := ret[0].([]entities.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -120,17 +121,17 @@ func (mr *MocklikeRepositoryMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MocklikeRepository) Update(arg0 context.Context, arg1 like.Like) error {
+func (m *MocklikeRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.Like) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MocklikeRepositoryMockRecorder) Update(arg0, arg1 any) *gomock.Call {
+func (mr *MocklikeRepositoryMockRecorder) Update(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MocklikeRepository)(nil).Update), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MocklikeRepository)(nil).Update), arg0, arg1, arg2)
 }
 
 // Mockclock is a mock of clock interface.

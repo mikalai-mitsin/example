@@ -347,6 +347,7 @@ func TestArticleServiceServer_List(t *testing.T) {
 				input: &examplepb.ArticleFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
+					Search:     wrapperspb.String(*filter.Search),
 					OrderBy:    nil,
 				},
 			},
@@ -372,6 +373,7 @@ func TestArticleServiceServer_List(t *testing.T) {
 				input: &examplepb.ArticleFilter{
 					PageNumber: wrapperspb.UInt64(*filter.PageNumber),
 					PageSize:   wrapperspb.UInt64(*filter.PageSize),
+					Search:     wrapperspb.String(*filter.Search),
 					OrderBy:    nil,
 				},
 			},
@@ -520,6 +522,7 @@ func Test_encodeArticleFilter(t *testing.T) {
 				input: &examplepb.ArticleFilter{
 					PageNumber: wrapperspb.UInt64(2),
 					PageSize:   wrapperspb.UInt64(5),
+					Search:     wrapperspb.String("my name is"),
 					OrderBy:    []string{"created_at", "id"},
 				},
 			},
@@ -527,6 +530,7 @@ func Test_encodeArticleFilter(t *testing.T) {
 				PageSize:   pointer.Of(uint64(5)),
 				PageNumber: pointer.Of(uint64(2)),
 				OrderBy:    []entities.ArticleOrdering{"created_at", "id"},
+				Search:     pointer.Of("my name is"),
 			},
 		},
 	}

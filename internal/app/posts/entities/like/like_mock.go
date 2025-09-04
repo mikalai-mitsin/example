@@ -27,18 +27,18 @@ func NewMockLikeFilter(t *testing.T) LikeFilter {
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
 		OrderBy: []LikeOrdering{
-			LikeOrderingValueASC,
+			LikeOrderingUserIdDESC,
+			LikeOrderingIdDESC,
+			LikeOrderingCreatedAtASC,
+			LikeOrderingPostIdDESC,
 			LikeOrderingValueDESC,
 			LikeOrderingUserIdASC,
-			LikeOrderingUserIdDESC,
 			LikeOrderingIdASC,
-			LikeOrderingIdDESC,
 			LikeOrderingCreatedAtDESC,
 			LikeOrderingUpdatedAtASC,
 			LikeOrderingUpdatedAtDESC,
-			LikeOrderingPostIdDESC,
-			LikeOrderingCreatedAtASC,
 			LikeOrderingPostIdASC,
+			LikeOrderingValueASC,
 		},
 	}
 }

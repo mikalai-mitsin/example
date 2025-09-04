@@ -58,10 +58,11 @@ type ArticleFilterDTO struct {
 	PageSize   *uint64  `json:"page_size"`
 	PageNumber *uint64  `json:"page_number"`
 	OrderBy    []string `json:"order_by"`
+	Search     string   `json:"search"`
 }
 
 func NewArticleFilterDTO(r *http.Request) (ArticleFilterDTO, error) {
-	filter := ArticleFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil}
+	filter := ArticleFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil, Search: ""}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -83,6 +84,9 @@ func NewArticleFilterDTO(r *http.Request) (ArticleFilterDTO, error) {
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
+	if r.URL.Query().Has("search") {
+		filter.Search = r.URL.Query().Get("search")
+	}
 	return filter, nil
 }
 func (dto ArticleFilterDTO) toEntity() (entities.ArticleFilter, error) {
@@ -90,6 +94,7 @@ func (dto ArticleFilterDTO) toEntity() (entities.ArticleFilter, error) {
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
 		OrderBy:    []entities.ArticleOrdering{},
+		Search:     pointer.Of(dto.Search),
 	}
 	for _, orderBy := range dto.OrderBy {
 		filter.OrderBy = append(filter.OrderBy, entities.ArticleOrdering(orderBy))

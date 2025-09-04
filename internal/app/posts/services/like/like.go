@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -25,6 +26,7 @@ func NewLikeService(
 
 func (u *LikeService) Create(
 	ctx context.Context,
+	tx dtx.TX,
 	create entities.LikeCreate,
 ) (entities.Like, error) {
 	if err := create.Validate(); err != nil {
@@ -39,7 +41,7 @@ func (u *LikeService) Create(
 		Value:     create.Value,
 		UserId:    create.UserId,
 	}
-	if err := u.likeRepository.Create(ctx, like); err != nil {
+	if err := u.likeRepository.Create(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
@@ -72,6 +74,7 @@ func (u *LikeService) List(
 
 func (u *LikeService) Update(
 	ctx context.Context,
+	tx dtx.TX,
 	update entities.LikeUpdate,
 ) (entities.Like, error) {
 	if err := update.Validate(); err != nil {
@@ -93,13 +96,13 @@ func (u *LikeService) Update(
 		}
 	}
 	like.UpdatedAt = u.clock.Now().UTC()
-	if err := u.likeRepository.Update(ctx, like); err != nil {
+	if err := u.likeRepository.Update(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
 }
-func (u *LikeService) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := u.likeRepository.Delete(ctx, id); err != nil {
+func (u *LikeService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := u.likeRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

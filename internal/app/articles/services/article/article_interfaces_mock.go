@@ -14,7 +14,8 @@ import (
 	reflect "reflect"
 	time "time"
 
-	article "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	fxevent "go.uber.org/fx/fxevent"
@@ -47,7 +48,7 @@ func (m *MockarticleRepository) EXPECT() *MockarticleRepositoryMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockarticleRepository) Count(arg0 context.Context, arg1 article.ArticleFilter) (uint64, error) {
+func (m *MockarticleRepository) Count(arg0 context.Context, arg1 entities.ArticleFilter) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -62,38 +63,38 @@ func (mr *MockarticleRepositoryMockRecorder) Count(arg0, arg1 any) *gomock.Call 
 }
 
 // Create mocks base method.
-func (m *MockarticleRepository) Create(arg0 context.Context, arg1 article.Article) error {
+func (m *MockarticleRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.Article) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockarticleRepositoryMockRecorder) Create(arg0, arg1 any) *gomock.Call {
+func (mr *MockarticleRepositoryMockRecorder) Create(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockarticleRepository)(nil).Create), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockarticleRepository)(nil).Create), arg0, arg1, arg2)
 }
 
 // Delete mocks base method.
-func (m *MockarticleRepository) Delete(arg0 context.Context, arg1 uuid.UUID) error {
+func (m *MockarticleRepository) Delete(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockarticleRepositoryMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
+func (mr *MockarticleRepositoryMockRecorder) Delete(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockarticleRepository)(nil).Delete), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockarticleRepository)(nil).Delete), arg0, arg1, arg2)
 }
 
 // Get mocks base method.
-func (m *MockarticleRepository) Get(arg0 context.Context, arg1 uuid.UUID) (article.Article, error) {
+func (m *MockarticleRepository) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(article.Article)
+	ret0, _ := ret[0].(entities.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -105,10 +106,10 @@ func (mr *MockarticleRepositoryMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockarticleRepository) List(arg0 context.Context, arg1 article.ArticleFilter) ([]article.Article, error) {
+func (m *MockarticleRepository) List(arg0 context.Context, arg1 entities.ArticleFilter) ([]entities.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]article.Article)
+	ret0, _ := ret[0].([]entities.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -120,17 +121,17 @@ func (mr *MockarticleRepositoryMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockarticleRepository) Update(arg0 context.Context, arg1 article.Article) error {
+func (m *MockarticleRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.Article) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockarticleRepositoryMockRecorder) Update(arg0, arg1 any) *gomock.Call {
+func (mr *MockarticleRepositoryMockRecorder) Update(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockarticleRepository)(nil).Update), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockarticleRepository)(nil).Update), arg0, arg1, arg2)
 }
 
 // Mockclock is a mock of clock interface.

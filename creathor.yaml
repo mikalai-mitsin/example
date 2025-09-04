@@ -33,9 +33,12 @@ apps:
         params:
           - name: "Title"
             type: "string"
+            search: true
           - name: "Subtitle"
             type: "string"
+            search: true
           - name: "Body"
             type: "string"
+            search: true
           - name: "is_published"
             type: bool

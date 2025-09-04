@@ -8,6 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jaswdr/faker"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,9 @@ func TestTagRepository_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	query := "INSERT INTO public.tags (id,created_at,updated_at,post_id,value) VALUES ($1,$2,$3,$4,$5)"
 	tag := entities.NewMockTag(t)
 	ctx := context.Background()
@@ -78,6 +82,7 @@ func TestTagRepository_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		tag entities.Tag
 	}
 	tests := []struct {
@@ -107,6 +112,7 @@ func TestTagRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTX,
 				tag: tag,
 			},
 			wantErr: nil,
@@ -131,6 +137,7 @@ func TestTagRepository_Create(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTX,
 				tag: tag,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")),
@@ -144,7 +151,7 @@ func TestTagRepository_Create(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Create(tt.args.ctx, tt.args.tag)
+			err := r.Create(tt.args.ctx, tt.args.tx, tt.args.tag)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -371,6 +378,9 @@ func TestTagRepository_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	tag := entities.NewMockTag(t)
 	query := `UPDATE public.tags SET created_at = $1, updated_at = $2, post_id = $3, value = $4 WHERE id = $5`
 	ctx := context.Background()
@@ -381,6 +391,7 @@ func TestTagRepository_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		tag entities.Tag
 	}
 	tests := []struct {
@@ -410,6 +421,7 @@ func TestTagRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTX,
 				tag: tag,
 			},
 			wantErr: nil,
@@ -434,6 +446,7 @@ func TestTagRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTX,
 				tag: tag,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("tag_id", tag.ID.String()),
@@ -458,6 +471,7 @@ func TestTagRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTX,
 				tag: tag,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -483,6 +497,7 @@ func TestTagRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTX,
 				tag: tag,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -508,6 +523,7 @@ func TestTagRepository_Update(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTX,
 				tag: tag,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -522,7 +538,7 @@ func TestTagRepository_Update(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Update(tt.args.ctx, tt.args.tag)
+			err := r.Update(tt.args.ctx, tt.args.tx, tt.args.tag)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -538,6 +554,9 @@ func TestTagRepository_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
+	mockTxManager := dtx.NewManager(mockDB)
+	mock.ExpectBegin()
+	mockTX := mockTxManager.NewTx()
 	tag := entities.NewMockTag(t)
 	type fields struct {
 		writeDB database
@@ -546,6 +565,7 @@ func TestTagRepository_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -569,6 +589,7 @@ func TestTagRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  tag.ID,
 			},
 			wantErr: nil,
@@ -587,6 +608,7 @@ func TestTagRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  tag.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError().WithParam("tag_id", tag.ID.String()),
@@ -605,6 +627,7 @@ func TestTagRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  tag.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -624,6 +647,7 @@ func TestTagRepository_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
+				tx:  mockTX,
 				id:  tag.ID,
 			},
 			wantErr: errs.FromPostgresError(errors.New("test error")).
@@ -638,7 +662,7 @@ func TestTagRepository_Delete(t *testing.T) {
 				readDB:  tt.fields.readDB,
 				logger:  tt.fields.logger,
 			}
-			err := r.Delete(tt.args.ctx, tt.args.id)
+			err := r.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

@@ -5,22 +5,26 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
 type likeService interface {
-	Create(context.Context, entities.LikeCreate) (entities.Like, error)
+	Create(context.Context, dtx.TX, entities.LikeCreate) (entities.Like, error)
 	Get(context.Context, uuid.UUID) (entities.Like, error)
 	List(context.Context, entities.LikeFilter) ([]entities.Like, uint64, error)
-	Update(context.Context, entities.LikeUpdate) (entities.Like, error)
-	Delete(context.Context, uuid.UUID) error
+	Update(context.Context, dtx.TX, entities.LikeUpdate) (entities.Like, error)
+	Delete(context.Context, dtx.TX, uuid.UUID) error
+}
+type likeEventProducer interface {
+	Created(context.Context, dtx.TX, entities.Like) error
+	Updated(context.Context, dtx.TX, entities.Like) error
+	Deleted(context.Context, dtx.TX, uuid.UUID) error
 }
 type logger interface {
 	log.Logger
 }
-type likeEventProducer interface {
-	Created(context.Context, entities.Like) error
-	Updated(context.Context, entities.Like) error
-	Deleted(context.Context, uuid.UUID) error
+type dtxManager interface {
+	NewTx() dtx.TX
 }

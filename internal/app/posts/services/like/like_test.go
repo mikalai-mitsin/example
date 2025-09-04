@@ -7,6 +7,7 @@ import (
 
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
@@ -245,6 +246,7 @@ func TestLikeService_Create(t *testing.T) {
 	mockClock := NewMockclock(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockUUID := NewMockuuidGenerator(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	create := entities.NewMockLikeCreate(t)
 	now := time.Now().UTC()
@@ -256,6 +258,7 @@ func TestLikeService_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		create entities.LikeCreate
 	}
 	tests := []struct {
@@ -276,6 +279,7 @@ func TestLikeService_Create(t *testing.T) {
 				mockLikeRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Like{
 							ID:        uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 							PostId:    create.PostId,
@@ -295,6 +299,7 @@ func TestLikeService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want: entities.Like{
@@ -317,6 +322,7 @@ func TestLikeService_Create(t *testing.T) {
 				mockLikeRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Like{
 							ID:        uuid.MustParse("00000000-0000-0000-0000-000000000002"),
 							PostId:    create.PostId,
@@ -336,6 +342,7 @@ func TestLikeService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want:    entities.Like{},
@@ -353,6 +360,7 @@ func TestLikeService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: entities.LikeCreate{},
 			},
 			want: entities.Like{},
@@ -372,7 +380,7 @@ func TestLikeService_Create(t *testing.T) {
 				logger:         tt.fields.logger,
 				uuid:           tt.fields.uuid,
 			}
-			got, err := u.Create(tt.args.ctx, tt.args.create)
+			got, err := u.Create(tt.args.ctx, tt.args.tx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -387,6 +395,7 @@ func TestLikeService_Update(t *testing.T) {
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	mockClock := NewMockclock(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	update := entities.NewMockLikeUpdate(t)
 	now := time.Now().UTC()
 	updatedLike := entities.Like{
@@ -405,6 +414,7 @@ func TestLikeService_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		update entities.LikeUpdate
 	}
 	tests := []struct {
@@ -422,7 +432,7 @@ func TestLikeService_Update(t *testing.T) {
 				mockLikeRepository.EXPECT().
 					Get(ctx, update.ID).Return(like, nil)
 				mockLikeRepository.EXPECT().
-					Update(ctx, updatedLike).Return(nil)
+					Update(ctx, mockTx, updatedLike).Return(nil)
 			},
 			fields: fields{
 				likeRepository: mockLikeRepository,
@@ -431,6 +441,7 @@ func TestLikeService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    updatedLike,
@@ -444,7 +455,7 @@ func TestLikeService_Update(t *testing.T) {
 					Get(ctx, update.ID).
 					Return(like, nil)
 				mockLikeRepository.EXPECT().
-					Update(ctx, updatedLike).
+					Update(ctx, mockTx, updatedLike).
 					Return(errs.NewUnexpectedBehaviorError("test error"))
 			},
 			fields: fields{
@@ -454,6 +465,7 @@ func TestLikeService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Like{},
@@ -473,6 +485,7 @@ func TestLikeService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Like{},
@@ -487,7 +500,7 @@ func TestLikeService_Update(t *testing.T) {
 				clock:          tt.fields.clock,
 				logger:         tt.fields.logger,
 			}
-			got, err := u.Update(tt.args.ctx, tt.args.update)
+			got, err := u.Update(tt.args.ctx, tt.args.tx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -499,6 +512,7 @@ func TestLikeService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockLikeRepository := NewMocklikeRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	type fields struct {
@@ -507,6 +521,7 @@ func TestLikeService_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -520,7 +535,7 @@ func TestLikeService_Delete(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockLikeRepository.EXPECT().
-					Delete(ctx, like.ID).
+					Delete(ctx, mockTx, like.ID).
 					Return(nil)
 			},
 			fields: fields{
@@ -529,6 +544,7 @@ func TestLikeService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  like.ID,
 			},
 			wantErr: nil,
@@ -537,7 +553,7 @@ func TestLikeService_Delete(t *testing.T) {
 			name: "Like not found",
 			setup: func() {
 				mockLikeRepository.EXPECT().
-					Delete(ctx, like.ID).
+					Delete(ctx, mockTx, like.ID).
 					Return(errs.NewEntityNotFoundError())
 			},
 			fields: fields{
@@ -546,6 +562,7 @@ func TestLikeService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  like.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError(),
@@ -558,7 +575,7 @@ func TestLikeService_Delete(t *testing.T) {
 				likeRepository: tt.fields.likeRepository,
 				logger:         tt.fields.logger,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.id)
+			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

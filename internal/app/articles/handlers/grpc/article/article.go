@@ -97,6 +97,9 @@ func encodeArticleFilter(input *examplepb.ArticleFilter) entities.ArticleFilter 
 	if input.GetPageNumber() != nil {
 		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
 	}
+	if input.GetSearch() != nil {
+		filter.Search = pointer.Of(input.GetSearch().GetValue())
+	}
 	for _, orderBy := range input.GetOrderBy() {
 		filter.OrderBy = append(filter.OrderBy, entities.ArticleOrdering(orderBy))
 	}

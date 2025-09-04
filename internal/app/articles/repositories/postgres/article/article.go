@@ -7,8 +7,10 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
+	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -23,20 +25,20 @@ func NewArticleRepository(readDB database, writeDB database, logger logger) *Art
 }
 
 var orderByMap = map[entities.ArticleOrdering]string{
-	entities.ArticleOrderingIdASC:           "articles.id ASC",
-	entities.ArticleOrderingUpdatedAtASC:    "articles.updated_at ASC",
+	entities.ArticleOrderingIdDESC:          "articles.id DESC",
+	entities.ArticleOrderingCreatedAtASC:    "articles.created_at ASC",
 	entities.ArticleOrderingTitleASC:        "articles.title ASC",
 	entities.ArticleOrderingSubtitleASC:     "articles.subtitle ASC",
 	entities.ArticleOrderingSubtitleDESC:    "articles.subtitle DESC",
-	entities.ArticleOrderingBodyASC:         "articles.body ASC",
 	entities.ArticleOrderingBodyDESC:        "articles.body DESC",
 	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
-	entities.ArticleOrderingIdDESC:          "articles.id DESC",
-	entities.ArticleOrderingCreatedAtASC:    "articles.created_at ASC",
 	entities.ArticleOrderingCreatedAtDESC:   "articles.created_at DESC",
+	entities.ArticleOrderingUpdatedAtASC:    "articles.updated_at ASC",
 	entities.ArticleOrderingUpdatedAtDESC:   "articles.updated_at DESC",
 	entities.ArticleOrderingTitleDESC:       "articles.title DESC",
+	entities.ArticleOrderingBodyASC:         "articles.body ASC",
 	entities.ArticleOrderingIsPublishedDESC: "articles.is_published DESC",
+	entities.ArticleOrderingIdASC:           "articles.id ASC",
 }
 
 func encodeOrderBy(orderBy []entities.ArticleOrdering) []string {
@@ -93,7 +95,7 @@ func (dto ArticleDTO) toEntity() entities.Article {
 	}
 	return entity
 }
-func (r *ArticleRepository) Create(ctx context.Context, entity entities.Article) error {
+func (r *ArticleRepository) Create(ctx context.Context, tx dtx.TX, entity entities.Article) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewArticleDTOFromEntity(entity)
@@ -101,7 +103,7 @@ func (r *ArticleRepository) Create(ctx context.Context, entity entities.Article)
 		Columns("id", "created_at", "updated_at", "title", "subtitle", "body", "is_published").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.Title, dto.Subtitle, dto.Body, dto.IsPublished)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
+	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -137,6 +139,15 @@ func (r *ArticleRepository) List(
 	q := sq.Select("articles.id", "articles.created_at", "articles.updated_at", "articles.title", "articles.subtitle", "articles.body", "articles.is_published").
 		From("public.articles").
 		Limit(pageSize)
+	if filter.Search != nil {
+		q = q.Where(
+			postgres.Search{
+				Lang:   "english",
+				Query:  *filter.Search,
+				Fields: []string{"title", "subtitle", "body"},
+			},
+		)
+	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -159,6 +170,15 @@ func (r *ArticleRepository) Count(
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.articles")
+	if filter.Search != nil {
+		q = q.Where(
+			postgres.Search{
+				Lang:   "english",
+				Query:  *filter.Search,
+				Fields: []string{"title", "subtitle", "body"},
+			},
+		)
+	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
 	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
@@ -167,7 +187,7 @@ func (r *ArticleRepository) Count(
 	}
 	return count, nil
 }
-func (r *ArticleRepository) Update(ctx context.Context, entity entities.Article) error {
+func (r *ArticleRepository) Update(ctx context.Context, tx dtx.TX, entity entities.Article) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewArticleDTOFromEntity(entity)
@@ -181,7 +201,7 @@ func (r *ArticleRepository) Update(ctx context.Context, entity entities.Article)
 		q = q.Set("is_published", dto.IsPublished)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("article_id", fmt.Sprint(entity.ID))
 		return e
@@ -196,12 +216,12 @@ func (r *ArticleRepository) Update(ctx context.Context, entity entities.Article)
 	}
 	return nil
 }
-func (r *ArticleRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *ArticleRepository) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.articles").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("article_id", fmt.Sprint(id))
 		return e

@@ -7,6 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -23,18 +24,18 @@ func NewLikeRepository(readDB database, writeDB database, logger logger) *LikeRe
 }
 
 var orderByMap = map[entities.LikeOrdering]string{
-	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
-	entities.LikeOrderingUserIdDESC:    "likes.user_id DESC",
-	entities.LikeOrderingIdASC:         "likes.id ASC",
-	entities.LikeOrderingIdDESC:        "likes.id DESC",
-	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
-	entities.LikeOrderingUpdatedAtDESC: "likes.updated_at DESC",
+	entities.LikeOrderingUpdatedAtASC:  "likes.updated_at ASC",
 	entities.LikeOrderingPostIdASC:     "likes.post_id ASC",
 	entities.LikeOrderingPostIdDESC:    "likes.post_id DESC",
 	entities.LikeOrderingValueASC:      "likes.value ASC",
 	entities.LikeOrderingValueDESC:     "likes.value DESC",
 	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
-	entities.LikeOrderingUpdatedAtASC:  "likes.updated_at ASC",
+	entities.LikeOrderingUpdatedAtDESC: "likes.updated_at DESC",
+	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
+	entities.LikeOrderingUserIdDESC:    "likes.user_id DESC",
+	entities.LikeOrderingIdASC:         "likes.id ASC",
+	entities.LikeOrderingIdDESC:        "likes.id DESC",
+	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
 }
 
 func encodeOrderBy(orderBy []entities.LikeOrdering) []string {
@@ -88,7 +89,7 @@ func (dto LikeDTO) toEntity() entities.Like {
 	}
 	return entity
 }
-func (r *LikeRepository) Create(ctx context.Context, entity entities.Like) error {
+func (r *LikeRepository) Create(ctx context.Context, tx dtx.TX, entity entities.Like) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewLikeDTOFromEntity(entity)
@@ -96,7 +97,7 @@ func (r *LikeRepository) Create(ctx context.Context, entity entities.Like) error
 		Columns("id", "created_at", "updated_at", "post_id", "value", "user_id").
 		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.PostId, dto.Value, dto.UserId)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	if _, err := r.writeDB.ExecContext(ctx, query, args...); err != nil {
+	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
 		return e
 	}
@@ -158,7 +159,7 @@ func (r *LikeRepository) Count(ctx context.Context, filter entities.LikeFilter) 
 	}
 	return count, nil
 }
-func (r *LikeRepository) Update(ctx context.Context, entity entities.Like) error {
+func (r *LikeRepository) Update(ctx context.Context, tx dtx.TX, entity entities.Like) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := NewLikeDTOFromEntity(entity)
@@ -171,7 +172,7 @@ func (r *LikeRepository) Update(ctx context.Context, entity entities.Like) error
 		q = q.Set("user_id", dto.UserId)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("like_id", fmt.Sprint(entity.ID))
 		return e
@@ -186,12 +187,12 @@ func (r *LikeRepository) Update(ctx context.Context, entity entities.Like) error
 	}
 	return nil
 }
-func (r *LikeRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *LikeRepository) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Delete("public.likes").Where(sq.Eq{"id": id})
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
-	result, err := r.writeDB.ExecContext(ctx, query, args...)
+	result, err := tx.GetSQLTx().ExecContext(ctx, query, args...)
 	if err != nil {
 		e := errs.FromPostgresError(err).WithParam("like_id", fmt.Sprint(id))
 		return e

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -18,10 +19,12 @@ func TestNewLikeUseCase(t *testing.T) {
 	defer ctrl.Finish()
 	mockLikeService := NewMocklikeService(ctrl)
 	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
+	mockDtxManager := NewMockdtxManager(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	type args struct {
 		likeService       likeService
 		likeEventProducer likeEventProducer
+		dtxManager        dtxManager
 		logger            logger
 	}
 	tests := []struct {
@@ -36,11 +39,13 @@ func TestNewLikeUseCase(t *testing.T) {
 			args: args{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			want: &LikeUseCase{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 		},
@@ -48,7 +53,12 @@ func TestNewLikeUseCase(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			got := NewLikeUseCase(tt.args.likeService, tt.args.likeEventProducer, tt.args.logger)
+			got := NewLikeUseCase(
+				tt.args.likeService,
+				tt.args.likeEventProducer,
+				tt.args.dtxManager,
+				tt.args.logger,
+			)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -60,11 +70,13 @@ func TestLikeUseCase_Get(t *testing.T) {
 	mockLikeService := NewMocklikeService(ctrl)
 	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockDtxManager := NewMockdtxManager(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	type fields struct {
 		likeService       likeService
 		likeEventProducer likeEventProducer
+		dtxManager        dtxManager
 		logger            logger
 	}
 	type args struct {
@@ -89,6 +101,7 @@ func TestLikeUseCase_Get(t *testing.T) {
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -108,6 +121,7 @@ func TestLikeUseCase_Get(t *testing.T) {
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -124,6 +138,7 @@ func TestLikeUseCase_Get(t *testing.T) {
 			i := &LikeUseCase{
 				likeService:       tt.fields.likeService,
 				likeEventProducer: tt.fields.likeEventProducer,
+				dtxManager:        tt.fields.dtxManager,
 				logger:            tt.fields.logger,
 			}
 			got, err := i.Get(tt.args.ctx, tt.args.id)
@@ -139,12 +154,16 @@ func TestLikeUseCase_Create(t *testing.T) {
 	mockLikeService := NewMocklikeService(ctrl)
 	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
+	mockDtxManager := NewMockdtxManager(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	create := entities.NewMockLikeCreate(t)
 	type fields struct {
 		likeService       likeService
 		likeEventProducer likeEventProducer
+		dtxManager        dtxManager
 		logger            logger
 	}
 	type args struct {
@@ -162,12 +181,15 @@ func TestLikeUseCase_Create(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockLikeService.EXPECT().Create(ctx, create).Return(like, nil)
-				mocklikeEventProducer.EXPECT().Created(ctx, like).Return(nil)
+				mockDtxManager.EXPECT().NewTx().Return(mockTx)
+				mockLikeService.EXPECT().Create(ctx, mockTx, create).Return(like, nil)
+				mocklikeEventProducer.EXPECT().Created(ctx, mockTx, like).Return(nil)
+				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -180,13 +202,16 @@ func TestLikeUseCase_Create(t *testing.T) {
 		{
 			name: "create error",
 			setup: func() {
+				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().
-					Create(ctx, create).
+					Create(ctx, mockTx, create).
 					Return(entities.Like{}, errs.NewUnexpectedBehaviorError("c u"))
+				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -203,6 +228,7 @@ func TestLikeUseCase_Create(t *testing.T) {
 			i := &LikeUseCase{
 				likeService:       tt.fields.likeService,
 				likeEventProducer: tt.fields.likeEventProducer,
+				dtxManager:        tt.fields.dtxManager,
 				logger:            tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create)
@@ -218,12 +244,16 @@ func TestLikeUseCase_Update(t *testing.T) {
 	mockLikeService := NewMocklikeService(ctrl)
 	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
+	mockDtxManager := NewMockdtxManager(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	update := entities.NewMockLikeUpdate(t)
 	type fields struct {
 		likeService       likeService
 		likeEventProducer likeEventProducer
+		dtxManager        dtxManager
 		logger            logger
 	}
 	type args struct {
@@ -241,12 +271,15 @@ func TestLikeUseCase_Update(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockLikeService.EXPECT().Update(ctx, update).Return(like, nil)
-				mocklikeEventProducer.EXPECT().Updated(ctx, like).Return(nil)
+				mockDtxManager.EXPECT().NewTx().Return(mockTx)
+				mockLikeService.EXPECT().Update(ctx, mockTx, update).Return(like, nil)
+				mocklikeEventProducer.EXPECT().Updated(ctx, mockTx, like).Return(nil)
+				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -259,13 +292,16 @@ func TestLikeUseCase_Update(t *testing.T) {
 		{
 			name: "update error",
 			setup: func() {
+				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().
-					Update(ctx, update).
+					Update(ctx, mockTx, update).
 					Return(entities.Like{}, errs.NewUnexpectedBehaviorError("d 2"))
+				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -282,6 +318,7 @@ func TestLikeUseCase_Update(t *testing.T) {
 			i := &LikeUseCase{
 				likeService:       tt.fields.likeService,
 				likeEventProducer: tt.fields.likeEventProducer,
+				dtxManager:        tt.fields.dtxManager,
 				logger:            tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update)
@@ -297,11 +334,15 @@ func TestLikeUseCase_Delete(t *testing.T) {
 	mockLikeService := NewMocklikeService(ctrl)
 	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
+	mockDtxManager := NewMockdtxManager(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	like := entities.NewMockLike(t)
 	type fields struct {
 		likeService       likeService
 		likeEventProducer likeEventProducer
+		dtxManager        dtxManager
 		logger            logger
 	}
 	type args struct {
@@ -318,14 +359,17 @@ func TestLikeUseCase_Delete(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
+				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().
-					Delete(ctx, like.ID).
+					Delete(ctx, mockTx, like.ID).
 					Return(nil)
-				mocklikeEventProducer.EXPECT().Deleted(ctx, like.ID).Return(nil)
+				mocklikeEventProducer.EXPECT().Deleted(ctx, mockTx, like.ID).Return(nil)
+				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -337,13 +381,16 @@ func TestLikeUseCase_Delete(t *testing.T) {
 		{
 			name: "delete error",
 			setup: func() {
+				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().
-					Delete(ctx, like.ID).
+					Delete(ctx, mockTx, like.ID).
 					Return(errs.NewUnexpectedBehaviorError("d 2"))
+				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -359,6 +406,7 @@ func TestLikeUseCase_Delete(t *testing.T) {
 			i := &LikeUseCase{
 				likeService:       tt.fields.likeService,
 				likeEventProducer: tt.fields.likeEventProducer,
+				dtxManager:        tt.fields.dtxManager,
 				logger:            tt.fields.logger,
 			}
 			err := i.Delete(tt.args.ctx, tt.args.id)
@@ -373,6 +421,7 @@ func TestLikeUseCase_List(t *testing.T) {
 	mockLikeService := NewMocklikeService(ctrl)
 	mocklikeEventProducer := NewMocklikeEventProducer(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockDtxManager := NewMockdtxManager(ctrl)
 	ctx := context.Background()
 	filter := entities.NewMockLikeFilter(t)
 	count := faker.New().UInt64Between(2, 20)
@@ -383,6 +432,7 @@ func TestLikeUseCase_List(t *testing.T) {
 	type fields struct {
 		likeService       likeService
 		likeEventProducer likeEventProducer
+		dtxManager        dtxManager
 		logger            logger
 	}
 	type args struct {
@@ -408,6 +458,7 @@ func TestLikeUseCase_List(t *testing.T) {
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -428,6 +479,7 @@ func TestLikeUseCase_List(t *testing.T) {
 			fields: fields{
 				likeService:       mockLikeService,
 				likeEventProducer: mocklikeEventProducer,
+				dtxManager:        mockDtxManager,
 				logger:            mockLogger,
 			},
 			args: args{
@@ -445,6 +497,7 @@ func TestLikeUseCase_List(t *testing.T) {
 			i := &LikeUseCase{
 				likeService:       tt.fields.likeService,
 				likeEventProducer: tt.fields.likeEventProducer,
+				dtxManager:        tt.fields.dtxManager,
 				logger:            tt.fields.logger,
 			}
 			got, got1, err := i.List(tt.args.ctx, tt.args.filter)

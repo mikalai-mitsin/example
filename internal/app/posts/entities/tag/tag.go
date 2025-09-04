@@ -34,7 +34,7 @@ func (m *Tag) Validate() error {
 type TagOrdering string
 
 func (o TagOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(TagOrderingCreatedAtASC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingPostIdASC.String(), TagOrderingPostIdDESC.String(), TagOrderingValueASC.String(), TagOrderingValueDESC.String(), TagOrderingIdASC.String(), TagOrderingIdDESC.String(), TagOrderingCreatedAtDESC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(TagOrderingIdASC.String(), TagOrderingCreatedAtASC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingPostIdASC.String(), TagOrderingPostIdDESC.String(), TagOrderingValueASC.String(), TagOrderingIdDESC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingValueDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -43,16 +43,16 @@ func (o TagOrdering) String() string {
 	return string(o)
 }
 
-const TagOrderingIdASC TagOrdering = "id"
-const TagOrderingCreatedAtASC TagOrdering = "created_at"
-const TagOrderingCreatedAtDESC TagOrdering = "-created_at"
-const TagOrderingUpdatedAtDESC TagOrdering = "-updated_at"
 const TagOrderingPostIdASC TagOrdering = "post_id"
+const TagOrderingIdASC TagOrdering = "id"
+const TagOrderingIdDESC TagOrdering = "-id"
+const TagOrderingCreatedAtASC TagOrdering = "created_at"
+const TagOrderingUpdatedAtASC TagOrdering = "updated_at"
 const TagOrderingPostIdDESC TagOrdering = "-post_id"
 const TagOrderingValueASC TagOrdering = "value"
-const TagOrderingIdDESC TagOrdering = "-id"
-const TagOrderingUpdatedAtASC TagOrdering = "updated_at"
 const TagOrderingValueDESC TagOrdering = "-value"
+const TagOrderingCreatedAtDESC TagOrdering = "-created_at"
+const TagOrderingUpdatedAtDESC TagOrdering = "-updated_at"
 
 type TagFilter struct {
 	PageSize   *uint64       `json:"page_size"`

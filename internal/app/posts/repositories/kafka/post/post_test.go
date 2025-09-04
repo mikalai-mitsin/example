@@ -9,6 +9,7 @@ import (
 
 	"github.com/IBM/sarama"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -67,6 +68,7 @@ func TestPostEventProducer_Created(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
+		dtx  dtx.TX
 		post entities.Post
 	}
 	tests := []struct {
@@ -124,7 +126,7 @@ func TestPostEventProducer_Created(t *testing.T) {
 				producer: tt.fields.producer,
 				logger:   tt.fields.logger,
 			}
-			err := p.Created(tt.args.ctx, tt.args.post)
+			err := p.Created(tt.args.ctx, tt.args.dtx, tt.args.post)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -143,6 +145,7 @@ func TestPostEventProducer_Updated(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
+		dtx  dtx.TX
 		post entities.Post
 	}
 	tests := []struct {
@@ -200,7 +203,7 @@ func TestPostEventProducer_Updated(t *testing.T) {
 				producer: tt.fields.producer,
 				logger:   tt.fields.logger,
 			}
-			err := p.Updated(tt.args.ctx, tt.args.post)
+			err := p.Updated(tt.args.ctx, tt.args.dtx, tt.args.post)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -219,6 +222,7 @@ func TestPostEventProducer_Deleted(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		dtx dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -274,7 +278,7 @@ func TestPostEventProducer_Deleted(t *testing.T) {
 				producer: tt.fields.producer,
 				logger:   tt.fields.logger,
 			}
-			err := p.Deleted(tt.args.ctx, tt.args.id)
+			err := p.Deleted(tt.args.ctx, tt.args.dtx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

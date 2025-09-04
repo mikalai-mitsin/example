@@ -32,7 +32,7 @@ func (m *Post) Validate() error {
 type PostOrdering string
 
 func (o PostOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(PostOrderingIdDESC.String(), PostOrderingCreatedAtASC.String(), PostOrderingCreatedAtDESC.String(), PostOrderingUpdatedAtASC.String(), PostOrderingUpdatedAtDESC.String(), PostOrderingBodyASC.String(), PostOrderingBodyDESC.String(), PostOrderingIdASC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(PostOrderingUpdatedAtASC.String(), PostOrderingUpdatedAtDESC.String(), PostOrderingBodyASC.String(), PostOrderingBodyDESC.String(), PostOrderingIdASC.String(), PostOrderingIdDESC.String(), PostOrderingCreatedAtASC.String(), PostOrderingCreatedAtDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -41,6 +41,7 @@ func (o PostOrdering) String() string {
 	return string(o)
 }
 
+const PostOrderingUpdatedAtASC PostOrdering = "updated_at"
 const PostOrderingUpdatedAtDESC PostOrdering = "-updated_at"
 const PostOrderingBodyASC PostOrdering = "body"
 const PostOrderingBodyDESC PostOrdering = "-body"
@@ -48,7 +49,6 @@ const PostOrderingIdASC PostOrdering = "id"
 const PostOrderingIdDESC PostOrdering = "-id"
 const PostOrderingCreatedAtASC PostOrdering = "created_at"
 const PostOrderingCreatedAtDESC PostOrdering = "-created_at"
-const PostOrderingUpdatedAtASC PostOrdering = "updated_at"
 
 type PostFilter struct {
 	PageSize   *uint64        `json:"page_size"`

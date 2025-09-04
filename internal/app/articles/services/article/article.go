@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -30,6 +31,7 @@ func NewArticleService(
 
 func (u *ArticleService) Create(
 	ctx context.Context,
+	tx dtx.TX,
 	create entities.ArticleCreate,
 ) (entities.Article, error) {
 	if err := create.Validate(); err != nil {
@@ -45,7 +47,7 @@ func (u *ArticleService) Create(
 		Body:        create.Body,
 		IsPublished: create.IsPublished,
 	}
-	if err := u.articleRepository.Create(ctx, article); err != nil {
+	if err := u.articleRepository.Create(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	return article, nil
@@ -78,6 +80,7 @@ func (u *ArticleService) List(
 
 func (u *ArticleService) Update(
 	ctx context.Context,
+	tx dtx.TX,
 	update entities.ArticleUpdate,
 ) (entities.Article, error) {
 	if err := update.Validate(); err != nil {
@@ -102,13 +105,13 @@ func (u *ArticleService) Update(
 		}
 	}
 	article.UpdatedAt = u.clock.Now().UTC()
-	if err := u.articleRepository.Update(ctx, article); err != nil {
+	if err := u.articleRepository.Update(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	return article, nil
 }
-func (u *ArticleService) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := u.articleRepository.Delete(ctx, id); err != nil {
+func (u *ArticleService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := u.articleRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

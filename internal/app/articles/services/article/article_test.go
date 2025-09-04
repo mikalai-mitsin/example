@@ -7,6 +7,7 @@ import (
 
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
@@ -245,6 +246,7 @@ func TestArticleService_Create(t *testing.T) {
 	mockClock := NewMockclock(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockUUID := NewMockuuidGenerator(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	create := entities.NewMockArticleCreate(t)
 	now := time.Now().UTC()
@@ -256,6 +258,7 @@ func TestArticleService_Create(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		create entities.ArticleCreate
 	}
 	tests := []struct {
@@ -276,6 +279,7 @@ func TestArticleService_Create(t *testing.T) {
 				mockArticleRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Article{
 							ID:          uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 							Title:       create.Title,
@@ -296,6 +300,7 @@ func TestArticleService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want: entities.Article{
@@ -319,6 +324,7 @@ func TestArticleService_Create(t *testing.T) {
 				mockArticleRepository.EXPECT().
 					Create(
 						ctx,
+						mockTx,
 						entities.Article{
 							ID:          uuid.MustParse("00000000-0000-0000-0000-000000000002"),
 							Title:       create.Title,
@@ -339,6 +345,7 @@ func TestArticleService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: create,
 			},
 			want:    entities.Article{},
@@ -356,6 +363,7 @@ func TestArticleService_Create(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				create: entities.ArticleCreate{},
 			},
 			want: entities.Article{},
@@ -375,7 +383,7 @@ func TestArticleService_Create(t *testing.T) {
 				logger:            tt.fields.logger,
 				uuid:              tt.fields.uuid,
 			}
-			got, err := u.Create(tt.args.ctx, tt.args.create)
+			got, err := u.Create(tt.args.ctx, tt.args.tx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -390,6 +398,7 @@ func TestArticleService_Update(t *testing.T) {
 	ctx := context.Background()
 	article := entities.NewMockArticle(t)
 	mockClock := NewMockclock(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	update := entities.NewMockArticleUpdate(t)
 	now := time.Now().UTC()
 	updatedArticle := entities.Article{
@@ -409,6 +418,7 @@ func TestArticleService_Update(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
+		tx     dtx.TX
 		update entities.ArticleUpdate
 	}
 	tests := []struct {
@@ -426,7 +436,7 @@ func TestArticleService_Update(t *testing.T) {
 				mockArticleRepository.EXPECT().
 					Get(ctx, update.ID).Return(article, nil)
 				mockArticleRepository.EXPECT().
-					Update(ctx, updatedArticle).Return(nil)
+					Update(ctx, mockTx, updatedArticle).Return(nil)
 			},
 			fields: fields{
 				articleRepository: mockArticleRepository,
@@ -435,6 +445,7 @@ func TestArticleService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    updatedArticle,
@@ -448,7 +459,7 @@ func TestArticleService_Update(t *testing.T) {
 					Get(ctx, update.ID).
 					Return(article, nil)
 				mockArticleRepository.EXPECT().
-					Update(ctx, updatedArticle).
+					Update(ctx, mockTx, updatedArticle).
 					Return(errs.NewUnexpectedBehaviorError("test error"))
 			},
 			fields: fields{
@@ -458,6 +469,7 @@ func TestArticleService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Article{},
@@ -477,6 +489,7 @@ func TestArticleService_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:    ctx,
+				tx:     mockTx,
 				update: update,
 			},
 			want:    entities.Article{},
@@ -491,7 +504,7 @@ func TestArticleService_Update(t *testing.T) {
 				clock:             tt.fields.clock,
 				logger:            tt.fields.logger,
 			}
-			got, err := u.Update(tt.args.ctx, tt.args.update)
+			got, err := u.Update(tt.args.ctx, tt.args.tx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
@@ -503,6 +516,7 @@ func TestArticleService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockArticleRepository := NewMockarticleRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
 	article := entities.NewMockArticle(t)
 	type fields struct {
@@ -511,6 +525,7 @@ func TestArticleService_Delete(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
+		tx  dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -524,7 +539,7 @@ func TestArticleService_Delete(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mockArticleRepository.EXPECT().
-					Delete(ctx, article.ID).
+					Delete(ctx, mockTx, article.ID).
 					Return(nil)
 			},
 			fields: fields{
@@ -533,6 +548,7 @@ func TestArticleService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  article.ID,
 			},
 			wantErr: nil,
@@ -541,7 +557,7 @@ func TestArticleService_Delete(t *testing.T) {
 			name: "Article not found",
 			setup: func() {
 				mockArticleRepository.EXPECT().
-					Delete(ctx, article.ID).
+					Delete(ctx, mockTx, article.ID).
 					Return(errs.NewEntityNotFoundError())
 			},
 			fields: fields{
@@ -550,6 +566,7 @@ func TestArticleService_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
+				tx:  mockTx,
 				id:  article.ID,
 			},
 			wantErr: errs.NewEntityNotFoundError(),
@@ -562,7 +579,7 @@ func TestArticleService_Delete(t *testing.T) {
 				articleRepository: tt.fields.articleRepository,
 				logger:            tt.fields.logger,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.id)
+			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
