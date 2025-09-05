@@ -29,10 +29,12 @@ func NewHandler(topic string, groupID string, handlerFunc HandlerFunc) Handler {
 }
 
 type Consumer struct {
-	config   *Config
-	client   sarama.Client
-	handlers map[string]Handler
-	logger   log.Logger
+	config     *Config
+	client     sarama.Client
+	handlers   map[string]Handler
+	logger     log.Logger
+	cancel     context.CancelFunc
+	errorGroup *errgroup.Group
 }
 
 func NewConsumer(cfg *Config, logger log.Logger) (*Consumer, error) {
@@ -63,23 +65,35 @@ func (c *Consumer) Start(ctx context.Context) error {
 		handler.groupHandler = NewGroupHandler(handler.HandlerFunc, logger)
 		c.handlers[id] = handler
 	}
-	errorgroup, ctx := errgroup.WithContext(ctx)
+	consumeCtx, cancel := context.WithCancel(context.Background())
+	c.cancel = cancel
+	errorGroup, consumeCtx := errgroup.WithContext(consumeCtx)
+	c.errorGroup = errorGroup
 	for _, handler := range c.handlers {
-		errorgroup.Go(func() error {
-			if err := handler.group.Consume(context.Background(), []string{handler.Topic}, handler.groupHandler); err != nil {
-				logger.Error(
-					"consume error",
-					log.Error(err),
-					log.String("group", handler.GroupID),
-					log.String("topic", handler.Topic),
-				)
+		errorGroup.Go(func() error {
+			for {
+				if err := handler.group.Consume(consumeCtx, []string{handler.Topic}, handler.groupHandler); err != nil {
+					logger.Error(
+						"consume error",
+						log.Error(err),
+						log.String("group", handler.GroupID),
+						log.String("topic", handler.Topic),
+					)
+				}
+				if err := consumeCtx.Err(); err != nil {
+					return err
+				}
 			}
-			return nil
 		})
 	}
-	return errorgroup.Wait()
+	return nil
 }
 func (c *Consumer) Stop(ctx context.Context) error {
+	c.cancel()
+	err := c.errorGroup.Wait()
+	if err != nil {
+		c.logger.Error("error group wait", log.Error(err))
+	}
 	for _, handler := range c.handlers {
 		if err := handler.group.Close(); err != nil {
 			return err
