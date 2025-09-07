@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	like "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -47,10 +47,10 @@ func (m *MocklikeService) EXPECT() *MocklikeServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MocklikeService) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.LikeCreate) (entities.Like, error) {
+func (m *MocklikeService) Create(arg0 context.Context, arg1 dtx.TX, arg2 like.LikeCreate) (like.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
-	ret0, _ := ret[0].(entities.Like)
+	ret0, _ := ret[0].(like.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -76,10 +76,10 @@ func (mr *MocklikeServiceMockRecorder) Delete(arg0, arg1, arg2 any) *gomock.Call
 }
 
 // Get mocks base method.
-func (m *MocklikeService) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Like, error) {
+func (m *MocklikeService) Get(arg0 context.Context, arg1 uuid.UUID) (like.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(entities.Like)
+	ret0, _ := ret[0].(like.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -91,10 +91,10 @@ func (mr *MocklikeServiceMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MocklikeService) List(arg0 context.Context, arg1 entities.LikeFilter) ([]entities.Like, uint64, error) {
+func (m *MocklikeService) List(arg0 context.Context, arg1 like.LikeFilter) ([]like.Like, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entities.Like)
+	ret0, _ := ret[0].([]like.Like)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -107,10 +107,10 @@ func (mr *MocklikeServiceMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MocklikeService) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.LikeUpdate) (entities.Like, error) {
+func (m *MocklikeService) Update(arg0 context.Context, arg1 dtx.TX, arg2 like.LikeUpdate) (like.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
-	ret0, _ := ret[0].(entities.Like)
+	ret0, _ := ret[0].(like.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -146,7 +146,7 @@ func (m *MocklikeEventService) EXPECT() *MocklikeEventServiceMockRecorder {
 }
 
 // Created mocks base method.
-func (m *MocklikeEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 entities.Like) error {
+func (m *MocklikeEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 like.Like) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Created", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -174,7 +174,7 @@ func (mr *MocklikeEventServiceMockRecorder) Deleted(arg0, arg1, arg2 any) *gomoc
 }
 
 // Updated mocks base method.
-func (m *MocklikeEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 entities.Like) error {
+func (m *MocklikeEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 like.Like) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Updated", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

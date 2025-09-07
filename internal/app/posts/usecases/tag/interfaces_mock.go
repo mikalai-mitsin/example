@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
+	tag "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -47,10 +47,10 @@ func (m *MocktagService) EXPECT() *MocktagServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MocktagService) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.TagCreate) (entities.Tag, error) {
+func (m *MocktagService) Create(arg0 context.Context, arg1 dtx.TX, arg2 tag.TagCreate) (tag.Tag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
-	ret0, _ := ret[0].(entities.Tag)
+	ret0, _ := ret[0].(tag.Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -76,10 +76,10 @@ func (mr *MocktagServiceMockRecorder) Delete(arg0, arg1, arg2 any) *gomock.Call 
 }
 
 // Get mocks base method.
-func (m *MocktagService) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Tag, error) {
+func (m *MocktagService) Get(arg0 context.Context, arg1 uuid.UUID) (tag.Tag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(entities.Tag)
+	ret0, _ := ret[0].(tag.Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -91,10 +91,10 @@ func (mr *MocktagServiceMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MocktagService) List(arg0 context.Context, arg1 entities.TagFilter) ([]entities.Tag, uint64, error) {
+func (m *MocktagService) List(arg0 context.Context, arg1 tag.TagFilter) ([]tag.Tag, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entities.Tag)
+	ret0, _ := ret[0].([]tag.Tag)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -107,10 +107,10 @@ func (mr *MocktagServiceMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MocktagService) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.TagUpdate) (entities.Tag, error) {
+func (m *MocktagService) Update(arg0 context.Context, arg1 dtx.TX, arg2 tag.TagUpdate) (tag.Tag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
-	ret0, _ := ret[0].(entities.Tag)
+	ret0, _ := ret[0].(tag.Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -146,7 +146,7 @@ func (m *MocktagEventService) EXPECT() *MocktagEventServiceMockRecorder {
 }
 
 // Created mocks base method.
-func (m *MocktagEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 entities.Tag) error {
+func (m *MocktagEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 tag.Tag) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Created", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -174,7 +174,7 @@ func (mr *MocktagEventServiceMockRecorder) Deleted(arg0, arg1, arg2 any) *gomock
 }
 
 // Updated mocks base method.
-func (m *MocktagEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 entities.Tag) error {
+func (m *MocktagEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 tag.Tag) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Updated", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

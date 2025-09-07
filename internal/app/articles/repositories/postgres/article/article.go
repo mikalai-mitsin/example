@@ -28,17 +28,17 @@ var orderByMap = map[entities.ArticleOrdering]string{
 	entities.ArticleOrderingIdDESC:          "articles.id DESC",
 	entities.ArticleOrderingCreatedAtASC:    "articles.created_at ASC",
 	entities.ArticleOrderingUpdatedAtASC:    "articles.updated_at ASC",
-	entities.ArticleOrderingTitleASC:        "articles.title ASC",
-	entities.ArticleOrderingTitleDESC:       "articles.title DESC",
+	entities.ArticleOrderingUpdatedAtDESC:   "articles.updated_at DESC",
 	entities.ArticleOrderingSubtitleDESC:    "articles.subtitle DESC",
 	entities.ArticleOrderingBodyDESC:        "articles.body DESC",
-	entities.ArticleOrderingIsPublishedDESC: "articles.is_published DESC",
+	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
 	entities.ArticleOrderingIdASC:           "articles.id ASC",
 	entities.ArticleOrderingCreatedAtDESC:   "articles.created_at DESC",
-	entities.ArticleOrderingUpdatedAtDESC:   "articles.updated_at DESC",
+	entities.ArticleOrderingTitleASC:        "articles.title ASC",
+	entities.ArticleOrderingTitleDESC:       "articles.title DESC",
 	entities.ArticleOrderingSubtitleASC:     "articles.subtitle ASC",
 	entities.ArticleOrderingBodyASC:         "articles.body ASC",
-	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
+	entities.ArticleOrderingIsPublishedDESC: "articles.is_published DESC",
 }
 
 func encodeOrderBy(orderBy []entities.ArticleOrdering) []string {

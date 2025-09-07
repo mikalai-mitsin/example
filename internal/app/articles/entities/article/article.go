@@ -38,7 +38,7 @@ func (m *Article) Validate() error {
 type ArticleOrdering string
 
 func (o ArticleOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(ArticleOrderingBodyDESC.String(), ArticleOrderingUpdatedAtASC.String(), ArticleOrderingUpdatedAtDESC.String(), ArticleOrderingTitleASC.String(), ArticleOrderingTitleDESC.String(), ArticleOrderingIsPublishedASC.String(), ArticleOrderingIsPublishedDESC.String(), ArticleOrderingIdASC.String(), ArticleOrderingIdDESC.String(), ArticleOrderingCreatedAtASC.String(), ArticleOrderingCreatedAtDESC.String(), ArticleOrderingSubtitleASC.String(), ArticleOrderingSubtitleDESC.String(), ArticleOrderingBodyASC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(ArticleOrderingIsPublishedDESC.String(), ArticleOrderingIdASC.String(), ArticleOrderingIdDESC.String(), ArticleOrderingCreatedAtDESC.String(), ArticleOrderingUpdatedAtDESC.String(), ArticleOrderingSubtitleDESC.String(), ArticleOrderingBodyASC.String(), ArticleOrderingIsPublishedASC.String(), ArticleOrderingCreatedAtASC.String(), ArticleOrderingUpdatedAtASC.String(), ArticleOrderingTitleASC.String(), ArticleOrderingTitleDESC.String(), ArticleOrderingSubtitleASC.String(), ArticleOrderingBodyDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -47,18 +47,18 @@ func (o ArticleOrdering) String() string {
 	return string(o)
 }
 
-const ArticleOrderingSubtitleASC ArticleOrdering = "subtitle"
+const ArticleOrderingTitleDESC ArticleOrdering = "-title"
 const ArticleOrderingBodyASC ArticleOrdering = "body"
 const ArticleOrderingBodyDESC ArticleOrdering = "-body"
+const ArticleOrderingIdASC ArticleOrdering = "id"
+const ArticleOrderingIdDESC ArticleOrdering = "-id"
+const ArticleOrderingCreatedAtDESC ArticleOrdering = "-created_at"
+const ArticleOrderingSubtitleASC ArticleOrdering = "subtitle"
+const ArticleOrderingSubtitleDESC ArticleOrdering = "-subtitle"
 const ArticleOrderingIsPublishedASC ArticleOrdering = "is_published"
 const ArticleOrderingIsPublishedDESC ArticleOrdering = "-is_published"
-const ArticleOrderingIdASC ArticleOrdering = "id"
 const ArticleOrderingCreatedAtASC ArticleOrdering = "created_at"
-const ArticleOrderingCreatedAtDESC ArticleOrdering = "-created_at"
 const ArticleOrderingUpdatedAtASC ArticleOrdering = "updated_at"
-const ArticleOrderingTitleDESC ArticleOrdering = "-title"
-const ArticleOrderingSubtitleDESC ArticleOrdering = "-subtitle"
-const ArticleOrderingIdDESC ArticleOrdering = "-id"
 const ArticleOrderingUpdatedAtDESC ArticleOrdering = "-updated_at"
 const ArticleOrderingTitleASC ArticleOrdering = "title"
 

@@ -225,6 +225,10 @@ paths:
     get:
       parameters:
       - in: query
+        name: page_size
+        schema:
+          type: integer
+      - in: query
         name: page_number
         schema:
           type: integer
@@ -239,10 +243,6 @@ paths:
         name: search
         schema:
           type: string
-      - in: query
-        name: page_size
-        schema:
-          type: integer
       requestBody:
         content:
           application/json:

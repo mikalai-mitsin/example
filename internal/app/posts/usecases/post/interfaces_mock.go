@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	post "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -47,10 +47,10 @@ func (m *MockpostService) EXPECT() *MockpostServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockpostService) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.PostCreate) (entities.Post, error) {
+func (m *MockpostService) Create(arg0 context.Context, arg1 dtx.TX, arg2 post.PostCreate) (post.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
-	ret0, _ := ret[0].(entities.Post)
+	ret0, _ := ret[0].(post.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -76,10 +76,10 @@ func (mr *MockpostServiceMockRecorder) Delete(arg0, arg1, arg2 any) *gomock.Call
 }
 
 // Get mocks base method.
-func (m *MockpostService) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Post, error) {
+func (m *MockpostService) Get(arg0 context.Context, arg1 uuid.UUID) (post.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(entities.Post)
+	ret0, _ := ret[0].(post.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -91,10 +91,10 @@ func (mr *MockpostServiceMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockpostService) List(arg0 context.Context, arg1 entities.PostFilter) ([]entities.Post, uint64, error) {
+func (m *MockpostService) List(arg0 context.Context, arg1 post.PostFilter) ([]post.Post, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entities.Post)
+	ret0, _ := ret[0].([]post.Post)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -107,10 +107,10 @@ func (mr *MockpostServiceMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockpostService) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.PostUpdate) (entities.Post, error) {
+func (m *MockpostService) Update(arg0 context.Context, arg1 dtx.TX, arg2 post.PostUpdate) (post.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
-	ret0, _ := ret[0].(entities.Post)
+	ret0, _ := ret[0].(post.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -146,7 +146,7 @@ func (m *MockpostEventService) EXPECT() *MockpostEventServiceMockRecorder {
 }
 
 // Created mocks base method.
-func (m *MockpostEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 entities.Post) error {
+func (m *MockpostEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 post.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Created", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -174,7 +174,7 @@ func (mr *MockpostEventServiceMockRecorder) Deleted(arg0, arg1, arg2 any) *gomoc
 }
 
 // Updated mocks base method.
-func (m *MockpostEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 entities.Post) error {
+func (m *MockpostEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 post.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Updated", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

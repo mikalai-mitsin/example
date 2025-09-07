@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	article "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -48,7 +48,7 @@ func (m *MockarticleRepository) EXPECT() *MockarticleRepositoryMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockarticleRepository) Count(arg0 context.Context, arg1 entities.ArticleFilter) (uint64, error) {
+func (m *MockarticleRepository) Count(arg0 context.Context, arg1 article.ArticleFilter) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -63,7 +63,7 @@ func (mr *MockarticleRepositoryMockRecorder) Count(arg0, arg1 any) *gomock.Call 
 }
 
 // Create mocks base method.
-func (m *MockarticleRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.Article) error {
+func (m *MockarticleRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 article.Article) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -91,10 +91,10 @@ func (mr *MockarticleRepositoryMockRecorder) Delete(arg0, arg1, arg2 any) *gomoc
 }
 
 // Get mocks base method.
-func (m *MockarticleRepository) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Article, error) {
+func (m *MockarticleRepository) Get(arg0 context.Context, arg1 uuid.UUID) (article.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(entities.Article)
+	ret0, _ := ret[0].(article.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -106,10 +106,10 @@ func (mr *MockarticleRepositoryMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockarticleRepository) List(arg0 context.Context, arg1 entities.ArticleFilter) ([]entities.Article, error) {
+func (m *MockarticleRepository) List(arg0 context.Context, arg1 article.ArticleFilter) ([]article.Article, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entities.Article)
+	ret0, _ := ret[0].([]article.Article)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -121,7 +121,7 @@ func (mr *MockarticleRepositoryMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockarticleRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.Article) error {
+func (m *MockarticleRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 article.Article) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -159,7 +159,7 @@ func (m *MockarticleEventProducer) EXPECT() *MockarticleEventProducerMockRecorde
 }
 
 // Created mocks base method.
-func (m *MockarticleEventProducer) Created(arg0 context.Context, arg1 entities.Article) error {
+func (m *MockarticleEventProducer) Created(arg0 context.Context, arg1 article.Article) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Created", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -187,7 +187,7 @@ func (mr *MockarticleEventProducerMockRecorder) Deleted(arg0, arg1 any) *gomock.
 }
 
 // Updated mocks base method.
-func (m *MockarticleEventProducer) Updated(arg0 context.Context, arg1 entities.Article) error {
+func (m *MockarticleEventProducer) Updated(arg0 context.Context, arg1 article.Article) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Updated", arg0, arg1)
 	ret0, _ := ret[0].(error)

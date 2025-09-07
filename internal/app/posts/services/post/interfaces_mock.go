@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	post "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -48,7 +48,7 @@ func (m *MockpostRepository) EXPECT() *MockpostRepositoryMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockpostRepository) Count(arg0 context.Context, arg1 entities.PostFilter) (uint64, error) {
+func (m *MockpostRepository) Count(arg0 context.Context, arg1 post.PostFilter) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -63,7 +63,7 @@ func (mr *MockpostRepositoryMockRecorder) Count(arg0, arg1 any) *gomock.Call {
 }
 
 // Create mocks base method.
-func (m *MockpostRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.Post) error {
+func (m *MockpostRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 post.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -91,10 +91,10 @@ func (mr *MockpostRepositoryMockRecorder) Delete(arg0, arg1, arg2 any) *gomock.C
 }
 
 // Get mocks base method.
-func (m *MockpostRepository) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Post, error) {
+func (m *MockpostRepository) Get(arg0 context.Context, arg1 uuid.UUID) (post.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(entities.Post)
+	ret0, _ := ret[0].(post.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -106,10 +106,10 @@ func (mr *MockpostRepositoryMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockpostRepository) List(arg0 context.Context, arg1 entities.PostFilter) ([]entities.Post, error) {
+func (m *MockpostRepository) List(arg0 context.Context, arg1 post.PostFilter) ([]post.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entities.Post)
+	ret0, _ := ret[0].([]post.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -121,7 +121,7 @@ func (mr *MockpostRepositoryMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockpostRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.Post) error {
+func (m *MockpostRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 post.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -159,7 +159,7 @@ func (m *MockpostEventProducer) EXPECT() *MockpostEventProducerMockRecorder {
 }
 
 // Created mocks base method.
-func (m *MockpostEventProducer) Created(arg0 context.Context, arg1 entities.Post) error {
+func (m *MockpostEventProducer) Created(arg0 context.Context, arg1 post.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Created", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -187,7 +187,7 @@ func (mr *MockpostEventProducerMockRecorder) Deleted(arg0, arg1 any) *gomock.Cal
 }
 
 // Updated mocks base method.
-func (m *MockpostEventProducer) Updated(arg0 context.Context, arg1 entities.Post) error {
+func (m *MockpostEventProducer) Updated(arg0 context.Context, arg1 post.Post) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Updated", arg0, arg1)
 	ret0, _ := ret[0].(error)
