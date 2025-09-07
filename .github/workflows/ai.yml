@@ -32,9 +32,13 @@ jobs:
           git fetch origin master
           git diff origin/master...HEAD > diff.patch
 
-          # Создаем временный Python-скрипт для AI-ревью
-          echo 'import os, openai
+          # Создаем Python-скрипт через HEREDOC
+          cat <<'PYTHON' > ai_review.py
+  import os
+  import openai
+  
   code = open("diff.patch").read()
+  
   prompt = f"""
   You are an expert Go developer.
   Review the following Go code. Suggest improvements in style, structure, and potential bugs.
@@ -43,13 +47,15 @@ Here is the code:
 
   {code}
   """
+
 response = openai.ChatCompletion.create(
     model="gpt-4",
 messages=[{"role":"user","content": prompt}],
   temperature=0
   )
+  
   print(response["choices"][0]["message"]["content"])
-  ' > ai_review.py
+  PYTHON
   
   # Запускаем AI-ревью
   python3 ai_review.py
