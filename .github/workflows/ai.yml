@@ -1,0 +1,61 @@
+name: AI Code Review
+
+on:
+  pull_request:
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install openai reviewdog
+
+      - name: Run AI Review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Получаем diff изменений в PR
+          git fetch origin main
+          CODE=$(git diff origin/main...HEAD)
+
+          # Python-скрипт для запроса к ChatGPT
+          python3 <<EOF
+  import os, openai, sys
+  
+  code = os.environ['CODE']
+  
+  prompt = f"""
+  You are an expert Go developer.
+  Review the following Go code. Suggest improvements in style, structure, and potential bugs.
+Return output in a format suitable for Reviewdog (one line per issue):
+
+  {code}
+  """
+
+response = openai.ChatCompletion.create(
+    model="gpt-4",
+messages=[{"role":"user","content": prompt}],
+  temperature=0
+  )
+  
+  # Печатаем ответ, чтобы Reviewdog мог его обработать
+  print(response['choices'][0]['message']['content'])
+  EOF
+
+# Pipe output в Reviewdog
+# reviewdog ожидает формат: "file:line:message"
+# Если нужно, можно добавить парсер для превращения ответа AI в этот формат
+# Для простого варианта выводим как комментарий к PR
+# Пример:
+# echo "$AI_OUTPUT" | reviewdog -f=rdjson -name="AI Review" -reporter=github-pr-check
