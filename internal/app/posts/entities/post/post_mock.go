@@ -25,14 +25,14 @@ func NewMockPostFilter(t *testing.T) PostFilter {
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
 		OrderBy: []PostOrdering{
+			PostOrderingUpdatedAtASC,
+			PostOrderingUpdatedAtDESC,
 			PostOrderingBodyASC,
 			PostOrderingBodyDESC,
 			PostOrderingIdASC,
 			PostOrderingIdDESC,
 			PostOrderingCreatedAtASC,
 			PostOrderingCreatedAtDESC,
-			PostOrderingUpdatedAtASC,
-			PostOrderingUpdatedAtDESC,
 		},
 	}
 }
