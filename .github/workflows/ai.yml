@@ -2,8 +2,9 @@ name: AI Code Review
 
 on:
   push:
-    branches:
-      - '**'
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
 
 jobs:
   ai-review:
@@ -27,16 +28,13 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Получаем diff изменений в PR
-          git fetch origin main
-          CODE=$(git diff origin/main...HEAD)
+          # Получаем diff изменений относительно master
+          git fetch origin master
+          git diff origin/master...HEAD > diff.patch
 
-          # Запуск Python-скрипта
-          python3 - <<PYTHON
-  import os, openai
-  
-  code = os.environ['CODE']
-  
+          # Создаем временный Python-скрипт для AI-ревью
+          echo 'import os, openai
+  code = open("diff.patch").read()
   prompt = f"""
   You are an expert Go developer.
   Review the following Go code. Suggest improvements in style, structure, and potential bugs.
@@ -45,12 +43,13 @@ Here is the code:
 
   {code}
   """
-
 response = openai.ChatCompletion.create(
     model="gpt-4",
 messages=[{"role":"user","content": prompt}],
   temperature=0
   )
+  print(response["choices"][0]["message"]["content"])
+  ' > ai_review.py
   
-  print(response['choices'][0]['message']['content'])
-  PYTHON
+  # Запускаем AI-ревью
+  python3 ai_review.py
