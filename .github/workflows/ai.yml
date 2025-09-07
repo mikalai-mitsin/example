@@ -31,16 +31,17 @@ jobs:
           git fetch origin main
           CODE=$(git diff origin/main...HEAD)
 
-          # Python-скрипт для запроса к ChatGPT
-          python3 <<EOF
-  import os, openai, sys
+          # Запуск Python-скрипта
+          python3 - << 'EOF'
+  import os, openai
   
   code = os.environ['CODE']
   
   prompt = f"""
   You are an expert Go developer.
   Review the following Go code. Suggest improvements in style, structure, and potential bugs.
-Return output in a format suitable for Reviewdog (one line per issue):
+Return each issue in the format: file:line:message
+Here is the code:
 
   {code}
   """
@@ -51,13 +52,5 @@ messages=[{"role":"user","content": prompt}],
   temperature=0
   )
   
-  # Печатаем ответ, чтобы Reviewdog мог его обработать
   print(response['choices'][0]['message']['content'])
   EOF
-
-# Pipe output в Reviewdog
-# reviewdog ожидает формат: "file:line:message"
-# Если нужно, можно добавить парсер для превращения ответа AI в этот формат
-# Для простого варианта выводим как комментарий к PR
-# Пример:
-# echo "$AI_OUTPUT" | reviewdog -f=rdjson -name="AI Review" -reporter=github-pr-check
