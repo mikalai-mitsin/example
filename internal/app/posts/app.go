@@ -11,12 +11,12 @@ import (
 	likeKafkaHandlers "github.com/mikalai-mitsin/example/internal/app/posts/handlers/kafka/like"
 	postKafkaHandlers "github.com/mikalai-mitsin/example/internal/app/posts/handlers/kafka/post"
 	tagKafkaHandlers "github.com/mikalai-mitsin/example/internal/app/posts/handlers/kafka/tag"
-	likeEvents "github.com/mikalai-mitsin/example/internal/app/posts/repositories/kafka/like"
-	postEvents "github.com/mikalai-mitsin/example/internal/app/posts/repositories/kafka/post"
-	tagEvents "github.com/mikalai-mitsin/example/internal/app/posts/repositories/kafka/tag"
-	likeRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/postgres/like"
-	postRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/postgres/post"
-	tagRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/postgres/tag"
+	likeKafkaRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/kafka/like"
+	postKafkaRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/kafka/post"
+	tagKafkaRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/kafka/tag"
+	likePostgresRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/postgres/like"
+	postPostgresRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/postgres/post"
+	tagPostgresRepositories "github.com/mikalai-mitsin/example/internal/app/posts/repositories/postgres/tag"
 	likeServices "github.com/mikalai-mitsin/example/internal/app/posts/services/like"
 	postServices "github.com/mikalai-mitsin/example/internal/app/posts/services/post"
 	tagServices "github.com/mikalai-mitsin/example/internal/app/posts/services/tag"
@@ -30,7 +30,6 @@ import (
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
-	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 )
 
 type App struct {
@@ -39,25 +38,28 @@ type App struct {
 	dtxManager        *dtx.Manager
 	logger            log.Logger
 	kafkaProducer     *kafka.Producer
-	postRepository    *postRepositories.PostRepository
+	postRepository    *postPostgresRepositories.PostRepository
 	postService       *postServices.PostService
 	postUseCase       *postUseCases.PostUseCase
 	httpPostHandler   *postHttpHandlers.PostHandler
-	postEventProducer *postEvents.PostEventProducer
+	postEventProducer *postKafkaRepositories.PostEventProducer
+	postEventService  *postServices.PostEventService
 	kafkaPostHandler  *postKafkaHandlers.PostHandler
 	grpcPostHandler   *postGrpcHandlers.PostServiceServer
-	tagRepository     *tagRepositories.TagRepository
+	tagRepository     *tagPostgresRepositories.TagRepository
 	tagService        *tagServices.TagService
 	tagUseCase        *tagUseCases.TagUseCase
 	httpTagHandler    *tagHttpHandlers.TagHandler
-	tagEventProducer  *tagEvents.TagEventProducer
+	tagEventProducer  *tagKafkaRepositories.TagEventProducer
+	tagEventService   *tagServices.TagEventService
 	kafkaTagHandler   *tagKafkaHandlers.TagHandler
 	grpcTagHandler    *tagGrpcHandlers.TagServiceServer
-	likeRepository    *likeRepositories.LikeRepository
+	likeRepository    *likePostgresRepositories.LikeRepository
 	likeService       *likeServices.LikeService
 	likeUseCase       *likeUseCases.LikeUseCase
 	httpLikeHandler   *likeHttpHandlers.LikeHandler
-	likeEventProducer *likeEvents.LikeEventProducer
+	likeEventProducer *likeKafkaRepositories.LikeEventProducer
+	likeEventService  *likeServices.LikeEventService
 	kafkaLikeHandler  *likeKafkaHandlers.LikeHandler
 	grpcLikeHandler   *likeGrpcHandlers.LikeServiceServer
 }
@@ -70,24 +72,27 @@ func NewApp(
 	uuidGenerator *uuid.UUIDv7Generator,
 	kafkaProducer *kafka.Producer,
 ) *App {
-	postRepository := postRepositories.NewPostRepository(readDB, writeDB, logger)
+	postRepository := postPostgresRepositories.NewPostRepository(readDB, writeDB, logger)
 	postService := postServices.NewPostService(postRepository, clock, logger, uuidGenerator)
-	postEventProducer := postEvents.NewPostEventProducer(kafkaProducer, logger)
-	postUseCase := postUseCases.NewPostUseCase(postService, postEventProducer, dtxManager, logger)
+	postEventProducer := postKafkaRepositories.NewPostEventProducer(kafkaProducer, logger)
+	postEventService := postServices.NewPostEventService(postEventProducer, logger)
+	postUseCase := postUseCases.NewPostUseCase(postService, postEventService, dtxManager, logger)
 	httpPostHandler := postHttpHandlers.NewPostHandler(postUseCase, logger)
 	kafkaPostHandler := postKafkaHandlers.NewPostHandler(postUseCase, logger)
 	grpcPostHandler := postGrpcHandlers.NewPostServiceServer(postUseCase, logger)
-	tagRepository := tagRepositories.NewTagRepository(readDB, writeDB, logger)
+	tagRepository := tagPostgresRepositories.NewTagRepository(readDB, writeDB, logger)
 	tagService := tagServices.NewTagService(tagRepository, clock, logger, uuidGenerator)
-	tagEventProducer := tagEvents.NewTagEventProducer(kafkaProducer, logger)
-	tagUseCase := tagUseCases.NewTagUseCase(tagService, tagEventProducer, dtxManager, logger)
+	tagEventProducer := tagKafkaRepositories.NewTagEventProducer(kafkaProducer, logger)
+	tagEventService := tagServices.NewTagEventService(tagEventProducer, logger)
+	tagUseCase := tagUseCases.NewTagUseCase(tagService, tagEventService, dtxManager, logger)
 	httpTagHandler := tagHttpHandlers.NewTagHandler(tagUseCase, logger)
 	kafkaTagHandler := tagKafkaHandlers.NewTagHandler(tagUseCase, logger)
 	grpcTagHandler := tagGrpcHandlers.NewTagServiceServer(tagUseCase, logger)
-	likeRepository := likeRepositories.NewLikeRepository(readDB, writeDB, logger)
+	likeRepository := likePostgresRepositories.NewLikeRepository(readDB, writeDB, logger)
 	likeService := likeServices.NewLikeService(likeRepository, clock, logger, uuidGenerator)
-	likeEventProducer := likeEvents.NewLikeEventProducer(kafkaProducer, logger)
-	likeUseCase := likeUseCases.NewLikeUseCase(likeService, likeEventProducer, dtxManager, logger)
+	likeEventProducer := likeKafkaRepositories.NewLikeEventProducer(kafkaProducer, logger)
+	likeEventService := likeServices.NewLikeEventService(likeEventProducer, logger)
+	likeUseCase := likeUseCases.NewLikeUseCase(likeService, likeEventService, dtxManager, logger)
 	httpLikeHandler := likeHttpHandlers.NewLikeHandler(likeUseCase, logger)
 	kafkaLikeHandler := likeKafkaHandlers.NewLikeHandler(likeUseCase, logger)
 	grpcLikeHandler := likeGrpcHandlers.NewLikeServiceServer(likeUseCase, logger)
@@ -102,6 +107,7 @@ func NewApp(
 		postUseCase:       postUseCase,
 		httpPostHandler:   httpPostHandler,
 		postEventProducer: postEventProducer,
+		postEventService:  postEventService,
 		kafkaPostHandler:  kafkaPostHandler,
 		grpcPostHandler:   grpcPostHandler,
 		tagRepository:     tagRepository,
@@ -109,6 +115,7 @@ func NewApp(
 		tagUseCase:        tagUseCase,
 		httpTagHandler:    httpTagHandler,
 		tagEventProducer:  tagEventProducer,
+		tagEventService:   tagEventService,
 		kafkaTagHandler:   kafkaTagHandler,
 		grpcTagHandler:    grpcTagHandler,
 		likeRepository:    likeRepository,
@@ -116,85 +123,44 @@ func NewApp(
 		likeUseCase:       likeUseCase,
 		httpLikeHandler:   httpLikeHandler,
 		likeEventProducer: likeEventProducer,
+		likeEventService:  likeEventService,
 		kafkaLikeHandler:  kafkaLikeHandler,
 		grpcLikeHandler:   grpcLikeHandler,
 	}
 }
 func (a *App) RegisterHTTP(httpServer *http.Server) error {
-	httpServer.Mount("/api/v1/posts/posts", a.httpPostHandler.ChiRouter())
-	httpServer.Mount("/api/v1/posts/tags", a.httpTagHandler.ChiRouter())
-	httpServer.Mount("/api/v1/posts/likes", a.httpLikeHandler.ChiRouter())
+	if err := a.httpPostHandler.RegisterHTTP(httpServer); err != nil {
+		return err
+	}
+	if err := a.httpTagHandler.RegisterHTTP(httpServer); err != nil {
+		return err
+	}
+	if err := a.httpLikeHandler.RegisterHTTP(httpServer); err != nil {
+		return err
+	}
 	return nil
 }
 func (a *App) RegisterGRPC(grpcServer *grpc.Server) error {
-	grpcServer.AddHandler(&examplepb.PostService_ServiceDesc, a.grpcPostHandler)
-	grpcServer.AddHandler(&examplepb.TagService_ServiceDesc, a.grpcTagHandler)
-	grpcServer.AddHandler(&examplepb.LikeService_ServiceDesc, a.grpcLikeHandler)
+	if err := a.grpcPostHandler.RegisterGRPC(grpcServer); err != nil {
+		return err
+	}
+	if err := a.grpcTagHandler.RegisterGRPC(grpcServer); err != nil {
+		return err
+	}
+	if err := a.grpcLikeHandler.RegisterGRPC(grpcServer); err != nil {
+		return err
+	}
 	return nil
 }
 func (a *App) RegisterKafka(consumer *kafka.Consumer) error {
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.post.created",
-			"example.posts.post.created",
-			a.kafkaPostHandler.Created,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.post.updated",
-			"example.posts.post.updated",
-			a.kafkaPostHandler.Updated,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.post.deleted",
-			"example.posts.post.deleted",
-			a.kafkaPostHandler.Deleted,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.tag.created",
-			"example.posts.tag.created",
-			a.kafkaTagHandler.Created,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.tag.updated",
-			"example.posts.tag.updated",
-			a.kafkaTagHandler.Updated,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.tag.deleted",
-			"example.posts.tag.deleted",
-			a.kafkaTagHandler.Deleted,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.like.created",
-			"example.posts.like.created",
-			a.kafkaLikeHandler.Created,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.like.updated",
-			"example.posts.like.updated",
-			a.kafkaLikeHandler.Updated,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.posts.like.deleted",
-			"example.posts.like.deleted",
-			a.kafkaLikeHandler.Deleted,
-		),
-	)
+	if err := a.kafkaPostHandler.RegisterKafka(consumer); err != nil {
+		return err
+	}
+	if err := a.kafkaTagHandler.RegisterKafka(consumer); err != nil {
+		return err
+	}
+	if err := a.kafkaLikeHandler.RegisterKafka(consumer); err != nil {
+		return err
+	}
 	return nil
 }

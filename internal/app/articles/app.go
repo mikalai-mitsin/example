@@ -5,8 +5,8 @@ import (
 	articleGrpcHandlers "github.com/mikalai-mitsin/example/internal/app/articles/handlers/grpc/article"
 	articleHttpHandlers "github.com/mikalai-mitsin/example/internal/app/articles/handlers/http/article"
 	articleKafkaHandlers "github.com/mikalai-mitsin/example/internal/app/articles/handlers/kafka/article"
-	articleEvents "github.com/mikalai-mitsin/example/internal/app/articles/repositories/kafka/article"
-	articleRepositories "github.com/mikalai-mitsin/example/internal/app/articles/repositories/postgres/article"
+	articleKafkaRepositories "github.com/mikalai-mitsin/example/internal/app/articles/repositories/kafka/article"
+	articlePostgresRepositories "github.com/mikalai-mitsin/example/internal/app/articles/repositories/postgres/article"
 	articleServices "github.com/mikalai-mitsin/example/internal/app/articles/services/article"
 	articleUseCases "github.com/mikalai-mitsin/example/internal/app/articles/usecases/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/clock"
@@ -16,7 +16,6 @@ import (
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
-	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 )
 
 type App struct {
@@ -25,11 +24,12 @@ type App struct {
 	dtxManager           *dtx.Manager
 	logger               log.Logger
 	kafkaProducer        *kafka.Producer
-	articleRepository    *articleRepositories.ArticleRepository
+	articleRepository    *articlePostgresRepositories.ArticleRepository
 	articleService       *articleServices.ArticleService
 	articleUseCase       *articleUseCases.ArticleUseCase
 	httpArticleHandler   *articleHttpHandlers.ArticleHandler
-	articleEventProducer *articleEvents.ArticleEventProducer
+	articleEventProducer *articleKafkaRepositories.ArticleEventProducer
+	articleEventService  *articleServices.ArticleEventService
 	kafkaArticleHandler  *articleKafkaHandlers.ArticleHandler
 	grpcArticleHandler   *articleGrpcHandlers.ArticleServiceServer
 }
@@ -42,17 +42,18 @@ func NewApp(
 	uuidGenerator *uuid.UUIDv7Generator,
 	kafkaProducer *kafka.Producer,
 ) *App {
-	articleRepository := articleRepositories.NewArticleRepository(readDB, writeDB, logger)
+	articleRepository := articlePostgresRepositories.NewArticleRepository(readDB, writeDB, logger)
 	articleService := articleServices.NewArticleService(
 		articleRepository,
 		clock,
 		logger,
 		uuidGenerator,
 	)
-	articleEventProducer := articleEvents.NewArticleEventProducer(kafkaProducer, logger)
+	articleEventProducer := articleKafkaRepositories.NewArticleEventProducer(kafkaProducer, logger)
+	articleEventService := articleServices.NewArticleEventService(articleEventProducer, logger)
 	articleUseCase := articleUseCases.NewArticleUseCase(
 		articleService,
-		articleEventProducer,
+		articleEventService,
 		dtxManager,
 		logger,
 	)
@@ -70,39 +71,26 @@ func NewApp(
 		articleUseCase:       articleUseCase,
 		httpArticleHandler:   httpArticleHandler,
 		articleEventProducer: articleEventProducer,
+		articleEventService:  articleEventService,
 		kafkaArticleHandler:  kafkaArticleHandler,
 		grpcArticleHandler:   grpcArticleHandler,
 	}
 }
 func (a *App) RegisterHTTP(httpServer *http.Server) error {
-	httpServer.Mount("/api/v1/articles/articles", a.httpArticleHandler.ChiRouter())
+	if err := a.httpArticleHandler.RegisterHTTP(httpServer); err != nil {
+		return err
+	}
 	return nil
 }
 func (a *App) RegisterGRPC(grpcServer *grpc.Server) error {
-	grpcServer.AddHandler(&examplepb.ArticleService_ServiceDesc, a.grpcArticleHandler)
+	if err := a.grpcArticleHandler.RegisterGRPC(grpcServer); err != nil {
+		return err
+	}
 	return nil
 }
 func (a *App) RegisterKafka(consumer *kafka.Consumer) error {
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.articles.article.created",
-			"example.articles.article.created",
-			a.kafkaArticleHandler.Created,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.articles.article.updated",
-			"example.articles.article.updated",
-			a.kafkaArticleHandler.Updated,
-		),
-	)
-	consumer.AddHandler(
-		kafka.NewHandler(
-			"example.articles.article.deleted",
-			"example.articles.article.deleted",
-			a.kafkaArticleHandler.Deleted,
-		),
-	)
+	if err := a.kafkaArticleHandler.RegisterKafka(consumer); err != nil {
+		return err
+	}
 	return nil
 }
