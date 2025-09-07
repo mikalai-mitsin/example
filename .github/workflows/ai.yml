@@ -32,7 +32,7 @@ jobs:
           CODE=$(git diff origin/main...HEAD)
 
           # Запуск Python-скрипта
-          python3 - << 'EOF'
+          python3 - <<PYTHON
   import os, openai
   
   code = os.environ['CODE']
@@ -53,4 +53,4 @@ messages=[{"role":"user","content": prompt}],
   )
   
   print(response['choices'][0]['message']['content'])
-  EOF
+  PYTHON
