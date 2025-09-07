@@ -1,7 +1,9 @@
 name: AI Code Review
 
 on:
-  pull_request:
+  push:
+    branches:
+      - '**'
 
 jobs:
   ai-review:
