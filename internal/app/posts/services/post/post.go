@@ -24,7 +24,7 @@ func NewPostService(
 	return &PostService{postRepository: postRepository, clock: clock, logger: logger, uuid: uuid}
 }
 
-func (u *PostService) Create(
+func (s *PostService) Create(
 	ctx context.Context,
 	tx dtx.TX,
 	create entities.PostCreate,
@@ -32,40 +32,40 @@ func (u *PostService) Create(
 	if err := create.Validate(); err != nil {
 		return entities.Post{}, err
 	}
-	now := u.clock.Now().UTC()
-	post := entities.Post{ID: u.uuid.NewUUID(), UpdatedAt: now, CreatedAt: now, Body: create.Body}
-	if err := u.postRepository.Create(ctx, tx, post); err != nil {
+	now := s.clock.Now().UTC()
+	post := entities.Post{ID: s.uuid.NewUUID(), UpdatedAt: now, CreatedAt: now, Body: create.Body}
+	if err := s.postRepository.Create(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
 }
-func (u *PostService) Get(ctx context.Context, id uuid.UUID) (entities.Post, error) {
-	post, err := u.postRepository.Get(ctx, id)
+func (s *PostService) Get(ctx context.Context, id uuid.UUID) (entities.Post, error) {
+	post, err := s.postRepository.Get(ctx, id)
 	if err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
 }
 
-func (u *PostService) List(
+func (s *PostService) List(
 	ctx context.Context,
 	filter entities.PostFilter,
 ) ([]entities.Post, uint64, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, 0, err
 	}
-	post, err := u.postRepository.List(ctx, filter)
+	post, err := s.postRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	count, err := u.postRepository.Count(ctx, filter)
+	count, err := s.postRepository.Count(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	return post, count, nil
 }
 
-func (u *PostService) Update(
+func (s *PostService) Update(
 	ctx context.Context,
 	tx dtx.TX,
 	update entities.PostUpdate,
@@ -73,7 +73,7 @@ func (u *PostService) Update(
 	if err := update.Validate(); err != nil {
 		return entities.Post{}, err
 	}
-	post, err := u.postRepository.Get(ctx, update.ID)
+	post, err := s.postRepository.Get(ctx, update.ID)
 	if err != nil {
 		return entities.Post{}, err
 	}
@@ -82,14 +82,14 @@ func (u *PostService) Update(
 			post.Body = *update.Body
 		}
 	}
-	post.UpdatedAt = u.clock.Now().UTC()
-	if err := u.postRepository.Update(ctx, tx, post); err != nil {
+	post.UpdatedAt = s.clock.Now().UTC()
+	if err := s.postRepository.Update(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	return post, nil
 }
-func (u *PostService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := u.postRepository.Delete(ctx, tx, id); err != nil {
+func (s *PostService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := s.postRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

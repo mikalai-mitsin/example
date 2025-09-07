@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
+	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
@@ -74,6 +75,10 @@ func (s *TagServiceServer) Delete(
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
+}
+func (s *TagServiceServer) RegisterGRPC(grpcServer *grpc.Server) error {
+	grpcServer.AddHandler(&examplepb.TagService_ServiceDesc, s)
+	return nil
 }
 func encodeTagCreate(input *examplepb.TagCreate) entities.TagCreate {
 	create := entities.TagCreate{PostId: uuid.MustParse(input.GetPostId()), Value: input.GetValue()}

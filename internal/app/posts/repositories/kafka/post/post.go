@@ -1,11 +1,10 @@
-package events
+package repositories
 
 import (
 	"context"
 	"encoding/json"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
-	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -29,7 +28,7 @@ func NewPostEventProducer(
 	return &PostEventProducer{producer: producer, logger: logger}
 }
 
-func (p *PostEventProducer) Created(ctx context.Context, _ dtx.TX, post entities.Post) error {
+func (p *PostEventProducer) Created(ctx context.Context, post entities.Post) error {
 	data, err := json.Marshal(post)
 	if err != nil {
 		return err
@@ -45,7 +44,7 @@ func (p *PostEventProducer) Created(ctx context.Context, _ dtx.TX, post entities
 	return nil
 }
 
-func (p *PostEventProducer) Updated(ctx context.Context, _ dtx.TX, post entities.Post) error {
+func (p *PostEventProducer) Updated(ctx context.Context, post entities.Post) error {
 	data, err := json.Marshal(post)
 	if err != nil {
 		return err
@@ -61,7 +60,7 @@ func (p *PostEventProducer) Updated(ctx context.Context, _ dtx.TX, post entities
 	return nil
 }
 
-func (p *PostEventProducer) Deleted(ctx context.Context, _ dtx.TX, id uuid.UUID) error {
+func (p *PostEventProducer) Deleted(ctx context.Context, id uuid.UUID) error {
 	message := &kafka.Message{
 		Topic: topicEventDeleted,
 		Value: []byte(id.String()),

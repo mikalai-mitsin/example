@@ -10,23 +10,23 @@ import (
 )
 
 type ArticleUseCase struct {
-	articleService       articleService
-	articleEventProducer articleEventProducer
-	dtxManager           dtxManager
-	logger               logger
+	articleService      articleService
+	articleEventService articleEventService
+	dtxManager          dtxManager
+	logger              logger
 }
 
 func NewArticleUseCase(
 	articleService articleService,
-	articleEventProducer articleEventProducer,
+	articleEventService articleEventService,
 	dtxManager dtxManager,
 	logger logger,
 ) *ArticleUseCase {
 	return &ArticleUseCase{
-		articleService:       articleService,
-		articleEventProducer: articleEventProducer,
-		dtxManager:           dtxManager,
-		logger:               logger,
+		articleService:      articleService,
+		articleEventService: articleEventService,
+		dtxManager:          dtxManager,
+		logger:              logger,
 	}
 }
 
@@ -45,7 +45,7 @@ func (u *ArticleUseCase) Create(
 	if err != nil {
 		return entities.Article{}, err
 	}
-	if err := u.articleEventProducer.Created(ctx, tx, article); err != nil {
+	if err := u.articleEventService.Created(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -87,7 +87,7 @@ func (u *ArticleUseCase) Update(
 	if err != nil {
 		return entities.Article{}, err
 	}
-	if err := u.articleEventProducer.Updated(ctx, tx, article); err != nil {
+	if err := u.articleEventService.Updated(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -106,7 +106,7 @@ func (u *ArticleUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := u.articleService.Delete(ctx, tx, id); err != nil {
 		return err
 	}
-	if err := u.articleEventProducer.Deleted(ctx, tx, id); err != nil {
+	if err := u.articleEventService.Deleted(ctx, tx, id); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {

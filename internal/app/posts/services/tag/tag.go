@@ -24,7 +24,7 @@ func NewTagService(
 	return &TagService{tagRepository: tagRepository, clock: clock, logger: logger, uuid: uuid}
 }
 
-func (u *TagService) Create(
+func (s *TagService) Create(
 	ctx context.Context,
 	tx dtx.TX,
 	create entities.TagCreate,
@@ -32,46 +32,46 @@ func (u *TagService) Create(
 	if err := create.Validate(); err != nil {
 		return entities.Tag{}, err
 	}
-	now := u.clock.Now().UTC()
+	now := s.clock.Now().UTC()
 	tag := entities.Tag{
-		ID:        u.uuid.NewUUID(),
+		ID:        s.uuid.NewUUID(),
 		UpdatedAt: now,
 		CreatedAt: now,
 		PostId:    create.PostId,
 		Value:     create.Value,
 	}
-	if err := u.tagRepository.Create(ctx, tx, tag); err != nil {
+	if err := s.tagRepository.Create(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
 }
-func (u *TagService) Get(ctx context.Context, id uuid.UUID) (entities.Tag, error) {
-	tag, err := u.tagRepository.Get(ctx, id)
+func (s *TagService) Get(ctx context.Context, id uuid.UUID) (entities.Tag, error) {
+	tag, err := s.tagRepository.Get(ctx, id)
 	if err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
 }
 
-func (u *TagService) List(
+func (s *TagService) List(
 	ctx context.Context,
 	filter entities.TagFilter,
 ) ([]entities.Tag, uint64, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, 0, err
 	}
-	tag, err := u.tagRepository.List(ctx, filter)
+	tag, err := s.tagRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	count, err := u.tagRepository.Count(ctx, filter)
+	count, err := s.tagRepository.Count(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	return tag, count, nil
 }
 
-func (u *TagService) Update(
+func (s *TagService) Update(
 	ctx context.Context,
 	tx dtx.TX,
 	update entities.TagUpdate,
@@ -79,7 +79,7 @@ func (u *TagService) Update(
 	if err := update.Validate(); err != nil {
 		return entities.Tag{}, err
 	}
-	tag, err := u.tagRepository.Get(ctx, update.ID)
+	tag, err := s.tagRepository.Get(ctx, update.ID)
 	if err != nil {
 		return entities.Tag{}, err
 	}
@@ -91,14 +91,14 @@ func (u *TagService) Update(
 			tag.Value = *update.Value
 		}
 	}
-	tag.UpdatedAt = u.clock.Now().UTC()
-	if err := u.tagRepository.Update(ctx, tx, tag); err != nil {
+	tag.UpdatedAt = s.clock.Now().UTC()
+	if err := s.tagRepository.Update(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	return tag, nil
 }
-func (u *TagService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := u.tagRepository.Delete(ctx, tx, id); err != nil {
+func (s *TagService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := s.tagRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

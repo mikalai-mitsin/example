@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	httpServer "github.com/mikalai-mitsin/example/internal/pkg/http"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -189,7 +190,7 @@ func (h *ArticleHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusNoContent)
 	render.NoContent(w, r)
 }
-func (h *ArticleHandler) ChiRouter() chi.Router {
+func (h *ArticleHandler) router() chi.Router {
 	router := chi.NewRouter()
 	router.Route("/", func(g chi.Router) {
 		g.Post("/", h.Create)
@@ -199,4 +200,8 @@ func (h *ArticleHandler) ChiRouter() chi.Router {
 		g.Delete("/{id}", h.Delete)
 	})
 	return router
+}
+func (h *ArticleHandler) RegisterHTTP(httpServer *httpServer.Server) error {
+	httpServer.Mount("/api/v1/articles/articles", h.router())
+	return nil
 }

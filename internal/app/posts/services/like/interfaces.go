@@ -1,6 +1,6 @@
 package services
 
-//go:generate mockgen -source=like_interfaces.go -package=services -destination=like_interfaces_mock.go
+//go:generate mockgen -source=interfaces.go -package=services -destination=interfaces_mock.go
 import (
 	"context"
 	"time"
@@ -18,6 +18,11 @@ type likeRepository interface {
 	Count(context.Context, entities.LikeFilter) (uint64, error)
 	Update(context.Context, dtx.TX, entities.Like) error
 	Delete(context.Context, dtx.TX, uuid.UUID) error
+}
+type likeEventProducer interface {
+	Created(context.Context, entities.Like) error
+	Updated(context.Context, entities.Like) error
+	Deleted(context.Context, uuid.UUID) error
 }
 
 // clock - clock interface

@@ -1,6 +1,6 @@
 package services
 
-//go:generate mockgen -source=post_interfaces.go -package=services -destination=post_interfaces_mock.go
+//go:generate mockgen -source=interfaces.go -package=services -destination=interfaces_mock.go
 import (
 	"context"
 	"time"
@@ -18,6 +18,11 @@ type postRepository interface {
 	Count(context.Context, entities.PostFilter) (uint64, error)
 	Update(context.Context, dtx.TX, entities.Post) error
 	Delete(context.Context, dtx.TX, uuid.UUID) error
+}
+type postEventProducer interface {
+	Created(context.Context, entities.Post) error
+	Updated(context.Context, entities.Post) error
+	Deleted(context.Context, uuid.UUID) error
 }
 
 // clock - clock interface

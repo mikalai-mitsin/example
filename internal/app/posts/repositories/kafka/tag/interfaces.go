@@ -1,6 +1,6 @@
-package events
+package repositories
 
-//go:generate mockgen -source=tag_interfaces.go -package=events -destination=tag_interfaces_mock.go
+//go:generate mockgen -source=interfaces.go -package=repositories -destination=interfaces_mock.go
 import (
 	"context"
 

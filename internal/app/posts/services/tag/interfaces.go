@@ -1,6 +1,6 @@
 package services
 
-//go:generate mockgen -source=tag_interfaces.go -package=services -destination=tag_interfaces_mock.go
+//go:generate mockgen -source=interfaces.go -package=services -destination=interfaces_mock.go
 import (
 	"context"
 	"time"
@@ -18,6 +18,11 @@ type tagRepository interface {
 	Count(context.Context, entities.TagFilter) (uint64, error)
 	Update(context.Context, dtx.TX, entities.Tag) error
 	Delete(context.Context, dtx.TX, uuid.UUID) error
+}
+type tagEventProducer interface {
+	Created(context.Context, entities.Tag) error
+	Updated(context.Context, entities.Tag) error
+	Deleted(context.Context, uuid.UUID) error
 }
 
 // clock - clock interface

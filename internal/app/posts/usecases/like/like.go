@@ -10,23 +10,23 @@ import (
 )
 
 type LikeUseCase struct {
-	likeService       likeService
-	likeEventProducer likeEventProducer
-	dtxManager        dtxManager
-	logger            logger
+	likeService      likeService
+	likeEventService likeEventService
+	dtxManager       dtxManager
+	logger           logger
 }
 
 func NewLikeUseCase(
 	likeService likeService,
-	likeEventProducer likeEventProducer,
+	likeEventService likeEventService,
 	dtxManager dtxManager,
 	logger logger,
 ) *LikeUseCase {
 	return &LikeUseCase{
-		likeService:       likeService,
-		likeEventProducer: likeEventProducer,
-		dtxManager:        dtxManager,
-		logger:            logger,
+		likeService:      likeService,
+		likeEventService: likeEventService,
+		dtxManager:       dtxManager,
+		logger:           logger,
 	}
 }
 
@@ -45,7 +45,7 @@ func (u *LikeUseCase) Create(
 	if err != nil {
 		return entities.Like{}, err
 	}
-	if err := u.likeEventProducer.Created(ctx, tx, like); err != nil {
+	if err := u.likeEventService.Created(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -87,7 +87,7 @@ func (u *LikeUseCase) Update(
 	if err != nil {
 		return entities.Like{}, err
 	}
-	if err := u.likeEventProducer.Updated(ctx, tx, like); err != nil {
+	if err := u.likeEventService.Updated(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -106,7 +106,7 @@ func (u *LikeUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := u.likeService.Delete(ctx, tx, id); err != nil {
 		return err
 	}
-	if err := u.likeEventProducer.Deleted(ctx, tx, id); err != nil {
+	if err := u.likeEventService.Deleted(ctx, tx, id); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {

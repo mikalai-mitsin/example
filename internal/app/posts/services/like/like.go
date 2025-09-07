@@ -24,7 +24,7 @@ func NewLikeService(
 	return &LikeService{likeRepository: likeRepository, clock: clock, logger: logger, uuid: uuid}
 }
 
-func (u *LikeService) Create(
+func (s *LikeService) Create(
 	ctx context.Context,
 	tx dtx.TX,
 	create entities.LikeCreate,
@@ -32,47 +32,47 @@ func (u *LikeService) Create(
 	if err := create.Validate(); err != nil {
 		return entities.Like{}, err
 	}
-	now := u.clock.Now().UTC()
+	now := s.clock.Now().UTC()
 	like := entities.Like{
-		ID:        u.uuid.NewUUID(),
+		ID:        s.uuid.NewUUID(),
 		UpdatedAt: now,
 		CreatedAt: now,
 		PostId:    create.PostId,
 		Value:     create.Value,
 		UserId:    create.UserId,
 	}
-	if err := u.likeRepository.Create(ctx, tx, like); err != nil {
+	if err := s.likeRepository.Create(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
 }
-func (u *LikeService) Get(ctx context.Context, id uuid.UUID) (entities.Like, error) {
-	like, err := u.likeRepository.Get(ctx, id)
+func (s *LikeService) Get(ctx context.Context, id uuid.UUID) (entities.Like, error) {
+	like, err := s.likeRepository.Get(ctx, id)
 	if err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
 }
 
-func (u *LikeService) List(
+func (s *LikeService) List(
 	ctx context.Context,
 	filter entities.LikeFilter,
 ) ([]entities.Like, uint64, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, 0, err
 	}
-	like, err := u.likeRepository.List(ctx, filter)
+	like, err := s.likeRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	count, err := u.likeRepository.Count(ctx, filter)
+	count, err := s.likeRepository.Count(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	return like, count, nil
 }
 
-func (u *LikeService) Update(
+func (s *LikeService) Update(
 	ctx context.Context,
 	tx dtx.TX,
 	update entities.LikeUpdate,
@@ -80,7 +80,7 @@ func (u *LikeService) Update(
 	if err := update.Validate(); err != nil {
 		return entities.Like{}, err
 	}
-	like, err := u.likeRepository.Get(ctx, update.ID)
+	like, err := s.likeRepository.Get(ctx, update.ID)
 	if err != nil {
 		return entities.Like{}, err
 	}
@@ -95,14 +95,14 @@ func (u *LikeService) Update(
 			like.UserId = *update.UserId
 		}
 	}
-	like.UpdatedAt = u.clock.Now().UTC()
-	if err := u.likeRepository.Update(ctx, tx, like); err != nil {
+	like.UpdatedAt = s.clock.Now().UTC()
+	if err := s.likeRepository.Update(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	return like, nil
 }
-func (u *LikeService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := u.likeRepository.Delete(ctx, tx, id); err != nil {
+func (s *LikeService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := s.likeRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

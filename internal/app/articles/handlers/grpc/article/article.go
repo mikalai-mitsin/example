@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
+	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
@@ -74,6 +75,10 @@ func (s *ArticleServiceServer) Delete(
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
+}
+func (s *ArticleServiceServer) RegisterGRPC(grpcServer *grpc.Server) error {
+	grpcServer.AddHandler(&examplepb.ArticleService_ServiceDesc, s)
+	return nil
 }
 func encodeArticleCreate(input *examplepb.ArticleCreate) entities.ArticleCreate {
 	create := entities.ArticleCreate{

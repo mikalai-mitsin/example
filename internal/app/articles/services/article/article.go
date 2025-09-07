@@ -29,7 +29,7 @@ func NewArticleService(
 	}
 }
 
-func (u *ArticleService) Create(
+func (s *ArticleService) Create(
 	ctx context.Context,
 	tx dtx.TX,
 	create entities.ArticleCreate,
@@ -37,9 +37,9 @@ func (u *ArticleService) Create(
 	if err := create.Validate(); err != nil {
 		return entities.Article{}, err
 	}
-	now := u.clock.Now().UTC()
+	now := s.clock.Now().UTC()
 	article := entities.Article{
-		ID:          u.uuid.NewUUID(),
+		ID:          s.uuid.NewUUID(),
 		UpdatedAt:   now,
 		CreatedAt:   now,
 		Title:       create.Title,
@@ -47,38 +47,38 @@ func (u *ArticleService) Create(
 		Body:        create.Body,
 		IsPublished: create.IsPublished,
 	}
-	if err := u.articleRepository.Create(ctx, tx, article); err != nil {
+	if err := s.articleRepository.Create(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	return article, nil
 }
-func (u *ArticleService) Get(ctx context.Context, id uuid.UUID) (entities.Article, error) {
-	article, err := u.articleRepository.Get(ctx, id)
+func (s *ArticleService) Get(ctx context.Context, id uuid.UUID) (entities.Article, error) {
+	article, err := s.articleRepository.Get(ctx, id)
 	if err != nil {
 		return entities.Article{}, err
 	}
 	return article, nil
 }
 
-func (u *ArticleService) List(
+func (s *ArticleService) List(
 	ctx context.Context,
 	filter entities.ArticleFilter,
 ) ([]entities.Article, uint64, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, 0, err
 	}
-	article, err := u.articleRepository.List(ctx, filter)
+	article, err := s.articleRepository.List(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	count, err := u.articleRepository.Count(ctx, filter)
+	count, err := s.articleRepository.Count(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	return article, count, nil
 }
 
-func (u *ArticleService) Update(
+func (s *ArticleService) Update(
 	ctx context.Context,
 	tx dtx.TX,
 	update entities.ArticleUpdate,
@@ -86,7 +86,7 @@ func (u *ArticleService) Update(
 	if err := update.Validate(); err != nil {
 		return entities.Article{}, err
 	}
-	article, err := u.articleRepository.Get(ctx, update.ID)
+	article, err := s.articleRepository.Get(ctx, update.ID)
 	if err != nil {
 		return entities.Article{}, err
 	}
@@ -104,14 +104,14 @@ func (u *ArticleService) Update(
 			article.IsPublished = *update.IsPublished
 		}
 	}
-	article.UpdatedAt = u.clock.Now().UTC()
-	if err := u.articleRepository.Update(ctx, tx, article); err != nil {
+	article.UpdatedAt = s.clock.Now().UTC()
+	if err := s.articleRepository.Update(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	return article, nil
 }
-func (u *ArticleService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := u.articleRepository.Delete(ctx, tx, id); err != nil {
+func (s *ArticleService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
+	if err := s.articleRepository.Delete(ctx, tx, id); err != nil {
 		return err
 	}
 	return nil

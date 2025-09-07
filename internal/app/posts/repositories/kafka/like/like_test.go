@@ -1,4 +1,4 @@
-package events
+package repositories
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/IBM/sarama"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
-	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -68,7 +67,6 @@ func TestLikeEventProducer_Created(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
-		dtx  dtx.TX
 		like entities.Like
 	}
 	tests := []struct {
@@ -126,7 +124,7 @@ func TestLikeEventProducer_Created(t *testing.T) {
 				producer: tt.fields.producer,
 				logger:   tt.fields.logger,
 			}
-			err := p.Created(tt.args.ctx, tt.args.dtx, tt.args.like)
+			err := p.Created(tt.args.ctx, tt.args.like)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -145,7 +143,6 @@ func TestLikeEventProducer_Updated(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
-		dtx  dtx.TX
 		like entities.Like
 	}
 	tests := []struct {
@@ -203,7 +200,7 @@ func TestLikeEventProducer_Updated(t *testing.T) {
 				producer: tt.fields.producer,
 				logger:   tt.fields.logger,
 			}
-			err := p.Updated(tt.args.ctx, tt.args.dtx, tt.args.like)
+			err := p.Updated(tt.args.ctx, tt.args.like)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -222,7 +219,6 @@ func TestLikeEventProducer_Deleted(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
-		dtx dtx.TX
 		id  uuid.UUID
 	}
 	tests := []struct {
@@ -278,7 +274,7 @@ func TestLikeEventProducer_Deleted(t *testing.T) {
 				producer: tt.fields.producer,
 				logger:   tt.fields.logger,
 			}
-			err := p.Deleted(tt.args.ctx, tt.args.dtx, tt.args.id)
+			err := p.Deleted(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

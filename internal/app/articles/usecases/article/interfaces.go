@@ -1,5 +1,6 @@
 package usecases
 
+//go:generate mockgen -source=interfaces.go -package=usecases -destination=interfaces_mock.go
 import (
 	"context"
 
@@ -16,7 +17,7 @@ type articleService interface {
 	Update(context.Context, dtx.TX, entities.ArticleUpdate) (entities.Article, error)
 	Delete(context.Context, dtx.TX, uuid.UUID) error
 }
-type articleEventProducer interface {
+type articleEventService interface {
 	Created(context.Context, dtx.TX, entities.Article) error
 	Updated(context.Context, dtx.TX, entities.Article) error
 	Deleted(context.Context, dtx.TX, uuid.UUID) error

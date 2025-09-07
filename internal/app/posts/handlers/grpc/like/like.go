@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
@@ -74,6 +75,10 @@ func (s *LikeServiceServer) Delete(
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
+}
+func (s *LikeServiceServer) RegisterGRPC(grpcServer *grpc.Server) error {
+	grpcServer.AddHandler(&examplepb.LikeService_ServiceDesc, s)
+	return nil
 }
 func encodeLikeCreate(input *examplepb.LikeCreate) entities.LikeCreate {
 	create := entities.LikeCreate{

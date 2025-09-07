@@ -10,23 +10,23 @@ import (
 )
 
 type PostUseCase struct {
-	postService       postService
-	postEventProducer postEventProducer
-	dtxManager        dtxManager
-	logger            logger
+	postService      postService
+	postEventService postEventService
+	dtxManager       dtxManager
+	logger           logger
 }
 
 func NewPostUseCase(
 	postService postService,
-	postEventProducer postEventProducer,
+	postEventService postEventService,
 	dtxManager dtxManager,
 	logger logger,
 ) *PostUseCase {
 	return &PostUseCase{
-		postService:       postService,
-		postEventProducer: postEventProducer,
-		dtxManager:        dtxManager,
-		logger:            logger,
+		postService:      postService,
+		postEventService: postEventService,
+		dtxManager:       dtxManager,
+		logger:           logger,
 	}
 }
 
@@ -45,7 +45,7 @@ func (u *PostUseCase) Create(
 	if err != nil {
 		return entities.Post{}, err
 	}
-	if err := u.postEventProducer.Created(ctx, tx, post); err != nil {
+	if err := u.postEventService.Created(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -87,7 +87,7 @@ func (u *PostUseCase) Update(
 	if err != nil {
 		return entities.Post{}, err
 	}
-	if err := u.postEventProducer.Updated(ctx, tx, post); err != nil {
+	if err := u.postEventService.Updated(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -106,7 +106,7 @@ func (u *PostUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := u.postService.Delete(ctx, tx, id); err != nil {
 		return err
 	}
-	if err := u.postEventProducer.Deleted(ctx, tx, id); err != nil {
+	if err := u.postEventService.Deleted(ctx, tx, id); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {

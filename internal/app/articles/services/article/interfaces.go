@@ -1,6 +1,6 @@
 package services
 
-//go:generate mockgen -source=article_interfaces.go -package=services -destination=article_interfaces_mock.go
+//go:generate mockgen -source=interfaces.go -package=services -destination=interfaces_mock.go
 import (
 	"context"
 	"time"
@@ -18,6 +18,11 @@ type articleRepository interface {
 	Count(context.Context, entities.ArticleFilter) (uint64, error)
 	Update(context.Context, dtx.TX, entities.Article) error
 	Delete(context.Context, dtx.TX, uuid.UUID) error
+}
+type articleEventProducer interface {
+	Created(context.Context, entities.Article) error
+	Updated(context.Context, entities.Article) error
+	Deleted(context.Context, uuid.UUID) error
 }
 
 // clock - clock interface

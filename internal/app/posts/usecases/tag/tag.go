@@ -10,23 +10,23 @@ import (
 )
 
 type TagUseCase struct {
-	tagService       tagService
-	tagEventProducer tagEventProducer
-	dtxManager       dtxManager
-	logger           logger
+	tagService      tagService
+	tagEventService tagEventService
+	dtxManager      dtxManager
+	logger          logger
 }
 
 func NewTagUseCase(
 	tagService tagService,
-	tagEventProducer tagEventProducer,
+	tagEventService tagEventService,
 	dtxManager dtxManager,
 	logger logger,
 ) *TagUseCase {
 	return &TagUseCase{
-		tagService:       tagService,
-		tagEventProducer: tagEventProducer,
-		dtxManager:       dtxManager,
-		logger:           logger,
+		tagService:      tagService,
+		tagEventService: tagEventService,
+		dtxManager:      dtxManager,
+		logger:          logger,
 	}
 }
 func (u *TagUseCase) Create(ctx context.Context, create entities.TagCreate) (entities.Tag, error) {
@@ -41,7 +41,7 @@ func (u *TagUseCase) Create(ctx context.Context, create entities.TagCreate) (ent
 	if err != nil {
 		return entities.Tag{}, err
 	}
-	if err := u.tagEventProducer.Created(ctx, tx, tag); err != nil {
+	if err := u.tagEventService.Created(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -79,7 +79,7 @@ func (u *TagUseCase) Update(ctx context.Context, update entities.TagUpdate) (ent
 	if err != nil {
 		return entities.Tag{}, err
 	}
-	if err := u.tagEventProducer.Updated(ctx, tx, tag); err != nil {
+	if err := u.tagEventService.Updated(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -98,7 +98,7 @@ func (u *TagUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := u.tagService.Delete(ctx, tx, id); err != nil {
 		return err
 	}
-	if err := u.tagEventProducer.Deleted(ctx, tx, id); err != nil {
+	if err := u.tagEventService.Deleted(ctx, tx, id); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {

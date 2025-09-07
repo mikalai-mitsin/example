@@ -18,14 +18,14 @@ func TestNewPostUseCase(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
-	mockpostEventProducer := NewMockpostEventProducer(ctrl)
+	mockPostEventService := NewMockpostEventService(ctrl)
 	mockDtxManager := NewMockdtxManager(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	type args struct {
-		postService       postService
-		postEventProducer postEventProducer
-		dtxManager        dtxManager
-		logger            logger
+		postService      postService
+		postEventService postEventService
+		dtxManager       dtxManager
+		logger           logger
 	}
 	tests := []struct {
 		name  string
@@ -37,16 +37,16 @@ func TestNewPostUseCase(t *testing.T) {
 			name:  "ok",
 			setup: func() {},
 			args: args{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			want: &PostUseCase{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 		},
 	}
@@ -55,7 +55,7 @@ func TestNewPostUseCase(t *testing.T) {
 			tt.setup()
 			got := NewPostUseCase(
 				tt.args.postService,
-				tt.args.postEventProducer,
+				tt.args.postEventService,
 				tt.args.dtxManager,
 				tt.args.logger,
 			)
@@ -68,16 +68,16 @@ func TestPostUseCase_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
-	mockpostEventProducer := NewMockpostEventProducer(ctrl)
+	mockPostEventService := NewMockpostEventService(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockDtxManager := NewMockdtxManager(ctrl)
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	type fields struct {
-		postService       postService
-		postEventProducer postEventProducer
-		dtxManager        dtxManager
-		logger            logger
+		postService      postService
+		postEventService postEventService
+		dtxManager       dtxManager
+		logger           logger
 	}
 	type args struct {
 		ctx context.Context
@@ -99,10 +99,10 @@ func TestPostUseCase_Get(t *testing.T) {
 					Return(post, nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -119,10 +119,10 @@ func TestPostUseCase_Get(t *testing.T) {
 					Return(entities.Post{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -136,10 +136,10 @@ func TestPostUseCase_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService:       tt.fields.postService,
-				postEventProducer: tt.fields.postEventProducer,
-				dtxManager:        tt.fields.dtxManager,
-				logger:            tt.fields.logger,
+				postService:      tt.fields.postService,
+				postEventService: tt.fields.postEventService,
+				dtxManager:       tt.fields.dtxManager,
+				logger:           tt.fields.logger,
 			}
 			got, err := i.Get(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -152,7 +152,7 @@ func TestPostUseCase_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
-	mockpostEventProducer := NewMockpostEventProducer(ctrl)
+	mockPostEventService := NewMockpostEventService(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 	mockDtxManager := NewMockdtxManager(ctrl)
@@ -161,10 +161,10 @@ func TestPostUseCase_Create(t *testing.T) {
 	post := entities.NewMockPost(t)
 	create := entities.NewMockPostCreate(t)
 	type fields struct {
-		postService       postService
-		postEventProducer postEventProducer
-		dtxManager        dtxManager
-		logger            logger
+		postService      postService
+		postEventService postEventService
+		dtxManager       dtxManager
+		logger           logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -183,14 +183,14 @@ func TestPostUseCase_Create(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockPostService.EXPECT().Create(ctx, mockTx, create).Return(post, nil)
-				mockpostEventProducer.EXPECT().Created(ctx, mockTx, post).Return(nil)
+				mockPostEventService.EXPECT().Created(ctx, mockTx, post).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -209,10 +209,10 @@ func TestPostUseCase_Create(t *testing.T) {
 				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -226,10 +226,10 @@ func TestPostUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService:       tt.fields.postService,
-				postEventProducer: tt.fields.postEventProducer,
-				dtxManager:        tt.fields.dtxManager,
-				logger:            tt.fields.logger,
+				postService:      tt.fields.postService,
+				postEventService: tt.fields.postEventService,
+				dtxManager:       tt.fields.dtxManager,
+				logger:           tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -242,7 +242,7 @@ func TestPostUseCase_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
-	mockpostEventProducer := NewMockpostEventProducer(ctrl)
+	mockPostEventService := NewMockpostEventService(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 	mockDtxManager := NewMockdtxManager(ctrl)
@@ -251,10 +251,10 @@ func TestPostUseCase_Update(t *testing.T) {
 	post := entities.NewMockPost(t)
 	update := entities.NewMockPostUpdate(t)
 	type fields struct {
-		postService       postService
-		postEventProducer postEventProducer
-		dtxManager        dtxManager
-		logger            logger
+		postService      postService
+		postEventService postEventService
+		dtxManager       dtxManager
+		logger           logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -273,14 +273,14 @@ func TestPostUseCase_Update(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockPostService.EXPECT().Update(ctx, mockTx, update).Return(post, nil)
-				mockpostEventProducer.EXPECT().Updated(ctx, mockTx, post).Return(nil)
+				mockPostEventService.EXPECT().Updated(ctx, mockTx, post).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -299,10 +299,10 @@ func TestPostUseCase_Update(t *testing.T) {
 				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -316,10 +316,10 @@ func TestPostUseCase_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService:       tt.fields.postService,
-				postEventProducer: tt.fields.postEventProducer,
-				dtxManager:        tt.fields.dtxManager,
-				logger:            tt.fields.logger,
+				postService:      tt.fields.postService,
+				postEventService: tt.fields.postEventService,
+				dtxManager:       tt.fields.dtxManager,
+				logger:           tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -332,7 +332,7 @@ func TestPostUseCase_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
-	mockpostEventProducer := NewMockpostEventProducer(ctrl)
+	mockPostEventService := NewMockpostEventService(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 	mockDtxManager := NewMockdtxManager(ctrl)
@@ -340,10 +340,10 @@ func TestPostUseCase_Delete(t *testing.T) {
 	ctx := context.Background()
 	post := entities.NewMockPost(t)
 	type fields struct {
-		postService       postService
-		postEventProducer postEventProducer
-		dtxManager        dtxManager
-		logger            logger
+		postService      postService
+		postEventService postEventService
+		dtxManager       dtxManager
+		logger           logger
 	}
 	type args struct {
 		ctx context.Context
@@ -363,14 +363,14 @@ func TestPostUseCase_Delete(t *testing.T) {
 				mockPostService.EXPECT().
 					Delete(ctx, mockTx, post.ID).
 					Return(nil)
-				mockpostEventProducer.EXPECT().Deleted(ctx, mockTx, post.ID).Return(nil)
+				mockPostEventService.EXPECT().Deleted(ctx, mockTx, post.ID).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -388,10 +388,10 @@ func TestPostUseCase_Delete(t *testing.T) {
 				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx: ctx,
@@ -404,10 +404,10 @@ func TestPostUseCase_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService:       tt.fields.postService,
-				postEventProducer: tt.fields.postEventProducer,
-				dtxManager:        tt.fields.dtxManager,
-				logger:            tt.fields.logger,
+				postService:      tt.fields.postService,
+				postEventService: tt.fields.postEventService,
+				dtxManager:       tt.fields.dtxManager,
+				logger:           tt.fields.logger,
 			}
 			err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -419,7 +419,7 @@ func TestPostUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockPostService := NewMockpostService(ctrl)
-	mockpostEventProducer := NewMockpostEventProducer(ctrl)
+	mockPostEventService := NewMockpostEventService(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	mockDtxManager := NewMockdtxManager(ctrl)
 	ctx := context.Background()
@@ -430,10 +430,10 @@ func TestPostUseCase_List(t *testing.T) {
 		listPosts = append(listPosts, entities.NewMockPost(t))
 	}
 	type fields struct {
-		postService       postService
-		postEventProducer postEventProducer
-		dtxManager        dtxManager
-		logger            logger
+		postService      postService
+		postEventService postEventService
+		dtxManager       dtxManager
+		logger           logger
 	}
 	type args struct {
 		ctx    context.Context
@@ -456,10 +456,10 @@ func TestPostUseCase_List(t *testing.T) {
 					Return(listPosts, count, nil)
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -477,10 +477,10 @@ func TestPostUseCase_List(t *testing.T) {
 					Return(nil, uint64(0), errs.NewUnexpectedBehaviorError("l e"))
 			},
 			fields: fields{
-				postService:       mockPostService,
-				postEventProducer: mockpostEventProducer,
-				dtxManager:        mockDtxManager,
-				logger:            mockLogger,
+				postService:      mockPostService,
+				postEventService: mockPostEventService,
+				dtxManager:       mockDtxManager,
+				logger:           mockLogger,
 			},
 			args: args{
 				ctx:    ctx,
@@ -495,10 +495,10 @@ func TestPostUseCase_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &PostUseCase{
-				postService:       tt.fields.postService,
-				postEventProducer: tt.fields.postEventProducer,
-				dtxManager:        tt.fields.dtxManager,
-				logger:            tt.fields.logger,
+				postService:      tt.fields.postService,
+				postEventService: tt.fields.postEventService,
+				dtxManager:       tt.fields.dtxManager,
+				logger:           tt.fields.logger,
 			}
 			got, got1, err := i.List(tt.args.ctx, tt.args.filter)
 			assert.ErrorIs(t, err, tt.wantErr)

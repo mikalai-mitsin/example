@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
+	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
@@ -74,6 +75,10 @@ func (s *PostServiceServer) Delete(
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
+}
+func (s *PostServiceServer) RegisterGRPC(grpcServer *grpc.Server) error {
+	grpcServer.AddHandler(&examplepb.PostService_ServiceDesc, s)
+	return nil
 }
 func encodePostCreate(input *examplepb.PostCreate) entities.PostCreate {
 	create := entities.PostCreate{Body: input.GetBody()}

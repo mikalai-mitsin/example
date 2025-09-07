@@ -1,11 +1,10 @@
-package events
+package repositories
 
 import (
 	"context"
 	"encoding/json"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
-	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -29,7 +28,7 @@ func NewTagEventProducer(
 	return &TagEventProducer{producer: producer, logger: logger}
 }
 
-func (p *TagEventProducer) Created(ctx context.Context, _ dtx.TX, tag entities.Tag) error {
+func (p *TagEventProducer) Created(ctx context.Context, tag entities.Tag) error {
 	data, err := json.Marshal(tag)
 	if err != nil {
 		return err
@@ -45,7 +44,7 @@ func (p *TagEventProducer) Created(ctx context.Context, _ dtx.TX, tag entities.T
 	return nil
 }
 
-func (p *TagEventProducer) Updated(ctx context.Context, _ dtx.TX, tag entities.Tag) error {
+func (p *TagEventProducer) Updated(ctx context.Context, tag entities.Tag) error {
 	data, err := json.Marshal(tag)
 	if err != nil {
 		return err
@@ -61,7 +60,7 @@ func (p *TagEventProducer) Updated(ctx context.Context, _ dtx.TX, tag entities.T
 	return nil
 }
 
-func (p *TagEventProducer) Deleted(ctx context.Context, _ dtx.TX, id uuid.UUID) error {
+func (p *TagEventProducer) Deleted(ctx context.Context, id uuid.UUID) error {
 	message := &kafka.Message{
 		Topic: topicEventDeleted,
 		Value: []byte(id.String()),
