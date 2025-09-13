@@ -20,9 +20,7 @@ type articleRepository interface {
 	Delete(context.Context, dtx.TX, uuid.UUID) error
 }
 type articleEventProducer interface {
-	Created(context.Context, entities.Article) error
-	Updated(context.Context, entities.Article) error
-	Deleted(context.Context, uuid.UUID) error
+	Send(context.Context, entities.Article) error
 }
 
 // clock - clock interface

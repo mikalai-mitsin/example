@@ -72,7 +72,7 @@ func TestArticleRepository_Create(t *testing.T) {
 	mockTxManager := dtx.NewManager(mockDB)
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
-	query := "INSERT INTO public.articles (id,created_at,updated_at,title,subtitle,body,is_published) VALUES ($1,$2,$3,$4,$5,$6,$7)"
+	query := "INSERT INTO public.articles (id,created_at,updated_at,deleted_at,title,subtitle,body,is_published) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)"
 	article := entities.NewMockArticle(t)
 	ctx := context.Background()
 	type fields struct {
@@ -100,6 +100,7 @@ func TestArticleRepository_Create(t *testing.T) {
 						article.ID,
 						article.UpdatedAt,
 						article.CreatedAt,
+						article.DeletedAt,
 						article.Title,
 						article.Subtitle,
 						article.Body,
@@ -127,6 +128,7 @@ func TestArticleRepository_Create(t *testing.T) {
 						article.ID,
 						article.UpdatedAt,
 						article.CreatedAt,
+						article.DeletedAt,
 						article.Title,
 						article.Subtitle,
 						article.Body,
@@ -171,7 +173,7 @@ func TestArticleRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
-	query := "SELECT articles.id, articles.created_at, articles.updated_at, articles.title, articles.subtitle, articles.body, articles.is_published FROM public.articles WHERE id = $1 LIMIT 1"
+	query := "SELECT articles.id, articles.created_at, articles.updated_at, articles.deleted_at, articles.title, articles.subtitle, articles.body, articles.is_published FROM public.articles WHERE id = $1 LIMIT 1"
 	article := entities.NewMockArticle(t)
 	ctx := context.Background()
 	type fields struct {
@@ -273,9 +275,9 @@ func TestArticleRepository_List(t *testing.T) {
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listArticles []entities.Article
+	var articles []entities.Article
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
-		listArticles = append(listArticles, entities.NewMockArticle(t))
+		articles = append(articles, entities.NewMockArticle(t))
 	}
 	filter := entities.ArticleFilter{
 		PageSize:   pointer.Of(uint64(10)),
@@ -283,7 +285,7 @@ func TestArticleRepository_List(t *testing.T) {
 		Search:     nil,
 		OrderBy:    []entities.ArticleOrdering{"id"},
 	}
-	query := "SELECT articles.id, articles.created_at, articles.updated_at, articles.title, articles.subtitle, articles.body, articles.is_published FROM public.articles ORDER BY articles.id ASC LIMIT 10 OFFSET 10"
+	query := "SELECT articles.id, articles.created_at, articles.updated_at, articles.deleted_at, articles.title, articles.subtitle, articles.body, articles.is_published FROM public.articles ORDER BY articles.id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		writeDB database
 		readDB  database
@@ -305,7 +307,7 @@ func TestArticleRepository_List(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mock.ExpectQuery(query).
-					WillReturnRows(newArticleRows(t, listArticles))
+					WillReturnRows(newArticleRows(t, articles))
 			},
 			fields: fields{
 				writeDB: mockDB,
@@ -316,7 +318,7 @@ func TestArticleRepository_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listArticles,
+			want:    articles,
 			wantErr: nil,
 		},
 		{
@@ -388,7 +390,7 @@ func TestArticleRepository_Update(t *testing.T) {
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
 	article := entities.NewMockArticle(t)
-	query := `UPDATE public.articles SET created_at = $1, updated_at = $2, title = $3, subtitle = $4, body = $5, is_published = $6 WHERE id = $7`
+	query := `UPDATE public.articles SET created_at = $1, updated_at = $2, deleted_at = $3, title = $4, subtitle = $5, body = $6, is_published = $7 WHERE id = $8`
 	ctx := context.Background()
 	type fields struct {
 		writeDB database
@@ -414,6 +416,7 @@ func TestArticleRepository_Update(t *testing.T) {
 					WithArgs(
 						article.CreatedAt,
 						article.UpdatedAt,
+						article.DeletedAt,
 						article.Title,
 						article.Subtitle,
 						article.Body,
@@ -441,6 +444,7 @@ func TestArticleRepository_Update(t *testing.T) {
 					WithArgs(
 						article.CreatedAt,
 						article.UpdatedAt,
+						article.DeletedAt,
 						article.Title,
 						article.Subtitle,
 						article.Body,
@@ -468,6 +472,7 @@ func TestArticleRepository_Update(t *testing.T) {
 					WithArgs(
 						article.CreatedAt,
 						article.UpdatedAt,
+						article.DeletedAt,
 						article.Title,
 						article.Subtitle,
 						article.Body,
@@ -496,6 +501,7 @@ func TestArticleRepository_Update(t *testing.T) {
 					WithArgs(
 						article.CreatedAt,
 						article.UpdatedAt,
+						article.DeletedAt,
 						article.Title,
 						article.Subtitle,
 						article.Body,
@@ -524,6 +530,7 @@ func TestArticleRepository_Update(t *testing.T) {
 					WithArgs(
 						article.CreatedAt,
 						article.UpdatedAt,
+						article.DeletedAt,
 						article.Title,
 						article.Subtitle,
 						article.Body,
@@ -789,7 +796,7 @@ func TestArticleRepository_Count(t *testing.T) {
 	}
 }
 
-func newArticleRows(t *testing.T, listArticles []entities.Article) *sqlmock.Rows {
+func newArticleRows(t *testing.T, articles []entities.Article) *sqlmock.Rows {
 	t.Helper()
 	rows := sqlmock.NewRows([]string{
 		"id",
@@ -799,8 +806,9 @@ func newArticleRows(t *testing.T, listArticles []entities.Article) *sqlmock.Rows
 		"is_published",
 		"updated_at",
 		"created_at",
+		"deleted_at",
 	})
-	for _, article := range listArticles {
+	for _, article := range articles {
 		rows.AddRow(
 			article.ID,
 			article.Title,
@@ -809,6 +817,7 @@ func newArticleRows(t *testing.T, listArticles []entities.Article) *sqlmock.Rows
 			article.IsPublished,
 			article.UpdatedAt,
 			article.CreatedAt,
+			article.DeletedAt,
 		)
 	}
 	return rows

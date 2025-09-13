@@ -33,10 +33,11 @@ message Article {
   string id = 1;
   google.protobuf.Timestamp updated_at = 2;
   google.protobuf.Timestamp created_at = 3;
-  string title = 4;
-  string subtitle = 5;
-  string body = 6;
-  bool is_published = 7;
+  google.protobuf.Timestamp deleted_at = 4;
+  string title = 5;
+  string subtitle = 6;
+  string body = 7;
+  bool is_published = 8;
 }
 
 message ListArticle {
@@ -52,7 +53,8 @@ message ArticleFilter {
   google.protobuf.UInt64Value page_number = 1;
   google.protobuf.UInt64Value page_size = 2;
   repeated string order_by = 3;
-  google.protobuf.StringValue search = 4;
+  google.protobuf.BoolValue is_deleted = 4;
+  google.protobuf.StringValue search = 5;
 }
 
 service ArticleService {
@@ -71,7 +73,7 @@ service ArticleService {
       body: "*"
     };
   }
-  rpc Delete(examplepb.v1.ArticleDelete) returns (google.protobuf.Empty) {
+  rpc Delete(examplepb.v1.ArticleDelete) returns (examplepb.v1.Article) {
     option (google.api.http) = {delete: "/api/v1/articles/{id}"};
   }
   rpc List(examplepb.v1.ArticleFilter) returns (examplepb.v1.ListArticle) {

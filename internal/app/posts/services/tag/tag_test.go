@@ -9,6 +9,7 @@ import (
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -138,10 +139,10 @@ func TestTagService_List(t *testing.T) {
 	mockTagRepository := NewMocktagRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listTags []entities.Tag
+	var tags []entities.Tag
 	count := faker.New().UInt64Between(2, 20)
 	for i := uint64(0); i < count; i++ {
-		listTags = append(listTags, entities.NewMockTag(t))
+		tags = append(tags, entities.NewMockTag(t))
 	}
 	filter := entities.NewMockTagFilter(t)
 	type fields struct {
@@ -164,7 +165,7 @@ func TestTagService_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockTagRepository.EXPECT().List(ctx, filter).Return(listTags, nil)
+				mockTagRepository.EXPECT().List(ctx, filter).Return(tags, nil)
 				mockTagRepository.EXPECT().Count(ctx, filter).Return(count, nil)
 			},
 			fields: fields{
@@ -175,7 +176,7 @@ func TestTagService_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listTags,
+			want:    tags,
 			want1:   count,
 			wantErr: nil,
 		},
@@ -201,7 +202,7 @@ func TestTagService_List(t *testing.T) {
 		{
 			name: "count error",
 			setup: func() {
-				mockTagRepository.EXPECT().List(ctx, filter).Return(listTags, nil)
+				mockTagRepository.EXPECT().List(ctx, filter).Return(tags, nil)
 				mockTagRepository.EXPECT().
 					Count(ctx, filter).
 					Return(uint64(0), errs.NewUnexpectedBehaviorError("test error"))
@@ -392,6 +393,7 @@ func TestTagService_Update(t *testing.T) {
 	updatedTag := entities.Tag{
 		ID:        tag.ID,
 		CreatedAt: tag.CreatedAt,
+		DeletedAt: tag.DeletedAt,
 		UpdatedAt: now,
 
 		PostId: *update.PostId,
@@ -502,11 +504,23 @@ func TestTagService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockTagRepository := NewMocktagRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockClock := NewMockclock(ctrl)
 	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
+	now := time.Now().UTC()
 	tag := entities.NewMockTag(t)
+	deletedTag := entities.Tag{
+		ID:        tag.ID,
+		CreatedAt: tag.CreatedAt,
+		UpdatedAt: tag.CreatedAt,
+		DeletedAt: pointer.Of(now),
+
+		PostId: tag.PostId,
+		Value:  tag.Value,
+	}
 	type fields struct {
 		tagRepository tagRepository
+		clock         clock
 		logger        logger
 	}
 	type args struct {
@@ -519,42 +533,75 @@ func TestTagService_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
+		want    entities.Tag
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
 				mockTagRepository.EXPECT().
-					Delete(ctx, mockTx, tag.ID).
+					Get(ctx, tag.ID).
+					Return(tag, nil)
+				mockTagRepository.EXPECT().
+					Update(ctx, mockTx, deletedTag).
 					Return(nil)
 			},
 			fields: fields{
 				tagRepository: mockTagRepository,
 				logger:        mockLogger,
+				clock:         mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  tag.ID,
 			},
+			want:    deletedTag,
 			wantErr: nil,
+		},
+		{
+			name: "update error",
+			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
+				mockTagRepository.EXPECT().
+					Get(ctx, tag.ID).
+					Return(tag, nil)
+				mockTagRepository.EXPECT().
+					Update(ctx, mockTx, deletedTag).
+					Return(errs.NewUnexpectedBehaviorError("test error 12"))
+			},
+			fields: fields{
+				tagRepository: mockTagRepository,
+				logger:        mockLogger,
+				clock:         mockClock,
+			},
+			args: args{
+				ctx: ctx,
+				tx:  mockTx,
+				id:  tag.ID,
+			},
+			want:    entities.Tag{},
+			wantErr: errs.NewUnexpectedBehaviorError("test error 12"),
 		},
 		{
 			name: "Tag not found",
 			setup: func() {
 				mockTagRepository.EXPECT().
-					Delete(ctx, mockTx, tag.ID).
-					Return(errs.NewEntityNotFoundError())
+					Get(ctx, tag.ID).
+					Return(entities.Tag{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				tagRepository: mockTagRepository,
 				logger:        mockLogger,
+				clock:         mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  tag.ID,
 			},
+			want:    entities.Tag{},
 			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
@@ -564,8 +611,10 @@ func TestTagService_Delete(t *testing.T) {
 			u := &TagService{
 				tagRepository: tt.fields.tagRepository,
 				logger:        tt.fields.logger,
+				clock:         tt.fields.clock,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			got, err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			assert.Equal(t, tt.want, got)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

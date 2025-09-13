@@ -5,6 +5,7 @@ import (
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -101,9 +102,14 @@ func (s *LikeService) Update(
 	}
 	return like, nil
 }
-func (s *LikeService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := s.likeRepository.Delete(ctx, tx, id); err != nil {
-		return err
+func (s *LikeService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) (entities.Like, error) {
+	like, err := s.likeRepository.Get(ctx, id)
+	if err != nil {
+		return entities.Like{}, err
 	}
-	return nil
+	like.DeletedAt = pointer.Of(s.clock.Now().UTC())
+	if err := s.likeRepository.Update(ctx, tx, like); err != nil {
+		return entities.Like{}, err
+	}
+	return like, nil
 }

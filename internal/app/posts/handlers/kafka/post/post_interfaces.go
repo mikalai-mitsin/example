@@ -14,7 +14,7 @@ type postUseCase interface {
 	Get(context.Context, uuid.UUID) (entities.Post, error)
 	List(context.Context, entities.PostFilter) ([]entities.Post, uint64, error)
 	Update(context.Context, entities.PostUpdate) (entities.Post, error)
-	Delete(context.Context, uuid.UUID) error
+	Delete(context.Context, uuid.UUID) (entities.Post, error)
 }
 type logger interface {
 	log.Logger

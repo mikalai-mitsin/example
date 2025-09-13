@@ -45,7 +45,7 @@ func (u *ArticleUseCase) Create(
 	if err != nil {
 		return entities.Article{}, err
 	}
-	if err := u.articleEventService.Created(ctx, tx, article); err != nil {
+	if err := u.articleEventService.Send(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -87,7 +87,7 @@ func (u *ArticleUseCase) Update(
 	if err != nil {
 		return entities.Article{}, err
 	}
-	if err := u.articleEventService.Updated(ctx, tx, article); err != nil {
+	if err := u.articleEventService.Send(ctx, tx, article); err != nil {
 		return entities.Article{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -95,7 +95,7 @@ func (u *ArticleUseCase) Update(
 	}
 	return article, nil
 }
-func (u *ArticleUseCase) Delete(ctx context.Context, id uuid.UUID) error {
+func (u *ArticleUseCase) Delete(ctx context.Context, id uuid.UUID) (entities.Article, error) {
 	logger := u.logger.WithContext(ctx)
 	tx := u.dtxManager.NewTx()
 	defer func(tx dtx.TX) {
@@ -103,14 +103,15 @@ func (u *ArticleUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 			logger.Error("cant rollback transaction", log.Error(err))
 		}
 	}(tx)
-	if err := u.articleService.Delete(ctx, tx, id); err != nil {
-		return err
+	article, err := u.articleService.Delete(ctx, tx, id)
+	if err != nil {
+		return entities.Article{}, err
 	}
-	if err := u.articleEventService.Deleted(ctx, tx, id); err != nil {
-		return err
+	if err := u.articleEventService.Send(ctx, tx, article); err != nil {
+		return entities.Article{}, err
 	}
 	if err := tx.Commit(); err != nil {
-		return err
+		return entities.Article{}, err
 	}
-	return nil
+	return article, nil
 }

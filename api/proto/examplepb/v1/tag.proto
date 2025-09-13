@@ -29,8 +29,9 @@ message Tag {
   string id = 1;
   google.protobuf.Timestamp updated_at = 2;
   google.protobuf.Timestamp created_at = 3;
-  string post_id = 4;
-  string value = 5;
+  google.protobuf.Timestamp deleted_at = 4;
+  string post_id = 5;
+  string value = 6;
 }
 
 message ListTag {
@@ -46,6 +47,7 @@ message TagFilter {
   google.protobuf.UInt64Value page_number = 1;
   google.protobuf.UInt64Value page_size = 2;
   repeated string order_by = 3;
+  google.protobuf.BoolValue is_deleted = 4;
 }
 
 service TagService {
@@ -64,7 +66,7 @@ service TagService {
       body: "*"
     };
   }
-  rpc Delete(examplepb.v1.TagDelete) returns (google.protobuf.Empty) {
+  rpc Delete(examplepb.v1.TagDelete) returns (examplepb.v1.Tag) {
     option (google.api.http) = {delete: "/api/v1/tags/{id}"};
   }
   rpc List(examplepb.v1.TagFilter) returns (examplepb.v1.ListTag) {

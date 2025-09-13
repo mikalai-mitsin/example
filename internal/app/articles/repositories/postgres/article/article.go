@@ -25,20 +25,22 @@ func NewArticleRepository(readDB database, writeDB database, logger logger) *Art
 }
 
 var orderByMap = map[entities.ArticleOrdering]string{
-	entities.ArticleOrderingBodyDESC:        "articles.body DESC",
-	entities.ArticleOrderingIsPublishedDESC: "articles.is_published DESC",
-	entities.ArticleOrderingIdASC:           "articles.id ASC",
 	entities.ArticleOrderingIdDESC:          "articles.id DESC",
-	entities.ArticleOrderingCreatedAtASC:    "articles.created_at ASC",
+	entities.ArticleOrderingCreatedAtDESC:   "articles.created_at DESC",
 	entities.ArticleOrderingUpdatedAtASC:    "articles.updated_at ASC",
+	entities.ArticleOrderingIsPublishedDESC: "articles.is_published DESC",
+	entities.ArticleOrderingDeletedAtASC:    "articles.deleted_at ASC",
+	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
+	entities.ArticleOrderingCreatedAtASC:    "articles.created_at ASC",
 	entities.ArticleOrderingUpdatedAtDESC:   "articles.updated_at DESC",
 	entities.ArticleOrderingTitleASC:        "articles.title ASC",
-	entities.ArticleOrderingSubtitleDESC:    "articles.subtitle DESC",
-	entities.ArticleOrderingIsPublishedASC:  "articles.is_published ASC",
-	entities.ArticleOrderingCreatedAtDESC:   "articles.created_at DESC",
+	entities.ArticleOrderingIdASC:           "articles.id ASC",
+	entities.ArticleOrderingDeletedAtDESC:   "articles.deleted_at DESC",
 	entities.ArticleOrderingTitleDESC:       "articles.title DESC",
 	entities.ArticleOrderingSubtitleASC:     "articles.subtitle ASC",
+	entities.ArticleOrderingSubtitleDESC:    "articles.subtitle DESC",
 	entities.ArticleOrderingBodyASC:         "articles.body ASC",
+	entities.ArticleOrderingBodyDESC:        "articles.body DESC",
 }
 
 func encodeOrderBy(orderBy []entities.ArticleOrdering) []string {
@@ -54,13 +56,14 @@ func encodeOrderBy(orderBy []entities.ArticleOrdering) []string {
 }
 
 type ArticleDTO struct {
-	ID          uuid.UUID `db:"id,omitempty"`
-	UpdatedAt   time.Time `db:"updated_at,omitempty"`
-	CreatedAt   time.Time `db:"created_at,omitempty"`
-	Title       string    `db:"title"`
-	Subtitle    string    `db:"subtitle"`
-	Body        string    `db:"body"`
-	IsPublished bool      `db:"is_published"`
+	ID          uuid.UUID  `db:"id,omitempty"`
+	UpdatedAt   time.Time  `db:"updated_at,omitempty"`
+	CreatedAt   time.Time  `db:"created_at,omitempty"`
+	DeletedAt   *time.Time `db:"deleted_at"`
+	Title       string     `db:"title"`
+	Subtitle    string     `db:"subtitle"`
+	Body        string     `db:"body"`
+	IsPublished bool       `db:"is_published"`
 }
 type ArticleListDTO []ArticleDTO
 
@@ -76,6 +79,7 @@ func NewArticleDTOFromEntity(entity entities.Article) ArticleDTO {
 		ID:          entity.ID,
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
+		DeletedAt:   entity.DeletedAt,
 		Title:       entity.Title,
 		Subtitle:    entity.Subtitle,
 		Body:        entity.Body,
@@ -88,6 +92,7 @@ func (dto ArticleDTO) toEntity() entities.Article {
 		ID:          dto.ID,
 		CreatedAt:   dto.CreatedAt,
 		UpdatedAt:   dto.UpdatedAt,
+		DeletedAt:   dto.DeletedAt,
 		Title:       dto.Title,
 		Subtitle:    dto.Subtitle,
 		Body:        dto.Body,
@@ -100,8 +105,8 @@ func (r *ArticleRepository) Create(ctx context.Context, tx dtx.TX, entity entiti
 	defer cancel()
 	dto := NewArticleDTOFromEntity(entity)
 	q := sq.Insert("public.articles").
-		Columns("id", "created_at", "updated_at", "title", "subtitle", "body", "is_published").
-		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.Title, dto.Subtitle, dto.Body, dto.IsPublished)
+		Columns("id", "created_at", "updated_at", "deleted_at", "title", "subtitle", "body", "is_published").
+		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.DeletedAt, dto.Title, dto.Subtitle, dto.Body, dto.IsPublished)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
@@ -113,7 +118,7 @@ func (r *ArticleRepository) Get(ctx context.Context, id uuid.UUID) (entities.Art
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := &ArticleDTO{}
-	q := sq.Select("articles.id", "articles.created_at", "articles.updated_at", "articles.title", "articles.subtitle", "articles.body", "articles.is_published").
+	q := sq.Select("articles.id", "articles.created_at", "articles.updated_at", "articles.deleted_at", "articles.title", "articles.subtitle", "articles.body", "articles.is_published").
 		From("public.articles").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -136,9 +141,16 @@ func (r *ArticleRepository) List(
 	if filter.PageSize == nil {
 		filter.PageSize = pointer.Of(pageSize)
 	}
-	q := sq.Select("articles.id", "articles.created_at", "articles.updated_at", "articles.title", "articles.subtitle", "articles.body", "articles.is_published").
+	q := sq.Select("articles.id", "articles.created_at", "articles.updated_at", "articles.deleted_at", "articles.title", "articles.subtitle", "articles.body", "articles.is_published").
 		From("public.articles").
 		Limit(pageSize)
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"articles.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"articles.deleted_at": nil})
+		}
+	}
 	if filter.Search != nil {
 		q = q.Where(
 			postgres.Search{
@@ -170,6 +182,13 @@ func (r *ArticleRepository) Count(
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.articles")
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"articles.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"articles.deleted_at": nil})
+		}
+	}
 	if filter.Search != nil {
 		q = q.Where(
 			postgres.Search{
@@ -195,6 +214,7 @@ func (r *ArticleRepository) Update(ctx context.Context, tx dtx.TX, entity entiti
 	{
 		q = q.Set("created_at", dto.CreatedAt)
 		q = q.Set("updated_at", dto.UpdatedAt)
+		q = q.Set("deleted_at", dto.DeletedAt)
 		q = q.Set("title", dto.Title)
 		q = q.Set("subtitle", dto.Subtitle)
 		q = q.Set("body", dto.Body)

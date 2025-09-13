@@ -2,18 +2,16 @@ package repositories
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"reflect"
 	"testing"
 
-	"github.com/IBM/sarama"
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestNewArticleEventProducer(t *testing.T) {
@@ -54,7 +52,7 @@ func TestNewArticleEventProducer(t *testing.T) {
 	}
 }
 
-func TestArticleEventProducer_Created(t *testing.T) {
+func TestArticleEventProducer_Send(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
@@ -87,9 +85,9 @@ func TestArticleEventProducer_Created(t *testing.T) {
 				article: article,
 			},
 			setup: func() {
-				data, _ := json.Marshal(article)
+				data, _ := proto.Marshal(decodeArticle(article))
 				mockProducer.EXPECT().Send(gomock.Any(), &kafka.Message{
-					Topic: topicEventCreated,
+					Topic: topicName,
 					Value: data,
 					Key:   article.ID.String(),
 				}).Return(nil)
@@ -107,9 +105,9 @@ func TestArticleEventProducer_Created(t *testing.T) {
 				article: article,
 			},
 			setup: func() {
-				data, _ := json.Marshal(article)
+				data, _ := proto.Marshal(decodeArticle(article))
 				mockProducer.EXPECT().Send(gomock.Any(), &kafka.Message{
-					Topic: topicEventCreated,
+					Topic: topicName,
 					Value: data,
 					Key:   article.ID.String(),
 				}).Return(errors.New("test error"))
@@ -124,157 +122,7 @@ func TestArticleEventProducer_Created(t *testing.T) {
 				producer: tt.fields.producer,
 				logger:   tt.fields.logger,
 			}
-			err := p.Created(tt.args.ctx, tt.args.article)
-			assert.ErrorIs(t, err, tt.wantErr)
-		})
-	}
-}
-
-func TestArticleEventProducer_Updated(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := NewMocklogger(ctrl)
-	mockProducer := NewMockproducer(ctrl)
-	ctx := context.Background()
-	article := entities.NewMockArticle(t)
-	type fields struct {
-		producer producer
-		logger   logger
-	}
-	type args struct {
-		ctx     context.Context
-		article entities.Article
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		setup   func()
-		wantErr error
-	}{
-		{
-			name: "ok",
-			fields: fields{
-				producer: mockProducer,
-				logger:   mockLogger,
-			},
-			args: args{
-				ctx:     ctx,
-				article: article,
-			},
-			setup: func() {
-				data, _ := json.Marshal(article)
-				mockProducer.EXPECT().Send(gomock.Any(), &kafka.Message{
-					Topic: topicEventUpdated,
-					Value: data,
-					Key:   article.ID.String(),
-				}).Return(nil)
-			},
-			wantErr: nil,
-		},
-		{
-			name: "send error",
-			fields: fields{
-				producer: mockProducer,
-				logger:   mockLogger,
-			},
-			args: args{
-				ctx:     ctx,
-				article: article,
-			},
-			setup: func() {
-				data, _ := json.Marshal(article)
-				mockProducer.EXPECT().Send(gomock.Any(), &kafka.Message{
-					Topic: topicEventUpdated,
-					Value: data,
-					Key:   article.ID.String(),
-				}).Return(errors.New("test error"))
-			},
-			wantErr: errs.FromKafkaError(errors.New("test error")),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
-			p := &ArticleEventProducer{
-				producer: tt.fields.producer,
-				logger:   tt.fields.logger,
-			}
-			err := p.Updated(tt.args.ctx, tt.args.article)
-			assert.ErrorIs(t, err, tt.wantErr)
-		})
-	}
-}
-
-func TestArticleEventProducer_Deleted(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := NewMocklogger(ctrl)
-	mockProducer := NewMockproducer(ctrl)
-	ctx := context.Background()
-	article := entities.NewMockArticle(t)
-	type fields struct {
-		producer producer
-		logger   logger
-	}
-	type args struct {
-		ctx context.Context
-		id  uuid.UUID
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		setup   func()
-		wantErr error
-	}{
-		{
-			name: "ok",
-			fields: fields{
-				producer: mockProducer,
-				logger:   mockLogger,
-			},
-			args: args{
-				ctx: ctx,
-				id:  article.ID,
-			},
-			setup: func() {
-				mockProducer.EXPECT().Send(gomock.Any(), &kafka.Message{
-					Topic: topicEventDeleted,
-					Value: sarama.ByteEncoder(article.ID.String()),
-					Key:   article.ID.String(),
-				}).Return(nil)
-			},
-			wantErr: nil,
-		},
-		{
-			name: "send error",
-			fields: fields{
-				producer: mockProducer,
-				logger:   mockLogger,
-			},
-			args: args{
-				ctx: ctx,
-				id:  article.ID,
-			},
-			setup: func() {
-				mockProducer.EXPECT().Send(gomock.Any(), &kafka.Message{
-					Topic: topicEventDeleted,
-					Value: []byte(article.ID.String()),
-					Key:   article.ID.String(),
-				}).Return(errors.New("test error"))
-			},
-			wantErr: errs.FromKafkaError(errors.New("test error")),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
-			p := &ArticleEventProducer{
-				producer: tt.fields.producer,
-				logger:   tt.fields.logger,
-			}
-			err := p.Deleted(tt.args.ctx, tt.args.id)
+			err := p.Send(tt.args.ctx, tt.args.article)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

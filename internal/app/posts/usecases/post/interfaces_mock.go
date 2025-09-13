@@ -62,11 +62,12 @@ func (mr *MockpostServiceMockRecorder) Create(arg0, arg1, arg2 any) *gomock.Call
 }
 
 // Delete mocks base method.
-func (m *MockpostService) Delete(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) error {
+func (m *MockpostService) Delete(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) (post.Post, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(post.Post)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Delete indicates an expected call of Delete.
@@ -145,46 +146,18 @@ func (m *MockpostEventService) EXPECT() *MockpostEventServiceMockRecorder {
 	return m.recorder
 }
 
-// Created mocks base method.
-func (m *MockpostEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 post.Post) error {
+// Send mocks base method.
+func (m *MockpostEventService) Send(arg0 context.Context, arg1 dtx.TX, arg2 post.Post) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Created", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Send", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Created indicates an expected call of Created.
-func (mr *MockpostEventServiceMockRecorder) Created(arg0, arg1, arg2 any) *gomock.Call {
+// Send indicates an expected call of Send.
+func (mr *MockpostEventServiceMockRecorder) Send(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Created", reflect.TypeOf((*MockpostEventService)(nil).Created), arg0, arg1, arg2)
-}
-
-// Deleted mocks base method.
-func (m *MockpostEventService) Deleted(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Deleted", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Deleted indicates an expected call of Deleted.
-func (mr *MockpostEventServiceMockRecorder) Deleted(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deleted", reflect.TypeOf((*MockpostEventService)(nil).Deleted), arg0, arg1, arg2)
-}
-
-// Updated mocks base method.
-func (m *MockpostEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 post.Post) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Updated", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Updated indicates an expected call of Updated.
-func (mr *MockpostEventServiceMockRecorder) Updated(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Updated", reflect.TypeOf((*MockpostEventService)(nil).Updated), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockpostEventService)(nil).Send), arg0, arg1, arg2)
 }
 
 // Mocklogger is a mock of logger interface.

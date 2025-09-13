@@ -12,7 +12,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -35,7 +34,7 @@ type ArticleServiceClient interface {
 	Create(ctx context.Context, in *ArticleCreate, opts ...grpc.CallOption) (*Article, error)
 	Get(ctx context.Context, in *ArticleGet, opts ...grpc.CallOption) (*Article, error)
 	Update(ctx context.Context, in *ArticleUpdate, opts ...grpc.CallOption) (*Article, error)
-	Delete(ctx context.Context, in *ArticleDelete, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *ArticleDelete, opts ...grpc.CallOption) (*Article, error)
 	List(ctx context.Context, in *ArticleFilter, opts ...grpc.CallOption) (*ListArticle, error)
 }
 
@@ -77,9 +76,9 @@ func (c *articleServiceClient) Update(ctx context.Context, in *ArticleUpdate, op
 	return out, nil
 }
 
-func (c *articleServiceClient) Delete(ctx context.Context, in *ArticleDelete, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *articleServiceClient) Delete(ctx context.Context, in *ArticleDelete, opts ...grpc.CallOption) (*Article, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(Article)
 	err := c.cc.Invoke(ctx, ArticleService_Delete_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -104,7 +103,7 @@ type ArticleServiceServer interface {
 	Create(context.Context, *ArticleCreate) (*Article, error)
 	Get(context.Context, *ArticleGet) (*Article, error)
 	Update(context.Context, *ArticleUpdate) (*Article, error)
-	Delete(context.Context, *ArticleDelete) (*emptypb.Empty, error)
+	Delete(context.Context, *ArticleDelete) (*Article, error)
 	List(context.Context, *ArticleFilter) (*ListArticle, error)
 }
 
@@ -124,7 +123,7 @@ func (UnimplementedArticleServiceServer) Get(context.Context, *ArticleGet) (*Art
 func (UnimplementedArticleServiceServer) Update(context.Context, *ArticleUpdate) (*Article, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedArticleServiceServer) Delete(context.Context, *ArticleDelete) (*emptypb.Empty, error) {
+func (UnimplementedArticleServiceServer) Delete(context.Context, *ArticleDelete) (*Article, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedArticleServiceServer) List(context.Context, *ArticleFilter) (*ListArticle, error) {

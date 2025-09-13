@@ -9,12 +9,13 @@ import (
 )
 
 type Like struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	PostId    uuid.UUID `json:"post_id"`
-	Value     string    `json:"value"`
-	UserId    uuid.UUID `json:"user_id"`
+	ID        uuid.UUID  `json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	PostId    uuid.UUID  `json:"post_id"`
+	Value     string     `json:"value"`
+	UserId    uuid.UUID  `json:"user_id"`
 }
 
 func (m *Like) Validate() error {
@@ -23,6 +24,7 @@ func (m *Like) Validate() error {
 		validation.Field(&m.ID, validation.Required),
 		validation.Field(&m.CreatedAt, validation.Required),
 		validation.Field(&m.UpdatedAt, validation.Required),
+		validation.Field(&m.DeletedAt),
 		validation.Field(&m.PostId, validation.Required),
 		validation.Field(&m.Value, validation.Required),
 		validation.Field(&m.UserId, validation.Required),
@@ -36,7 +38,7 @@ func (m *Like) Validate() error {
 type LikeOrdering string
 
 func (o LikeOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(LikeOrderingUserIdASC.String(), LikeOrderingUserIdDESC.String(), LikeOrderingIdDESC.String(), LikeOrderingCreatedAtASC.String(), LikeOrderingCreatedAtDESC.String(), LikeOrderingUpdatedAtASC.String(), LikeOrderingPostIdASC.String(), LikeOrderingValueASC.String(), LikeOrderingIdASC.String(), LikeOrderingUpdatedAtDESC.String(), LikeOrderingPostIdDESC.String(), LikeOrderingValueDESC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(LikeOrderingIdASC.String(), LikeOrderingCreatedAtASC.String(), LikeOrderingUpdatedAtASC.String(), LikeOrderingUpdatedAtDESC.String(), LikeOrderingPostIdASC.String(), LikeOrderingUserIdASC.String(), LikeOrderingUserIdDESC.String(), LikeOrderingIdDESC.String(), LikeOrderingCreatedAtDESC.String(), LikeOrderingDeletedAtASC.String(), LikeOrderingDeletedAtDESC.String(), LikeOrderingPostIdDESC.String(), LikeOrderingValueASC.String(), LikeOrderingValueDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -45,24 +47,27 @@ func (o LikeOrdering) String() string {
 	return string(o)
 }
 
-const LikeOrderingPostIdDESC LikeOrdering = "-post_id"
-const LikeOrderingValueASC LikeOrdering = "value"
-const LikeOrderingUserIdASC LikeOrdering = "user_id"
-const LikeOrderingUserIdDESC LikeOrdering = "-user_id"
-const LikeOrderingIdASC LikeOrdering = "id"
-const LikeOrderingUpdatedAtASC LikeOrdering = "updated_at"
-const LikeOrderingUpdatedAtDESC LikeOrdering = "-updated_at"
-const LikeOrderingValueDESC LikeOrdering = "-value"
 const LikeOrderingIdDESC LikeOrdering = "-id"
 const LikeOrderingCreatedAtASC LikeOrdering = "created_at"
+const LikeOrderingDeletedAtASC LikeOrdering = "deleted_at"
+const LikeOrderingPostIdDESC LikeOrdering = "-post_id"
+const LikeOrderingValueASC LikeOrdering = "value"
+const LikeOrderingUserIdDESC LikeOrdering = "-user_id"
+const LikeOrderingIdASC LikeOrdering = "id"
 const LikeOrderingCreatedAtDESC LikeOrdering = "-created_at"
+const LikeOrderingUpdatedAtASC LikeOrdering = "updated_at"
+const LikeOrderingUpdatedAtDESC LikeOrdering = "-updated_at"
+const LikeOrderingDeletedAtDESC LikeOrdering = "-deleted_at"
 const LikeOrderingPostIdASC LikeOrdering = "post_id"
+const LikeOrderingValueDESC LikeOrdering = "-value"
+const LikeOrderingUserIdASC LikeOrdering = "user_id"
 
 type LikeFilter struct {
 	PageSize   *uint64        `json:"page_size"`
 	PageNumber *uint64        `json:"page_number"`
 	Search     *string        `json:"search"`
 	OrderBy    []LikeOrdering `json:"order_by"`
+	IsDeleted  *bool          `json:"is_deleted"`
 }
 
 func (m *LikeFilter) Validate() error {
@@ -72,6 +77,7 @@ func (m *LikeFilter) Validate() error {
 		validation.Field(&m.PageNumber),
 		validation.Field(&m.Search),
 		validation.Field(&m.OrderBy),
+		validation.Field(&m.IsDeleted),
 	)
 	if err != nil {
 		return errs.NewFromValidationError(err)

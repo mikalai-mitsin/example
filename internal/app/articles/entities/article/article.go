@@ -9,13 +9,14 @@ import (
 )
 
 type Article struct {
-	ID          uuid.UUID `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	Title       string    `json:"title"`
-	Subtitle    string    `json:"subtitle"`
-	Body        string    `json:"body"`
-	IsPublished bool      `json:"is_published"`
+	ID          uuid.UUID  `json:"id"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at"`
+	Title       string     `json:"title"`
+	Subtitle    string     `json:"subtitle"`
+	Body        string     `json:"body"`
+	IsPublished bool       `json:"is_published"`
 }
 
 func (m *Article) Validate() error {
@@ -24,6 +25,7 @@ func (m *Article) Validate() error {
 		validation.Field(&m.ID, validation.Required),
 		validation.Field(&m.CreatedAt, validation.Required),
 		validation.Field(&m.UpdatedAt, validation.Required),
+		validation.Field(&m.DeletedAt),
 		validation.Field(&m.Title, validation.Required),
 		validation.Field(&m.Subtitle, validation.Required),
 		validation.Field(&m.Body, validation.Required),
@@ -38,7 +40,7 @@ func (m *Article) Validate() error {
 type ArticleOrdering string
 
 func (o ArticleOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(ArticleOrderingCreatedAtDESC.String(), ArticleOrderingTitleDESC.String(), ArticleOrderingSubtitleASC.String(), ArticleOrderingSubtitleDESC.String(), ArticleOrderingBodyASC.String(), ArticleOrderingBodyDESC.String(), ArticleOrderingIdDESC.String(), ArticleOrderingUpdatedAtASC.String(), ArticleOrderingUpdatedAtDESC.String(), ArticleOrderingTitleASC.String(), ArticleOrderingIsPublishedASC.String(), ArticleOrderingIsPublishedDESC.String(), ArticleOrderingIdASC.String(), ArticleOrderingCreatedAtASC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(ArticleOrderingIsPublishedASC.String(), ArticleOrderingUpdatedAtASC.String(), ArticleOrderingIsPublishedDESC.String(), ArticleOrderingIdASC.String(), ArticleOrderingIdDESC.String(), ArticleOrderingCreatedAtASC.String(), ArticleOrderingDeletedAtDESC.String(), ArticleOrderingDeletedAtASC.String(), ArticleOrderingBodyASC.String(), ArticleOrderingCreatedAtDESC.String(), ArticleOrderingUpdatedAtDESC.String(), ArticleOrderingTitleASC.String(), ArticleOrderingTitleDESC.String(), ArticleOrderingSubtitleASC.String(), ArticleOrderingSubtitleDESC.String(), ArticleOrderingBodyDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -47,26 +49,29 @@ func (o ArticleOrdering) String() string {
 	return string(o)
 }
 
-const ArticleOrderingBodyDESC ArticleOrdering = "-body"
-const ArticleOrderingIsPublishedASC ArticleOrdering = "is_published"
-const ArticleOrderingCreatedAtASC ArticleOrdering = "created_at"
-const ArticleOrderingCreatedAtDESC ArticleOrdering = "-created_at"
-const ArticleOrderingUpdatedAtASC ArticleOrdering = "updated_at"
-const ArticleOrderingTitleASC ArticleOrdering = "title"
-const ArticleOrderingTitleDESC ArticleOrdering = "-title"
-const ArticleOrderingSubtitleASC ArticleOrdering = "subtitle"
-const ArticleOrderingIsPublishedDESC ArticleOrdering = "-is_published"
-const ArticleOrderingIdASC ArticleOrdering = "id"
 const ArticleOrderingIdDESC ArticleOrdering = "-id"
-const ArticleOrderingUpdatedAtDESC ArticleOrdering = "-updated_at"
+const ArticleOrderingCreatedAtDESC ArticleOrdering = "-created_at"
 const ArticleOrderingSubtitleDESC ArticleOrdering = "-subtitle"
+const ArticleOrderingUpdatedAtASC ArticleOrdering = "updated_at"
+const ArticleOrderingDeletedAtASC ArticleOrdering = "deleted_at"
+const ArticleOrderingTitleDESC ArticleOrdering = "-title"
 const ArticleOrderingBodyASC ArticleOrdering = "body"
+const ArticleOrderingIsPublishedASC ArticleOrdering = "is_published"
+const ArticleOrderingIdASC ArticleOrdering = "id"
+const ArticleOrderingDeletedAtDESC ArticleOrdering = "-deleted_at"
+const ArticleOrderingTitleASC ArticleOrdering = "title"
+const ArticleOrderingCreatedAtASC ArticleOrdering = "created_at"
+const ArticleOrderingUpdatedAtDESC ArticleOrdering = "-updated_at"
+const ArticleOrderingSubtitleASC ArticleOrdering = "subtitle"
+const ArticleOrderingBodyDESC ArticleOrdering = "-body"
+const ArticleOrderingIsPublishedDESC ArticleOrdering = "-is_published"
 
 type ArticleFilter struct {
 	PageSize   *uint64           `json:"page_size"`
 	PageNumber *uint64           `json:"page_number"`
 	Search     *string           `json:"search"`
 	OrderBy    []ArticleOrdering `json:"order_by"`
+	IsDeleted  *bool             `json:"is_deleted"`
 }
 
 func (m *ArticleFilter) Validate() error {
@@ -76,6 +81,7 @@ func (m *ArticleFilter) Validate() error {
 		validation.Field(&m.PageNumber),
 		validation.Field(&m.Search),
 		validation.Field(&m.OrderBy),
+		validation.Field(&m.IsDeleted),
 	)
 	if err != nil {
 		return errs.NewFromValidationError(err)

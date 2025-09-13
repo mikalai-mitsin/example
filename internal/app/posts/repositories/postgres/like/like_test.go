@@ -72,7 +72,7 @@ func TestLikeRepository_Create(t *testing.T) {
 	mockTxManager := dtx.NewManager(mockDB)
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
-	query := "INSERT INTO public.likes (id,created_at,updated_at,post_id,value,user_id) VALUES ($1,$2,$3,$4,$5,$6)"
+	query := "INSERT INTO public.likes (id,created_at,updated_at,deleted_at,post_id,value,user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)"
 	like := entities.NewMockLike(t)
 	ctx := context.Background()
 	type fields struct {
@@ -100,6 +100,7 @@ func TestLikeRepository_Create(t *testing.T) {
 						like.ID,
 						like.UpdatedAt,
 						like.CreatedAt,
+						like.DeletedAt,
 						like.PostId,
 						like.Value,
 						like.UserId,
@@ -126,6 +127,7 @@ func TestLikeRepository_Create(t *testing.T) {
 						like.ID,
 						like.UpdatedAt,
 						like.CreatedAt,
+						like.DeletedAt,
 						like.PostId,
 						like.Value,
 						like.UserId,
@@ -169,7 +171,7 @@ func TestLikeRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
-	query := "SELECT likes.id, likes.created_at, likes.updated_at, likes.post_id, likes.value, likes.user_id FROM public.likes WHERE id = $1 LIMIT 1"
+	query := "SELECT likes.id, likes.created_at, likes.updated_at, likes.deleted_at, likes.post_id, likes.value, likes.user_id FROM public.likes WHERE id = $1 LIMIT 1"
 	like := entities.NewMockLike(t)
 	ctx := context.Background()
 	type fields struct {
@@ -269,9 +271,9 @@ func TestLikeRepository_List(t *testing.T) {
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listLikes []entities.Like
+	var likes []entities.Like
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
-		listLikes = append(listLikes, entities.NewMockLike(t))
+		likes = append(likes, entities.NewMockLike(t))
 	}
 	filter := entities.LikeFilter{
 		PageSize:   pointer.Of(uint64(10)),
@@ -279,7 +281,7 @@ func TestLikeRepository_List(t *testing.T) {
 		Search:     nil,
 		OrderBy:    []entities.LikeOrdering{"id"},
 	}
-	query := "SELECT likes.id, likes.created_at, likes.updated_at, likes.post_id, likes.value, likes.user_id FROM public.likes ORDER BY likes.id ASC LIMIT 10 OFFSET 10"
+	query := "SELECT likes.id, likes.created_at, likes.updated_at, likes.deleted_at, likes.post_id, likes.value, likes.user_id FROM public.likes ORDER BY likes.id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		writeDB database
 		readDB  database
@@ -301,7 +303,7 @@ func TestLikeRepository_List(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mock.ExpectQuery(query).
-					WillReturnRows(newLikeRows(t, listLikes))
+					WillReturnRows(newLikeRows(t, likes))
 			},
 			fields: fields{
 				writeDB: mockDB,
@@ -312,7 +314,7 @@ func TestLikeRepository_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listLikes,
+			want:    likes,
 			wantErr: nil,
 		},
 		{
@@ -384,7 +386,7 @@ func TestLikeRepository_Update(t *testing.T) {
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
 	like := entities.NewMockLike(t)
-	query := `UPDATE public.likes SET created_at = $1, updated_at = $2, post_id = $3, value = $4, user_id = $5 WHERE id = $6`
+	query := `UPDATE public.likes SET created_at = $1, updated_at = $2, deleted_at = $3, post_id = $4, value = $5, user_id = $6 WHERE id = $7`
 	ctx := context.Background()
 	type fields struct {
 		writeDB database
@@ -410,6 +412,7 @@ func TestLikeRepository_Update(t *testing.T) {
 					WithArgs(
 						like.CreatedAt,
 						like.UpdatedAt,
+						like.DeletedAt,
 						like.PostId,
 						like.Value,
 						like.UserId,
@@ -436,6 +439,7 @@ func TestLikeRepository_Update(t *testing.T) {
 					WithArgs(
 						like.CreatedAt,
 						like.UpdatedAt,
+						like.DeletedAt,
 						like.PostId,
 						like.Value,
 						like.UserId,
@@ -462,6 +466,7 @@ func TestLikeRepository_Update(t *testing.T) {
 					WithArgs(
 						like.CreatedAt,
 						like.UpdatedAt,
+						like.DeletedAt,
 						like.PostId,
 						like.Value,
 						like.UserId,
@@ -489,6 +494,7 @@ func TestLikeRepository_Update(t *testing.T) {
 					WithArgs(
 						like.CreatedAt,
 						like.UpdatedAt,
+						like.DeletedAt,
 						like.PostId,
 						like.Value,
 						like.UserId,
@@ -516,6 +522,7 @@ func TestLikeRepository_Update(t *testing.T) {
 					WithArgs(
 						like.CreatedAt,
 						like.UpdatedAt,
+						like.DeletedAt,
 						like.PostId,
 						like.Value,
 						like.UserId,
@@ -780,7 +787,7 @@ func TestLikeRepository_Count(t *testing.T) {
 	}
 }
 
-func newLikeRows(t *testing.T, listLikes []entities.Like) *sqlmock.Rows {
+func newLikeRows(t *testing.T, likes []entities.Like) *sqlmock.Rows {
 	t.Helper()
 	rows := sqlmock.NewRows([]string{
 		"id",
@@ -789,8 +796,9 @@ func newLikeRows(t *testing.T, listLikes []entities.Like) *sqlmock.Rows {
 		"user_id",
 		"updated_at",
 		"created_at",
+		"deleted_at",
 	})
-	for _, like := range listLikes {
+	for _, like := range likes {
 		rows.AddRow(
 			like.ID,
 			like.PostId,
@@ -798,6 +806,7 @@ func newLikeRows(t *testing.T, listLikes []entities.Like) *sqlmock.Rows {
 			like.UserId,
 			like.UpdatedAt,
 			like.CreatedAt,
+			like.DeletedAt,
 		)
 	}
 	return rows

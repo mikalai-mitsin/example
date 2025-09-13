@@ -12,7 +12,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -35,7 +34,7 @@ type LikeServiceClient interface {
 	Create(ctx context.Context, in *LikeCreate, opts ...grpc.CallOption) (*Like, error)
 	Get(ctx context.Context, in *LikeGet, opts ...grpc.CallOption) (*Like, error)
 	Update(ctx context.Context, in *LikeUpdate, opts ...grpc.CallOption) (*Like, error)
-	Delete(ctx context.Context, in *LikeDelete, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *LikeDelete, opts ...grpc.CallOption) (*Like, error)
 	List(ctx context.Context, in *LikeFilter, opts ...grpc.CallOption) (*ListLike, error)
 }
 
@@ -77,9 +76,9 @@ func (c *likeServiceClient) Update(ctx context.Context, in *LikeUpdate, opts ...
 	return out, nil
 }
 
-func (c *likeServiceClient) Delete(ctx context.Context, in *LikeDelete, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *likeServiceClient) Delete(ctx context.Context, in *LikeDelete, opts ...grpc.CallOption) (*Like, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(Like)
 	err := c.cc.Invoke(ctx, LikeService_Delete_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -104,7 +103,7 @@ type LikeServiceServer interface {
 	Create(context.Context, *LikeCreate) (*Like, error)
 	Get(context.Context, *LikeGet) (*Like, error)
 	Update(context.Context, *LikeUpdate) (*Like, error)
-	Delete(context.Context, *LikeDelete) (*emptypb.Empty, error)
+	Delete(context.Context, *LikeDelete) (*Like, error)
 	List(context.Context, *LikeFilter) (*ListLike, error)
 }
 
@@ -124,7 +123,7 @@ func (UnimplementedLikeServiceServer) Get(context.Context, *LikeGet) (*Like, err
 func (UnimplementedLikeServiceServer) Update(context.Context, *LikeUpdate) (*Like, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedLikeServiceServer) Delete(context.Context, *LikeDelete) (*emptypb.Empty, error) {
+func (UnimplementedLikeServiceServer) Delete(context.Context, *LikeDelete) (*Like, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedLikeServiceServer) List(context.Context, *LikeFilter) (*ListLike, error) {

@@ -5,6 +5,7 @@ import (
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -88,9 +89,14 @@ func (s *PostService) Update(
 	}
 	return post, nil
 }
-func (s *PostService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := s.postRepository.Delete(ctx, tx, id); err != nil {
-		return err
+func (s *PostService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) (entities.Post, error) {
+	post, err := s.postRepository.Get(ctx, id)
+	if err != nil {
+		return entities.Post{}, err
 	}
-	return nil
+	post.DeletedAt = pointer.Of(s.clock.Now().UTC())
+	if err := s.postRepository.Update(ctx, tx, post); err != nil {
+		return entities.Post{}, err
+	}
+	return post, nil
 }

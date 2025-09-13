@@ -31,9 +31,10 @@ message Like {
   string id = 1;
   google.protobuf.Timestamp updated_at = 2;
   google.protobuf.Timestamp created_at = 3;
-  string post_id = 4;
-  string value = 5;
-  string user_id = 6;
+  google.protobuf.Timestamp deleted_at = 4;
+  string post_id = 5;
+  string value = 6;
+  string user_id = 7;
 }
 
 message ListLike {
@@ -49,6 +50,7 @@ message LikeFilter {
   google.protobuf.UInt64Value page_number = 1;
   google.protobuf.UInt64Value page_size = 2;
   repeated string order_by = 3;
+  google.protobuf.BoolValue is_deleted = 4;
 }
 
 service LikeService {
@@ -67,7 +69,7 @@ service LikeService {
       body: "*"
     };
   }
-  rpc Delete(examplepb.v1.LikeDelete) returns (google.protobuf.Empty) {
+  rpc Delete(examplepb.v1.LikeDelete) returns (examplepb.v1.Like) {
     option (google.api.http) = {delete: "/api/v1/likes/{id}"};
   }
   rpc List(examplepb.v1.LikeFilter) returns (examplepb.v1.ListLike) {

@@ -14,7 +14,7 @@ type articleUseCase interface {
 	Get(context.Context, uuid.UUID) (entities.Article, error)
 	List(context.Context, entities.ArticleFilter) ([]entities.Article, uint64, error)
 	Update(context.Context, entities.ArticleUpdate) (entities.Article, error)
-	Delete(context.Context, uuid.UUID) error
+	Delete(context.Context, uuid.UUID) (entities.Article, error)
 }
 type logger interface {
 	log.Logger

@@ -10,11 +10,9 @@ import (
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -141,7 +139,7 @@ func TestArticleServiceServer_Delete(t *testing.T) {
 	mockArticleUseCase := NewMockarticleUseCase(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	id := uuid.NewUUID()
+	article := entities.NewMockArticle(t)
 	type fields struct {
 		UnimplementedArticleServiceServer examplepb.UnimplementedArticleServiceServer
 		articleUseCase                    articleUseCase
@@ -156,13 +154,13 @@ func TestArticleServiceServer_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
-		want    *emptypb.Empty
+		want    *examplepb.Article
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				mockArticleUseCase.EXPECT().Delete(ctx, id).Return(nil).Times(1)
+				mockArticleUseCase.EXPECT().Delete(ctx, article.ID).Return(article, nil)
 			},
 			fields: fields{
 				UnimplementedArticleServiceServer: examplepb.UnimplementedArticleServiceServer{},
@@ -172,17 +170,17 @@ func TestArticleServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.ArticleDelete{
-					Id: id.String(),
+					Id: article.ID.String(),
 				},
 			},
-			want:    &emptypb.Empty{},
+			want:    decodeArticle(article),
 			wantErr: nil,
 		},
 		{
 			name: "usecase error",
 			setup: func() {
-				mockArticleUseCase.EXPECT().Delete(ctx, id).
-					Return(errs.NewUnexpectedBehaviorError("i error")).
+				mockArticleUseCase.EXPECT().Delete(ctx, article.ID).
+					Return(entities.Article{}, errs.NewUnexpectedBehaviorError("i error")).
 					Times(1)
 			},
 			fields: fields{
@@ -193,7 +191,7 @@ func TestArticleServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.ArticleDelete{
-					Id: id.String(),
+					Id: article.ID.String(),
 				},
 			},
 			want: nil,
@@ -311,7 +309,7 @@ func TestArticleServiceServer_List(t *testing.T) {
 		Items: make([]*examplepb.Article, 0, int(count)),
 		Count: count,
 	}
-	listArticles := make([]entities.Article, 0, int(count))
+	articles := make([]entities.Article, 0, int(count))
 	type fields struct {
 		UnimplementedArticleServiceServer examplepb.UnimplementedArticleServiceServer
 		articleUseCase                    articleUseCase
@@ -334,7 +332,7 @@ func TestArticleServiceServer_List(t *testing.T) {
 			setup: func() {
 				mockArticleUseCase.EXPECT().
 					List(ctx, gomock.Any()).
-					Return(listArticles, count, nil).
+					Return(articles, count, nil).
 					Times(1)
 			},
 			fields: fields{
@@ -478,6 +476,7 @@ func Test_decodeArticle(t *testing.T) {
 		Id:          article.ID.String(),
 		UpdatedAt:   timestamppb.New(article.UpdatedAt),
 		CreatedAt:   timestamppb.New(article.CreatedAt),
+		DeletedAt:   timestamppb.New(*article.DeletedAt),
 		Title:       string(article.Title),
 		Subtitle:    string(article.Subtitle),
 		Body:        string(article.Body),

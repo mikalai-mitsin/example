@@ -9,6 +9,7 @@ import (
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -143,10 +144,10 @@ func TestPostService_List(t *testing.T) {
 	mockPostRepository := NewMockpostRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listPosts []entities.Post
+	var posts []entities.Post
 	count := faker.New().UInt64Between(2, 20)
 	for i := uint64(0); i < count; i++ {
-		listPosts = append(listPosts, entities.NewMockPost(t))
+		posts = append(posts, entities.NewMockPost(t))
 	}
 	filter := entities.NewMockPostFilter(t)
 	type fields struct {
@@ -169,7 +170,7 @@ func TestPostService_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockPostRepository.EXPECT().List(ctx, filter).Return(listPosts, nil)
+				mockPostRepository.EXPECT().List(ctx, filter).Return(posts, nil)
 				mockPostRepository.EXPECT().Count(ctx, filter).Return(count, nil)
 			},
 			fields: fields{
@@ -180,7 +181,7 @@ func TestPostService_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listPosts,
+			want:    posts,
 			want1:   count,
 			wantErr: nil,
 		},
@@ -206,7 +207,7 @@ func TestPostService_List(t *testing.T) {
 		{
 			name: "count error",
 			setup: func() {
-				mockPostRepository.EXPECT().List(ctx, filter).Return(listPosts, nil)
+				mockPostRepository.EXPECT().List(ctx, filter).Return(posts, nil)
 				mockPostRepository.EXPECT().
 					Count(ctx, filter).
 					Return(uint64(0), errs.NewUnexpectedBehaviorError("test error"))
@@ -393,6 +394,7 @@ func TestPostService_Update(t *testing.T) {
 	updatedPost := entities.Post{
 		ID:        post.ID,
 		CreatedAt: post.CreatedAt,
+		DeletedAt: post.DeletedAt,
 		UpdatedAt: now,
 
 		Body: *update.Body,
@@ -502,11 +504,22 @@ func TestPostService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockPostRepository := NewMockpostRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockClock := NewMockclock(ctrl)
 	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
+	now := time.Now().UTC()
 	post := entities.NewMockPost(t)
+	deletedPost := entities.Post{
+		ID:        post.ID,
+		CreatedAt: post.CreatedAt,
+		UpdatedAt: post.CreatedAt,
+		DeletedAt: pointer.Of(now),
+
+		Body: post.Body,
+	}
 	type fields struct {
 		postRepository postRepository
+		clock          clock
 		logger         logger
 	}
 	type args struct {
@@ -519,42 +532,75 @@ func TestPostService_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
+		want    entities.Post
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
 				mockPostRepository.EXPECT().
-					Delete(ctx, mockTx, post.ID).
+					Get(ctx, post.ID).
+					Return(post, nil)
+				mockPostRepository.EXPECT().
+					Update(ctx, mockTx, deletedPost).
 					Return(nil)
 			},
 			fields: fields{
 				postRepository: mockPostRepository,
 				logger:         mockLogger,
+				clock:          mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  post.ID,
 			},
+			want:    deletedPost,
 			wantErr: nil,
+		},
+		{
+			name: "update error",
+			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
+				mockPostRepository.EXPECT().
+					Get(ctx, post.ID).
+					Return(post, nil)
+				mockPostRepository.EXPECT().
+					Update(ctx, mockTx, deletedPost).
+					Return(errs.NewUnexpectedBehaviorError("test error 12"))
+			},
+			fields: fields{
+				postRepository: mockPostRepository,
+				logger:         mockLogger,
+				clock:          mockClock,
+			},
+			args: args{
+				ctx: ctx,
+				tx:  mockTx,
+				id:  post.ID,
+			},
+			want:    entities.Post{},
+			wantErr: errs.NewUnexpectedBehaviorError("test error 12"),
 		},
 		{
 			name: "Post not found",
 			setup: func() {
 				mockPostRepository.EXPECT().
-					Delete(ctx, mockTx, post.ID).
-					Return(errs.NewEntityNotFoundError())
+					Get(ctx, post.ID).
+					Return(entities.Post{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				postRepository: mockPostRepository,
 				logger:         mockLogger,
+				clock:          mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  post.ID,
 			},
+			want:    entities.Post{},
 			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
@@ -564,8 +610,10 @@ func TestPostService_Delete(t *testing.T) {
 			u := &PostService{
 				postRepository: tt.fields.postRepository,
 				logger:         tt.fields.logger,
+				clock:          tt.fields.clock,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			got, err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			assert.Equal(t, tt.want, got)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

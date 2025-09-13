@@ -9,6 +9,7 @@ import (
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -143,10 +144,10 @@ func TestLikeService_List(t *testing.T) {
 	mockLikeRepository := NewMocklikeRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listLikes []entities.Like
+	var likes []entities.Like
 	count := faker.New().UInt64Between(2, 20)
 	for i := uint64(0); i < count; i++ {
-		listLikes = append(listLikes, entities.NewMockLike(t))
+		likes = append(likes, entities.NewMockLike(t))
 	}
 	filter := entities.NewMockLikeFilter(t)
 	type fields struct {
@@ -169,7 +170,7 @@ func TestLikeService_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockLikeRepository.EXPECT().List(ctx, filter).Return(listLikes, nil)
+				mockLikeRepository.EXPECT().List(ctx, filter).Return(likes, nil)
 				mockLikeRepository.EXPECT().Count(ctx, filter).Return(count, nil)
 			},
 			fields: fields{
@@ -180,7 +181,7 @@ func TestLikeService_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listLikes,
+			want:    likes,
 			want1:   count,
 			wantErr: nil,
 		},
@@ -206,7 +207,7 @@ func TestLikeService_List(t *testing.T) {
 		{
 			name: "count error",
 			setup: func() {
-				mockLikeRepository.EXPECT().List(ctx, filter).Return(listLikes, nil)
+				mockLikeRepository.EXPECT().List(ctx, filter).Return(likes, nil)
 				mockLikeRepository.EXPECT().
 					Count(ctx, filter).
 					Return(uint64(0), errs.NewUnexpectedBehaviorError("test error"))
@@ -401,6 +402,7 @@ func TestLikeService_Update(t *testing.T) {
 	updatedLike := entities.Like{
 		ID:        like.ID,
 		CreatedAt: like.CreatedAt,
+		DeletedAt: like.DeletedAt,
 		UpdatedAt: now,
 
 		PostId: *update.PostId,
@@ -512,11 +514,24 @@ func TestLikeService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockLikeRepository := NewMocklikeRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockClock := NewMockclock(ctrl)
 	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
+	now := time.Now().UTC()
 	like := entities.NewMockLike(t)
+	deletedLike := entities.Like{
+		ID:        like.ID,
+		CreatedAt: like.CreatedAt,
+		UpdatedAt: like.CreatedAt,
+		DeletedAt: pointer.Of(now),
+
+		PostId: like.PostId,
+		Value:  like.Value,
+		UserId: like.UserId,
+	}
 	type fields struct {
 		likeRepository likeRepository
+		clock          clock
 		logger         logger
 	}
 	type args struct {
@@ -529,42 +544,75 @@ func TestLikeService_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
+		want    entities.Like
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
 				mockLikeRepository.EXPECT().
-					Delete(ctx, mockTx, like.ID).
+					Get(ctx, like.ID).
+					Return(like, nil)
+				mockLikeRepository.EXPECT().
+					Update(ctx, mockTx, deletedLike).
 					Return(nil)
 			},
 			fields: fields{
 				likeRepository: mockLikeRepository,
 				logger:         mockLogger,
+				clock:          mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  like.ID,
 			},
+			want:    deletedLike,
 			wantErr: nil,
+		},
+		{
+			name: "update error",
+			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
+				mockLikeRepository.EXPECT().
+					Get(ctx, like.ID).
+					Return(like, nil)
+				mockLikeRepository.EXPECT().
+					Update(ctx, mockTx, deletedLike).
+					Return(errs.NewUnexpectedBehaviorError("test error 12"))
+			},
+			fields: fields{
+				likeRepository: mockLikeRepository,
+				logger:         mockLogger,
+				clock:          mockClock,
+			},
+			args: args{
+				ctx: ctx,
+				tx:  mockTx,
+				id:  like.ID,
+			},
+			want:    entities.Like{},
+			wantErr: errs.NewUnexpectedBehaviorError("test error 12"),
 		},
 		{
 			name: "Like not found",
 			setup: func() {
 				mockLikeRepository.EXPECT().
-					Delete(ctx, mockTx, like.ID).
-					Return(errs.NewEntityNotFoundError())
+					Get(ctx, like.ID).
+					Return(entities.Like{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				likeRepository: mockLikeRepository,
 				logger:         mockLogger,
+				clock:          mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  like.ID,
 			},
+			want:    entities.Like{},
 			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
@@ -574,8 +622,10 @@ func TestLikeService_Delete(t *testing.T) {
 			u := &LikeService{
 				likeRepository: tt.fields.likeRepository,
 				logger:         tt.fields.logger,
+				clock:          tt.fields.clock,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			got, err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			assert.Equal(t, tt.want, got)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

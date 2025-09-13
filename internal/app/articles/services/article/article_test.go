@@ -9,6 +9,7 @@ import (
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -143,10 +144,10 @@ func TestArticleService_List(t *testing.T) {
 	mockArticleRepository := NewMockarticleRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listArticles []entities.Article
+	var articles []entities.Article
 	count := faker.New().UInt64Between(2, 20)
 	for i := uint64(0); i < count; i++ {
-		listArticles = append(listArticles, entities.NewMockArticle(t))
+		articles = append(articles, entities.NewMockArticle(t))
 	}
 	filter := entities.NewMockArticleFilter(t)
 	type fields struct {
@@ -169,7 +170,7 @@ func TestArticleService_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockArticleRepository.EXPECT().List(ctx, filter).Return(listArticles, nil)
+				mockArticleRepository.EXPECT().List(ctx, filter).Return(articles, nil)
 				mockArticleRepository.EXPECT().Count(ctx, filter).Return(count, nil)
 			},
 			fields: fields{
@@ -180,7 +181,7 @@ func TestArticleService_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listArticles,
+			want:    articles,
 			want1:   count,
 			wantErr: nil,
 		},
@@ -206,7 +207,7 @@ func TestArticleService_List(t *testing.T) {
 		{
 			name: "count error",
 			setup: func() {
-				mockArticleRepository.EXPECT().List(ctx, filter).Return(listArticles, nil)
+				mockArticleRepository.EXPECT().List(ctx, filter).Return(articles, nil)
 				mockArticleRepository.EXPECT().
 					Count(ctx, filter).
 					Return(uint64(0), errs.NewUnexpectedBehaviorError("test error"))
@@ -404,6 +405,7 @@ func TestArticleService_Update(t *testing.T) {
 	updatedArticle := entities.Article{
 		ID:        article.ID,
 		CreatedAt: article.CreatedAt,
+		DeletedAt: article.DeletedAt,
 		UpdatedAt: now,
 
 		Title:       *update.Title,
@@ -516,11 +518,25 @@ func TestArticleService_Delete(t *testing.T) {
 	defer ctrl.Finish()
 	mockArticleRepository := NewMockarticleRepository(ctrl)
 	mockLogger := NewMocklogger(ctrl)
+	mockClock := NewMockclock(ctrl)
 	mockTx := dtx.NewMockTX(ctrl)
 	ctx := context.Background()
+	now := time.Now().UTC()
 	article := entities.NewMockArticle(t)
+	deletedArticle := entities.Article{
+		ID:        article.ID,
+		CreatedAt: article.CreatedAt,
+		UpdatedAt: article.CreatedAt,
+		DeletedAt: pointer.Of(now),
+
+		Title:       article.Title,
+		Subtitle:    article.Subtitle,
+		Body:        article.Body,
+		IsPublished: article.IsPublished,
+	}
 	type fields struct {
 		articleRepository articleRepository
+		clock             clock
 		logger            logger
 	}
 	type args struct {
@@ -533,42 +549,75 @@ func TestArticleService_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
+		want    entities.Article
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
 				mockArticleRepository.EXPECT().
-					Delete(ctx, mockTx, article.ID).
+					Get(ctx, article.ID).
+					Return(article, nil)
+				mockArticleRepository.EXPECT().
+					Update(ctx, mockTx, deletedArticle).
 					Return(nil)
 			},
 			fields: fields{
 				articleRepository: mockArticleRepository,
 				logger:            mockLogger,
+				clock:             mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  article.ID,
 			},
+			want:    deletedArticle,
 			wantErr: nil,
+		},
+		{
+			name: "update error",
+			setup: func() {
+				mockClock.EXPECT().Now().Return(now)
+				mockArticleRepository.EXPECT().
+					Get(ctx, article.ID).
+					Return(article, nil)
+				mockArticleRepository.EXPECT().
+					Update(ctx, mockTx, deletedArticle).
+					Return(errs.NewUnexpectedBehaviorError("test error 12"))
+			},
+			fields: fields{
+				articleRepository: mockArticleRepository,
+				logger:            mockLogger,
+				clock:             mockClock,
+			},
+			args: args{
+				ctx: ctx,
+				tx:  mockTx,
+				id:  article.ID,
+			},
+			want:    entities.Article{},
+			wantErr: errs.NewUnexpectedBehaviorError("test error 12"),
 		},
 		{
 			name: "Article not found",
 			setup: func() {
 				mockArticleRepository.EXPECT().
-					Delete(ctx, mockTx, article.ID).
-					Return(errs.NewEntityNotFoundError())
+					Get(ctx, article.ID).
+					Return(entities.Article{}, errs.NewEntityNotFoundError())
 			},
 			fields: fields{
 				articleRepository: mockArticleRepository,
 				logger:            mockLogger,
+				clock:             mockClock,
 			},
 			args: args{
 				ctx: ctx,
 				tx:  mockTx,
 				id:  article.ID,
 			},
+			want:    entities.Article{},
 			wantErr: errs.NewEntityNotFoundError(),
 		},
 	}
@@ -578,8 +627,10 @@ func TestArticleService_Delete(t *testing.T) {
 			u := &ArticleService{
 				articleRepository: tt.fields.articleRepository,
 				logger:            tt.fields.logger,
+				clock:             tt.fields.clock,
 			}
-			err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			got, err := u.Delete(tt.args.ctx, tt.args.tx, tt.args.id)
+			assert.Equal(t, tt.want, got)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

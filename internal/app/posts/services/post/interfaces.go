@@ -20,9 +20,7 @@ type postRepository interface {
 	Delete(context.Context, dtx.TX, uuid.UUID) error
 }
 type postEventProducer interface {
-	Created(context.Context, entities.Post) error
-	Updated(context.Context, entities.Post) error
-	Deleted(context.Context, uuid.UUID) error
+	Send(context.Context, entities.Post) error
 }
 
 // clock - clock interface

@@ -2,18 +2,15 @@ package repositories
 
 import (
 	"context"
-	"encoding/json"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
-	topicEventCreated = "example.posts.post.created"
-	topicEventUpdated = "example.posts.post.updated"
-	topicEventDeleted = "example.posts.post.deleted"
+	topicName = "example.posts.post.v1"
 )
 
 type PostEventProducer struct {
@@ -28,43 +25,15 @@ func NewPostEventProducer(
 	return &PostEventProducer{producer: producer, logger: logger}
 }
 
-func (p *PostEventProducer) Created(ctx context.Context, post entities.Post) error {
-	data, err := json.Marshal(post)
+func (p *PostEventProducer) Send(ctx context.Context, post entities.Post) error {
+	data, err := proto.Marshal(decodePost(post))
 	if err != nil {
 		return err
 	}
 	message := &kafka.Message{
-		Topic: topicEventCreated,
+		Topic: topicName,
 		Value: data,
 		Key:   post.ID.String(),
-	}
-	if err := p.producer.Send(ctx, message); err != nil {
-		return errs.FromKafkaError(err)
-	}
-	return nil
-}
-
-func (p *PostEventProducer) Updated(ctx context.Context, post entities.Post) error {
-	data, err := json.Marshal(post)
-	if err != nil {
-		return err
-	}
-	message := &kafka.Message{
-		Topic: topicEventUpdated,
-		Value: data,
-		Key:   post.ID.String(),
-	}
-	if err := p.producer.Send(ctx, message); err != nil {
-		return errs.FromKafkaError(err)
-	}
-	return nil
-}
-
-func (p *PostEventProducer) Deleted(ctx context.Context, id uuid.UUID) error {
-	message := &kafka.Message{
-		Topic: topicEventDeleted,
-		Value: []byte(id.String()),
-		Key:   id.String(),
 	}
 	if err := p.producer.Send(ctx, message); err != nil {
 		return errs.FromKafkaError(err)

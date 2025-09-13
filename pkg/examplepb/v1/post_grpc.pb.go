@@ -12,7 +12,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -35,7 +34,7 @@ type PostServiceClient interface {
 	Create(ctx context.Context, in *PostCreate, opts ...grpc.CallOption) (*Post, error)
 	Get(ctx context.Context, in *PostGet, opts ...grpc.CallOption) (*Post, error)
 	Update(ctx context.Context, in *PostUpdate, opts ...grpc.CallOption) (*Post, error)
-	Delete(ctx context.Context, in *PostDelete, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *PostDelete, opts ...grpc.CallOption) (*Post, error)
 	List(ctx context.Context, in *PostFilter, opts ...grpc.CallOption) (*ListPost, error)
 }
 
@@ -77,9 +76,9 @@ func (c *postServiceClient) Update(ctx context.Context, in *PostUpdate, opts ...
 	return out, nil
 }
 
-func (c *postServiceClient) Delete(ctx context.Context, in *PostDelete, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *postServiceClient) Delete(ctx context.Context, in *PostDelete, opts ...grpc.CallOption) (*Post, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(Post)
 	err := c.cc.Invoke(ctx, PostService_Delete_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -104,7 +103,7 @@ type PostServiceServer interface {
 	Create(context.Context, *PostCreate) (*Post, error)
 	Get(context.Context, *PostGet) (*Post, error)
 	Update(context.Context, *PostUpdate) (*Post, error)
-	Delete(context.Context, *PostDelete) (*emptypb.Empty, error)
+	Delete(context.Context, *PostDelete) (*Post, error)
 	List(context.Context, *PostFilter) (*ListPost, error)
 }
 
@@ -124,7 +123,7 @@ func (UnimplementedPostServiceServer) Get(context.Context, *PostGet) (*Post, err
 func (UnimplementedPostServiceServer) Update(context.Context, *PostUpdate) (*Post, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedPostServiceServer) Delete(context.Context, *PostDelete) (*emptypb.Empty, error) {
+func (UnimplementedPostServiceServer) Delete(context.Context, *PostDelete) (*Post, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedPostServiceServer) List(context.Context, *PostFilter) (*ListPost, error) {

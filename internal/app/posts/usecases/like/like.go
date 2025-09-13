@@ -45,7 +45,7 @@ func (u *LikeUseCase) Create(
 	if err != nil {
 		return entities.Like{}, err
 	}
-	if err := u.likeEventService.Created(ctx, tx, like); err != nil {
+	if err := u.likeEventService.Send(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -87,7 +87,7 @@ func (u *LikeUseCase) Update(
 	if err != nil {
 		return entities.Like{}, err
 	}
-	if err := u.likeEventService.Updated(ctx, tx, like); err != nil {
+	if err := u.likeEventService.Send(ctx, tx, like); err != nil {
 		return entities.Like{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -95,7 +95,7 @@ func (u *LikeUseCase) Update(
 	}
 	return like, nil
 }
-func (u *LikeUseCase) Delete(ctx context.Context, id uuid.UUID) error {
+func (u *LikeUseCase) Delete(ctx context.Context, id uuid.UUID) (entities.Like, error) {
 	logger := u.logger.WithContext(ctx)
 	tx := u.dtxManager.NewTx()
 	defer func(tx dtx.TX) {
@@ -103,14 +103,15 @@ func (u *LikeUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 			logger.Error("cant rollback transaction", log.Error(err))
 		}
 	}(tx)
-	if err := u.likeService.Delete(ctx, tx, id); err != nil {
-		return err
+	like, err := u.likeService.Delete(ctx, tx, id)
+	if err != nil {
+		return entities.Like{}, err
 	}
-	if err := u.likeEventService.Deleted(ctx, tx, id); err != nil {
-		return err
+	if err := u.likeEventService.Send(ctx, tx, like); err != nil {
+		return entities.Like{}, err
 	}
 	if err := tx.Commit(); err != nil {
-		return err
+		return entities.Like{}, err
 	}
-	return nil
+	return like, nil
 }

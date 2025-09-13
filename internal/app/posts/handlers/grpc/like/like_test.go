@@ -10,11 +10,9 @@ import (
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -141,7 +139,7 @@ func TestLikeServiceServer_Delete(t *testing.T) {
 	mockLikeUseCase := NewMocklikeUseCase(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	id := uuid.NewUUID()
+	like := entities.NewMockLike(t)
 	type fields struct {
 		UnimplementedLikeServiceServer examplepb.UnimplementedLikeServiceServer
 		likeUseCase                    likeUseCase
@@ -156,13 +154,13 @@ func TestLikeServiceServer_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
-		want    *emptypb.Empty
+		want    *examplepb.Like
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				mockLikeUseCase.EXPECT().Delete(ctx, id).Return(nil).Times(1)
+				mockLikeUseCase.EXPECT().Delete(ctx, like.ID).Return(like, nil)
 			},
 			fields: fields{
 				UnimplementedLikeServiceServer: examplepb.UnimplementedLikeServiceServer{},
@@ -172,17 +170,17 @@ func TestLikeServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.LikeDelete{
-					Id: id.String(),
+					Id: like.ID.String(),
 				},
 			},
-			want:    &emptypb.Empty{},
+			want:    decodeLike(like),
 			wantErr: nil,
 		},
 		{
 			name: "usecase error",
 			setup: func() {
-				mockLikeUseCase.EXPECT().Delete(ctx, id).
-					Return(errs.NewUnexpectedBehaviorError("i error")).
+				mockLikeUseCase.EXPECT().Delete(ctx, like.ID).
+					Return(entities.Like{}, errs.NewUnexpectedBehaviorError("i error")).
 					Times(1)
 			},
 			fields: fields{
@@ -193,7 +191,7 @@ func TestLikeServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.LikeDelete{
-					Id: id.String(),
+					Id: like.ID.String(),
 				},
 			},
 			want: nil,
@@ -311,7 +309,7 @@ func TestLikeServiceServer_List(t *testing.T) {
 		Items: make([]*examplepb.Like, 0, int(count)),
 		Count: count,
 	}
-	listLikes := make([]entities.Like, 0, int(count))
+	likes := make([]entities.Like, 0, int(count))
 	type fields struct {
 		UnimplementedLikeServiceServer examplepb.UnimplementedLikeServiceServer
 		likeUseCase                    likeUseCase
@@ -332,10 +330,7 @@ func TestLikeServiceServer_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockLikeUseCase.EXPECT().
-					List(ctx, gomock.Any()).
-					Return(listLikes, count, nil).
-					Times(1)
+				mockLikeUseCase.EXPECT().List(ctx, gomock.Any()).Return(likes, count, nil).Times(1)
 			},
 			fields: fields{
 				UnimplementedLikeServiceServer: examplepb.UnimplementedLikeServiceServer{},
@@ -476,6 +471,7 @@ func Test_decodeLike(t *testing.T) {
 		Id:        like.ID.String(),
 		UpdatedAt: timestamppb.New(like.UpdatedAt),
 		CreatedAt: timestamppb.New(like.CreatedAt),
+		DeletedAt: timestamppb.New(*like.DeletedAt),
 		PostId:    like.PostId.String(),
 		Value:     string(like.Value),
 		UserId:    like.UserId.String(),

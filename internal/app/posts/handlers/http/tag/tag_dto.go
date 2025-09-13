@@ -15,11 +15,12 @@ import (
 )
 
 type TagDTO struct {
-	ID        uuid.UUID `json:"id"`
-	UpdatedAt time.Time `json:"updated_at"`
-	CreatedAt time.Time `json:"created_at"`
-	PostId    uuid.UUID `json:"post_id"`
-	Value     string    `json:"value"`
+	ID        uuid.UUID  `json:"id"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	PostId    uuid.UUID  `json:"post_id"`
+	Value     string     `json:"value"`
 }
 
 func NewTagDTO(entity entities.Tag) (TagDTO, error) {
@@ -27,6 +28,7 @@ func NewTagDTO(entity entities.Tag) (TagDTO, error) {
 		ID:        entity.ID,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
+		DeletedAt: entity.DeletedAt,
 		PostId:    entity.PostId,
 		Value:     entity.Value,
 	}
@@ -54,10 +56,11 @@ type TagFilterDTO struct {
 	PageSize   *uint64  `json:"page_size"`
 	PageNumber *uint64  `json:"page_number"`
 	OrderBy    []string `json:"order_by"`
+	IsDeleted  *bool    `json:"is_deleted"`
 }
 
 func NewTagFilterDTO(r *http.Request) (TagFilterDTO, error) {
-	filter := TagFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil}
+	filter := TagFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil, IsDeleted: nil}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -76,6 +79,15 @@ func NewTagFilterDTO(r *http.Request) (TagFilterDTO, error) {
 		}
 		filter.PageNumber = pointer.Of(uint64(pageNumber))
 	}
+	if r.URL.Query().Has("is_deleted") {
+		isDeleted, err := strconv.ParseBool(r.URL.Query().Get("is_deleted"))
+		if err != nil {
+			return TagFilterDTO{}, errs.NewInvalidFormError().
+				WithParam("is_deleted", "Invalid page_number.").
+				WithCause(err)
+		}
+		filter.IsDeleted = pointer.Of(isDeleted)
+	}
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
@@ -85,6 +97,7 @@ func (dto TagFilterDTO) toEntity() (entities.TagFilter, error) {
 	filter := entities.TagFilter{
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
+		IsDeleted:  dto.IsDeleted,
 		OrderBy:    []entities.TagOrdering{},
 	}
 	for _, orderBy := range dto.OrderBy {

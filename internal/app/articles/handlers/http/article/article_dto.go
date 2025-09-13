@@ -15,13 +15,14 @@ import (
 )
 
 type ArticleDTO struct {
-	ID          uuid.UUID `json:"id"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	CreatedAt   time.Time `json:"created_at"`
-	Title       string    `json:"title"`
-	Subtitle    string    `json:"subtitle"`
-	Body        string    `json:"body"`
-	IsPublished bool      `json:"is_published"`
+	ID          uuid.UUID  `json:"id"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	DeletedAt   *time.Time `json:"deleted_at"`
+	Title       string     `json:"title"`
+	Subtitle    string     `json:"subtitle"`
+	Body        string     `json:"body"`
+	IsPublished bool       `json:"is_published"`
 }
 
 func NewArticleDTO(entity entities.Article) (ArticleDTO, error) {
@@ -29,6 +30,7 @@ func NewArticleDTO(entity entities.Article) (ArticleDTO, error) {
 		ID:          entity.ID,
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
+		DeletedAt:   entity.DeletedAt,
 		Title:       entity.Title,
 		Subtitle:    entity.Subtitle,
 		Body:        entity.Body,
@@ -58,11 +60,18 @@ type ArticleFilterDTO struct {
 	PageSize   *uint64  `json:"page_size"`
 	PageNumber *uint64  `json:"page_number"`
 	OrderBy    []string `json:"order_by"`
-	Search     string   `json:"search"`
+	IsDeleted  *bool    `json:"is_deleted"`
+	Search     *string  `json:"search"`
 }
 
 func NewArticleFilterDTO(r *http.Request) (ArticleFilterDTO, error) {
-	filter := ArticleFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil, Search: ""}
+	filter := ArticleFilterDTO{
+		PageSize:   nil,
+		PageNumber: nil,
+		OrderBy:    nil,
+		IsDeleted:  nil,
+		Search:     nil,
+	}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -81,11 +90,20 @@ func NewArticleFilterDTO(r *http.Request) (ArticleFilterDTO, error) {
 		}
 		filter.PageNumber = pointer.Of(uint64(pageNumber))
 	}
+	if r.URL.Query().Has("is_deleted") {
+		isDeleted, err := strconv.ParseBool(r.URL.Query().Get("is_deleted"))
+		if err != nil {
+			return ArticleFilterDTO{}, errs.NewInvalidFormError().
+				WithParam("is_deleted", "Invalid page_number.").
+				WithCause(err)
+		}
+		filter.IsDeleted = pointer.Of(isDeleted)
+	}
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
 	if r.URL.Query().Has("search") {
-		filter.Search = r.URL.Query().Get("search")
+		filter.Search = pointer.Of(r.URL.Query().Get("search"))
 	}
 	return filter, nil
 }
@@ -93,8 +111,9 @@ func (dto ArticleFilterDTO) toEntity() (entities.ArticleFilter, error) {
 	filter := entities.ArticleFilter{
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
+		IsDeleted:  dto.IsDeleted,
 		OrderBy:    []entities.ArticleOrdering{},
-		Search:     pointer.Of(dto.Search),
+		Search:     dto.Search,
 	}
 	for _, orderBy := range dto.OrderBy {
 		filter.OrderBy = append(filter.OrderBy, entities.ArticleOrdering(orderBy))

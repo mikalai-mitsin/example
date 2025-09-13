@@ -130,7 +130,6 @@ func (h *GroupHandler) ConsumeClaim(
 			log.Int32("partition", msg.Partition),
 			log.Int64("offset", msg.Offset),
 			log.String("key", string(msg.Key)),
-			log.String("value", string(msg.Value)),
 		)
 		if err := h.handlerFunc(context.Background(), msg); err != nil {
 			logger.Error("handled message error", log.Error(err))

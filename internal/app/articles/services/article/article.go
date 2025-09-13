@@ -5,6 +5,7 @@ import (
 
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -110,9 +111,19 @@ func (s *ArticleService) Update(
 	}
 	return article, nil
 }
-func (s *ArticleService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := s.articleRepository.Delete(ctx, tx, id); err != nil {
-		return err
+
+func (s *ArticleService) Delete(
+	ctx context.Context,
+	tx dtx.TX,
+	id uuid.UUID,
+) (entities.Article, error) {
+	article, err := s.articleRepository.Get(ctx, id)
+	if err != nil {
+		return entities.Article{}, err
 	}
-	return nil
+	article.DeletedAt = pointer.Of(s.clock.Now().UTC())
+	if err := s.articleRepository.Update(ctx, tx, article); err != nil {
+		return entities.Article{}, err
+	}
+	return article, nil
 }

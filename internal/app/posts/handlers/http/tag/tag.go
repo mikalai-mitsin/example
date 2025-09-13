@@ -175,7 +175,7 @@ func (h *TagHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "UUID"
-// @Success 204 "No content"
+// @Success 200 {object} TagDTO "Updated tag"
 // @Failure 400 {object} errs.Error "Invalid request body or validation error"
 // @Failure 401 {object} errs.Error "Unauthorized"
 // @Failure 404 {object} errs.Error "Not found"
@@ -183,12 +183,18 @@ func (h *TagHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/posts/tags/{id} [DELETE]
 func (h *TagHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := uuid.MustParse(chi.URLParam(r, "id"))
-	if err := h.tagUseCase.Delete(r.Context(), id); err != nil {
+	tag, err := h.tagUseCase.Delete(r.Context(), id)
+	if err != nil {
 		errs.RenderToHTTPResponse(err, w, r)
 		return
 	}
-	render.Status(r, http.StatusNoContent)
-	render.NoContent(w, r)
+	response, err := NewTagDTO(tag)
+	if err != nil {
+		errs.RenderToHTTPResponse(err, w, r)
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, response)
 }
 func (h *TagHandler) router() chi.Router {
 	router := chi.NewRouter()

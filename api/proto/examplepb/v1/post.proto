@@ -27,7 +27,8 @@ message Post {
   string id = 1;
   google.protobuf.Timestamp updated_at = 2;
   google.protobuf.Timestamp created_at = 3;
-  string body = 4;
+  google.protobuf.Timestamp deleted_at = 4;
+  string body = 5;
 }
 
 message ListPost {
@@ -43,6 +44,7 @@ message PostFilter {
   google.protobuf.UInt64Value page_number = 1;
   google.protobuf.UInt64Value page_size = 2;
   repeated string order_by = 3;
+  google.protobuf.BoolValue is_deleted = 4;
 }
 
 service PostService {
@@ -61,7 +63,7 @@ service PostService {
       body: "*"
     };
   }
-  rpc Delete(examplepb.v1.PostDelete) returns (google.protobuf.Empty) {
+  rpc Delete(examplepb.v1.PostDelete) returns (examplepb.v1.Post) {
     option (google.api.http) = {delete: "/api/v1/posts/{id}"};
   }
   rpc List(examplepb.v1.PostFilter) returns (examplepb.v1.ListPost) {

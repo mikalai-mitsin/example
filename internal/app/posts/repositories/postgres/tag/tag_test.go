@@ -72,7 +72,7 @@ func TestTagRepository_Create(t *testing.T) {
 	mockTxManager := dtx.NewManager(mockDB)
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
-	query := "INSERT INTO public.tags (id,created_at,updated_at,post_id,value) VALUES ($1,$2,$3,$4,$5)"
+	query := "INSERT INTO public.tags (id,created_at,updated_at,deleted_at,post_id,value) VALUES ($1,$2,$3,$4,$5,$6)"
 	tag := entities.NewMockTag(t)
 	ctx := context.Background()
 	type fields struct {
@@ -100,6 +100,7 @@ func TestTagRepository_Create(t *testing.T) {
 						tag.ID,
 						tag.UpdatedAt,
 						tag.CreatedAt,
+						tag.DeletedAt,
 						tag.PostId,
 						tag.Value,
 					).
@@ -125,6 +126,7 @@ func TestTagRepository_Create(t *testing.T) {
 						tag.ID,
 						tag.UpdatedAt,
 						tag.CreatedAt,
+						tag.DeletedAt,
 						tag.PostId,
 						tag.Value,
 					).
@@ -167,7 +169,7 @@ func TestTagRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
-	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.post_id, tags.value FROM public.tags WHERE id = $1 LIMIT 1"
+	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.deleted_at, tags.post_id, tags.value FROM public.tags WHERE id = $1 LIMIT 1"
 	tag := entities.NewMockTag(t)
 	ctx := context.Background()
 	type fields struct {
@@ -267,9 +269,9 @@ func TestTagRepository_List(t *testing.T) {
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listTags []entities.Tag
+	var tags []entities.Tag
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
-		listTags = append(listTags, entities.NewMockTag(t))
+		tags = append(tags, entities.NewMockTag(t))
 	}
 	filter := entities.TagFilter{
 		PageSize:   pointer.Of(uint64(10)),
@@ -277,7 +279,7 @@ func TestTagRepository_List(t *testing.T) {
 		Search:     nil,
 		OrderBy:    []entities.TagOrdering{"id"},
 	}
-	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.post_id, tags.value FROM public.tags ORDER BY tags.id ASC LIMIT 10 OFFSET 10"
+	query := "SELECT tags.id, tags.created_at, tags.updated_at, tags.deleted_at, tags.post_id, tags.value FROM public.tags ORDER BY tags.id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		writeDB database
 		readDB  database
@@ -299,7 +301,7 @@ func TestTagRepository_List(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mock.ExpectQuery(query).
-					WillReturnRows(newTagRows(t, listTags))
+					WillReturnRows(newTagRows(t, tags))
 			},
 			fields: fields{
 				writeDB: mockDB,
@@ -310,7 +312,7 @@ func TestTagRepository_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listTags,
+			want:    tags,
 			wantErr: nil,
 		},
 		{
@@ -382,7 +384,7 @@ func TestTagRepository_Update(t *testing.T) {
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
 	tag := entities.NewMockTag(t)
-	query := `UPDATE public.tags SET created_at = $1, updated_at = $2, post_id = $3, value = $4 WHERE id = $5`
+	query := `UPDATE public.tags SET created_at = $1, updated_at = $2, deleted_at = $3, post_id = $4, value = $5 WHERE id = $6`
 	ctx := context.Background()
 	type fields struct {
 		writeDB database
@@ -408,6 +410,7 @@ func TestTagRepository_Update(t *testing.T) {
 					WithArgs(
 						tag.CreatedAt,
 						tag.UpdatedAt,
+						tag.DeletedAt,
 						tag.PostId,
 						tag.Value,
 						tag.ID,
@@ -433,6 +436,7 @@ func TestTagRepository_Update(t *testing.T) {
 					WithArgs(
 						tag.CreatedAt,
 						tag.UpdatedAt,
+						tag.DeletedAt,
 						tag.PostId,
 						tag.Value,
 						tag.ID,
@@ -458,6 +462,7 @@ func TestTagRepository_Update(t *testing.T) {
 					WithArgs(
 						tag.CreatedAt,
 						tag.UpdatedAt,
+						tag.DeletedAt,
 						tag.PostId,
 						tag.Value,
 						tag.ID,
@@ -484,6 +489,7 @@ func TestTagRepository_Update(t *testing.T) {
 					WithArgs(
 						tag.CreatedAt,
 						tag.UpdatedAt,
+						tag.DeletedAt,
 						tag.PostId,
 						tag.Value,
 						tag.ID,
@@ -510,6 +516,7 @@ func TestTagRepository_Update(t *testing.T) {
 					WithArgs(
 						tag.CreatedAt,
 						tag.UpdatedAt,
+						tag.DeletedAt,
 						tag.PostId,
 						tag.Value,
 						tag.ID,
@@ -773,7 +780,7 @@ func TestTagRepository_Count(t *testing.T) {
 	}
 }
 
-func newTagRows(t *testing.T, listTags []entities.Tag) *sqlmock.Rows {
+func newTagRows(t *testing.T, tags []entities.Tag) *sqlmock.Rows {
 	t.Helper()
 	rows := sqlmock.NewRows([]string{
 		"id",
@@ -781,14 +788,16 @@ func newTagRows(t *testing.T, listTags []entities.Tag) *sqlmock.Rows {
 		"value",
 		"updated_at",
 		"created_at",
+		"deleted_at",
 	})
-	for _, tag := range listTags {
+	for _, tag := range tags {
 		rows.AddRow(
 			tag.ID,
 			tag.PostId,
 			tag.Value,
 			tag.UpdatedAt,
 			tag.CreatedAt,
+			tag.DeletedAt,
 		)
 	}
 	return rows

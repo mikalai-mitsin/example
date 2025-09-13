@@ -15,10 +15,11 @@ import (
 )
 
 type PostDTO struct {
-	ID        uuid.UUID `json:"id"`
-	UpdatedAt time.Time `json:"updated_at"`
-	CreatedAt time.Time `json:"created_at"`
-	Body      string    `json:"body"`
+	ID        uuid.UUID  `json:"id"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	Body      string     `json:"body"`
 }
 
 func NewPostDTO(entity entities.Post) (PostDTO, error) {
@@ -26,6 +27,7 @@ func NewPostDTO(entity entities.Post) (PostDTO, error) {
 		ID:        entity.ID,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
+		DeletedAt: entity.DeletedAt,
 		Body:      entity.Body,
 	}
 	return dto, nil
@@ -52,10 +54,11 @@ type PostFilterDTO struct {
 	PageSize   *uint64  `json:"page_size"`
 	PageNumber *uint64  `json:"page_number"`
 	OrderBy    []string `json:"order_by"`
+	IsDeleted  *bool    `json:"is_deleted"`
 }
 
 func NewPostFilterDTO(r *http.Request) (PostFilterDTO, error) {
-	filter := PostFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil}
+	filter := PostFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil, IsDeleted: nil}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -74,6 +77,15 @@ func NewPostFilterDTO(r *http.Request) (PostFilterDTO, error) {
 		}
 		filter.PageNumber = pointer.Of(uint64(pageNumber))
 	}
+	if r.URL.Query().Has("is_deleted") {
+		isDeleted, err := strconv.ParseBool(r.URL.Query().Get("is_deleted"))
+		if err != nil {
+			return PostFilterDTO{}, errs.NewInvalidFormError().
+				WithParam("is_deleted", "Invalid page_number.").
+				WithCause(err)
+		}
+		filter.IsDeleted = pointer.Of(isDeleted)
+	}
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
@@ -83,6 +95,7 @@ func (dto PostFilterDTO) toEntity() (entities.PostFilter, error) {
 	filter := entities.PostFilter{
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
+		IsDeleted:  dto.IsDeleted,
 		OrderBy:    []entities.PostOrdering{},
 	}
 	for _, orderBy := range dto.OrderBy {

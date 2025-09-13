@@ -24,18 +24,20 @@ func NewLikeRepository(readDB database, writeDB database, logger logger) *LikeRe
 }
 
 var orderByMap = map[entities.LikeOrdering]string{
-	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
-	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
-	entities.LikeOrderingPostIdASC:     "likes.post_id ASC",
-	entities.LikeOrderingPostIdDESC:    "likes.post_id DESC",
-	entities.LikeOrderingValueASC:      "likes.value ASC",
-	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
 	entities.LikeOrderingUserIdDESC:    "likes.user_id DESC",
 	entities.LikeOrderingIdASC:         "likes.id ASC",
 	entities.LikeOrderingIdDESC:        "likes.id DESC",
-	entities.LikeOrderingUpdatedAtASC:  "likes.updated_at ASC",
+	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
+	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
 	entities.LikeOrderingUpdatedAtDESC: "likes.updated_at DESC",
+	entities.LikeOrderingDeletedAtASC:  "likes.deleted_at ASC",
+	entities.LikeOrderingPostIdASC:     "likes.post_id ASC",
+	entities.LikeOrderingValueASC:      "likes.value ASC",
+	entities.LikeOrderingUpdatedAtASC:  "likes.updated_at ASC",
+	entities.LikeOrderingDeletedAtDESC: "likes.deleted_at DESC",
+	entities.LikeOrderingPostIdDESC:    "likes.post_id DESC",
 	entities.LikeOrderingValueDESC:     "likes.value DESC",
+	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
 }
 
 func encodeOrderBy(orderBy []entities.LikeOrdering) []string {
@@ -51,12 +53,13 @@ func encodeOrderBy(orderBy []entities.LikeOrdering) []string {
 }
 
 type LikeDTO struct {
-	ID        uuid.UUID `db:"id,omitempty"`
-	UpdatedAt time.Time `db:"updated_at,omitempty"`
-	CreatedAt time.Time `db:"created_at,omitempty"`
-	PostId    uuid.UUID `db:"post_id"`
-	Value     string    `db:"value"`
-	UserId    uuid.UUID `db:"user_id"`
+	ID        uuid.UUID  `db:"id,omitempty"`
+	UpdatedAt time.Time  `db:"updated_at,omitempty"`
+	CreatedAt time.Time  `db:"created_at,omitempty"`
+	DeletedAt *time.Time `db:"deleted_at"`
+	PostId    uuid.UUID  `db:"post_id"`
+	Value     string     `db:"value"`
+	UserId    uuid.UUID  `db:"user_id"`
 }
 type LikeListDTO []LikeDTO
 
@@ -72,6 +75,7 @@ func NewLikeDTOFromEntity(entity entities.Like) LikeDTO {
 		ID:        entity.ID,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
+		DeletedAt: entity.DeletedAt,
 		PostId:    entity.PostId,
 		Value:     entity.Value,
 		UserId:    entity.UserId,
@@ -83,6 +87,7 @@ func (dto LikeDTO) toEntity() entities.Like {
 		ID:        dto.ID,
 		CreatedAt: dto.CreatedAt,
 		UpdatedAt: dto.UpdatedAt,
+		DeletedAt: dto.DeletedAt,
 		PostId:    dto.PostId,
 		Value:     dto.Value,
 		UserId:    dto.UserId,
@@ -94,8 +99,8 @@ func (r *LikeRepository) Create(ctx context.Context, tx dtx.TX, entity entities.
 	defer cancel()
 	dto := NewLikeDTOFromEntity(entity)
 	q := sq.Insert("public.likes").
-		Columns("id", "created_at", "updated_at", "post_id", "value", "user_id").
-		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.PostId, dto.Value, dto.UserId)
+		Columns("id", "created_at", "updated_at", "deleted_at", "post_id", "value", "user_id").
+		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.DeletedAt, dto.PostId, dto.Value, dto.UserId)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
@@ -107,7 +112,7 @@ func (r *LikeRepository) Get(ctx context.Context, id uuid.UUID) (entities.Like, 
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := &LikeDTO{}
-	q := sq.Select("likes.id", "likes.created_at", "likes.updated_at", "likes.post_id", "likes.value", "likes.user_id").
+	q := sq.Select("likes.id", "likes.created_at", "likes.updated_at", "likes.deleted_at", "likes.post_id", "likes.value", "likes.user_id").
 		From("public.likes").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -130,9 +135,16 @@ func (r *LikeRepository) List(
 	if filter.PageSize == nil {
 		filter.PageSize = pointer.Of(pageSize)
 	}
-	q := sq.Select("likes.id", "likes.created_at", "likes.updated_at", "likes.post_id", "likes.value", "likes.user_id").
+	q := sq.Select("likes.id", "likes.created_at", "likes.updated_at", "likes.deleted_at", "likes.post_id", "likes.value", "likes.user_id").
 		From("public.likes").
 		Limit(pageSize)
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"likes.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"likes.deleted_at": nil})
+		}
+	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -151,6 +163,13 @@ func (r *LikeRepository) Count(ctx context.Context, filter entities.LikeFilter) 
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.likes")
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"likes.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"likes.deleted_at": nil})
+		}
+	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
 	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
@@ -167,6 +186,7 @@ func (r *LikeRepository) Update(ctx context.Context, tx dtx.TX, entity entities.
 	{
 		q = q.Set("created_at", dto.CreatedAt)
 		q = q.Set("updated_at", dto.UpdatedAt)
+		q = q.Set("deleted_at", dto.DeletedAt)
 		q = q.Set("post_id", dto.PostId)
 		q = q.Set("value", dto.Value)
 		q = q.Set("user_id", dto.UserId)

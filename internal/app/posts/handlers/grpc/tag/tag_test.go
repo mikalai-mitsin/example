@@ -10,11 +10,9 @@ import (
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -141,7 +139,7 @@ func TestTagServiceServer_Delete(t *testing.T) {
 	mockTagUseCase := NewMocktagUseCase(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	id := uuid.NewUUID()
+	tag := entities.NewMockTag(t)
 	type fields struct {
 		UnimplementedTagServiceServer examplepb.UnimplementedTagServiceServer
 		tagUseCase                    tagUseCase
@@ -156,13 +154,13 @@ func TestTagServiceServer_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
-		want    *emptypb.Empty
+		want    *examplepb.Tag
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				mockTagUseCase.EXPECT().Delete(ctx, id).Return(nil).Times(1)
+				mockTagUseCase.EXPECT().Delete(ctx, tag.ID).Return(tag, nil)
 			},
 			fields: fields{
 				UnimplementedTagServiceServer: examplepb.UnimplementedTagServiceServer{},
@@ -172,17 +170,17 @@ func TestTagServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.TagDelete{
-					Id: id.String(),
+					Id: tag.ID.String(),
 				},
 			},
-			want:    &emptypb.Empty{},
+			want:    decodeTag(tag),
 			wantErr: nil,
 		},
 		{
 			name: "usecase error",
 			setup: func() {
-				mockTagUseCase.EXPECT().Delete(ctx, id).
-					Return(errs.NewUnexpectedBehaviorError("i error")).
+				mockTagUseCase.EXPECT().Delete(ctx, tag.ID).
+					Return(entities.Tag{}, errs.NewUnexpectedBehaviorError("i error")).
 					Times(1)
 			},
 			fields: fields{
@@ -193,7 +191,7 @@ func TestTagServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.TagDelete{
-					Id: id.String(),
+					Id: tag.ID.String(),
 				},
 			},
 			want: nil,
@@ -311,7 +309,7 @@ func TestTagServiceServer_List(t *testing.T) {
 		Items: make([]*examplepb.Tag, 0, int(count)),
 		Count: count,
 	}
-	listTags := make([]entities.Tag, 0, int(count))
+	tags := make([]entities.Tag, 0, int(count))
 	type fields struct {
 		UnimplementedTagServiceServer examplepb.UnimplementedTagServiceServer
 		tagUseCase                    tagUseCase
@@ -332,10 +330,7 @@ func TestTagServiceServer_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockTagUseCase.EXPECT().
-					List(ctx, gomock.Any()).
-					Return(listTags, count, nil).
-					Times(1)
+				mockTagUseCase.EXPECT().List(ctx, gomock.Any()).Return(tags, count, nil).Times(1)
 			},
 			fields: fields{
 				UnimplementedTagServiceServer: examplepb.UnimplementedTagServiceServer{},
@@ -476,6 +471,7 @@ func Test_decodeTag(t *testing.T) {
 		Id:        tag.ID.String(),
 		UpdatedAt: timestamppb.New(tag.UpdatedAt),
 		CreatedAt: timestamppb.New(tag.CreatedAt),
+		DeletedAt: timestamppb.New(*tag.DeletedAt),
 		PostId:    tag.PostId.String(),
 		Value:     string(tag.Value),
 	}

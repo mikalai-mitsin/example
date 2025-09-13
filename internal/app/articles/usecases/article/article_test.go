@@ -183,7 +183,7 @@ func TestArticleUseCase_Create(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockArticleService.EXPECT().Create(ctx, mockTx, create).Return(article, nil)
-				mockArticleEventService.EXPECT().Created(ctx, mockTx, article).Return(nil)
+				mockArticleEventService.EXPECT().Send(ctx, mockTx, article).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -273,7 +273,7 @@ func TestArticleUseCase_Update(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockArticleService.EXPECT().Update(ctx, mockTx, update).Return(article, nil)
-				mockArticleEventService.EXPECT().Updated(ctx, mockTx, article).Return(nil)
+				mockArticleEventService.EXPECT().Send(ctx, mockTx, article).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -354,6 +354,7 @@ func TestArticleUseCase_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
+		want    entities.Article
 		wantErr error
 	}{
 		{
@@ -362,8 +363,8 @@ func TestArticleUseCase_Delete(t *testing.T) {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockArticleService.EXPECT().
 					Delete(ctx, mockTx, article.ID).
-					Return(nil)
-				mockArticleEventService.EXPECT().Deleted(ctx, mockTx, article.ID).Return(nil)
+					Return(article, nil)
+				mockArticleEventService.EXPECT().Send(ctx, mockTx, article).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -376,6 +377,7 @@ func TestArticleUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  article.ID,
 			},
+			want:    article,
 			wantErr: nil,
 		},
 		{
@@ -384,7 +386,7 @@ func TestArticleUseCase_Delete(t *testing.T) {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockArticleService.EXPECT().
 					Delete(ctx, mockTx, article.ID).
-					Return(errs.NewUnexpectedBehaviorError("d 2"))
+					Return(entities.Article{}, errs.NewUnexpectedBehaviorError("d 2"))
 				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
@@ -397,6 +399,7 @@ func TestArticleUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  article.ID,
 			},
+			want:    entities.Article{},
 			wantErr: errs.NewUnexpectedBehaviorError("d 2"),
 		},
 	}
@@ -409,8 +412,9 @@ func TestArticleUseCase_Delete(t *testing.T) {
 				dtxManager:          tt.fields.dtxManager,
 				logger:              tt.fields.logger,
 			}
-			err := i.Delete(tt.args.ctx, tt.args.id)
+			got, err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -425,9 +429,9 @@ func TestArticleUseCase_List(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.NewMockArticleFilter(t)
 	count := faker.New().UInt64Between(2, 20)
-	listArticles := make([]entities.Article, 0, count)
+	articles := make([]entities.Article, 0, count)
 	for i := uint64(0); i < count; i++ {
-		listArticles = append(listArticles, entities.NewMockArticle(t))
+		articles = append(articles, entities.NewMockArticle(t))
 	}
 	type fields struct {
 		articleService      articleService
@@ -453,7 +457,7 @@ func TestArticleUseCase_List(t *testing.T) {
 			setup: func() {
 				mockArticleService.EXPECT().
 					List(ctx, filter).
-					Return(listArticles, count, nil)
+					Return(articles, count, nil)
 			},
 			fields: fields{
 				articleService:      mockArticleService,
@@ -465,7 +469,7 @@ func TestArticleUseCase_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listArticles,
+			want:    articles,
 			want1:   count,
 			wantErr: nil,
 		},

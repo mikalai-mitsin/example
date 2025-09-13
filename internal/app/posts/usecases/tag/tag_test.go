@@ -183,7 +183,7 @@ func TestTagUseCase_Create(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockTagService.EXPECT().Create(ctx, mockTx, create).Return(tag, nil)
-				mockTagEventService.EXPECT().Created(ctx, mockTx, tag).Return(nil)
+				mockTagEventService.EXPECT().Send(ctx, mockTx, tag).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -273,7 +273,7 @@ func TestTagUseCase_Update(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockTagService.EXPECT().Update(ctx, mockTx, update).Return(tag, nil)
-				mockTagEventService.EXPECT().Updated(ctx, mockTx, tag).Return(nil)
+				mockTagEventService.EXPECT().Send(ctx, mockTx, tag).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -354,6 +354,7 @@ func TestTagUseCase_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
+		want    entities.Tag
 		wantErr error
 	}{
 		{
@@ -362,8 +363,8 @@ func TestTagUseCase_Delete(t *testing.T) {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockTagService.EXPECT().
 					Delete(ctx, mockTx, tag.ID).
-					Return(nil)
-				mockTagEventService.EXPECT().Deleted(ctx, mockTx, tag.ID).Return(nil)
+					Return(tag, nil)
+				mockTagEventService.EXPECT().Send(ctx, mockTx, tag).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -376,6 +377,7 @@ func TestTagUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  tag.ID,
 			},
+			want:    tag,
 			wantErr: nil,
 		},
 		{
@@ -384,7 +386,7 @@ func TestTagUseCase_Delete(t *testing.T) {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockTagService.EXPECT().
 					Delete(ctx, mockTx, tag.ID).
-					Return(errs.NewUnexpectedBehaviorError("d 2"))
+					Return(entities.Tag{}, errs.NewUnexpectedBehaviorError("d 2"))
 				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
@@ -397,6 +399,7 @@ func TestTagUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  tag.ID,
 			},
+			want:    entities.Tag{},
 			wantErr: errs.NewUnexpectedBehaviorError("d 2"),
 		},
 	}
@@ -409,8 +412,9 @@ func TestTagUseCase_Delete(t *testing.T) {
 				dtxManager:      tt.fields.dtxManager,
 				logger:          tt.fields.logger,
 			}
-			err := i.Delete(tt.args.ctx, tt.args.id)
+			got, err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -425,9 +429,9 @@ func TestTagUseCase_List(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.NewMockTagFilter(t)
 	count := faker.New().UInt64Between(2, 20)
-	listTags := make([]entities.Tag, 0, count)
+	tags := make([]entities.Tag, 0, count)
 	for i := uint64(0); i < count; i++ {
-		listTags = append(listTags, entities.NewMockTag(t))
+		tags = append(tags, entities.NewMockTag(t))
 	}
 	type fields struct {
 		tagService      tagService
@@ -453,7 +457,7 @@ func TestTagUseCase_List(t *testing.T) {
 			setup: func() {
 				mockTagService.EXPECT().
 					List(ctx, filter).
-					Return(listTags, count, nil)
+					Return(tags, count, nil)
 			},
 			fields: fields{
 				tagService:      mockTagService,
@@ -465,7 +469,7 @@ func TestTagUseCase_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listTags,
+			want:    tags,
 			want1:   count,
 			wantErr: nil,
 		},

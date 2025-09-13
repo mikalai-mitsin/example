@@ -5,6 +5,7 @@ import (
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
+	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 )
 
@@ -97,9 +98,14 @@ func (s *TagService) Update(
 	}
 	return tag, nil
 }
-func (s *TagService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) error {
-	if err := s.tagRepository.Delete(ctx, tx, id); err != nil {
-		return err
+func (s *TagService) Delete(ctx context.Context, tx dtx.TX, id uuid.UUID) (entities.Tag, error) {
+	tag, err := s.tagRepository.Get(ctx, id)
+	if err != nil {
+		return entities.Tag{}, err
 	}
-	return nil
+	tag.DeletedAt = pointer.Of(s.clock.Now().UTC())
+	if err := s.tagRepository.Update(ctx, tx, tag); err != nil {
+		return entities.Tag{}, err
+	}
+	return tag, nil
 }

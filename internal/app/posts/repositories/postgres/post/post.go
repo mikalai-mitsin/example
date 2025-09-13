@@ -24,14 +24,16 @@ func NewPostRepository(readDB database, writeDB database, logger logger) *PostRe
 }
 
 var orderByMap = map[entities.PostOrdering]string{
-	entities.PostOrderingBodyASC:       "posts.body ASC",
-	entities.PostOrderingBodyDESC:      "posts.body DESC",
 	entities.PostOrderingIdASC:         "posts.id ASC",
-	entities.PostOrderingIdDESC:        "posts.id DESC",
-	entities.PostOrderingCreatedAtASC:  "posts.created_at ASC",
 	entities.PostOrderingCreatedAtDESC: "posts.created_at DESC",
 	entities.PostOrderingUpdatedAtASC:  "posts.updated_at ASC",
 	entities.PostOrderingUpdatedAtDESC: "posts.updated_at DESC",
+	entities.PostOrderingDeletedAtASC:  "posts.deleted_at ASC",
+	entities.PostOrderingDeletedAtDESC: "posts.deleted_at DESC",
+	entities.PostOrderingBodyASC:       "posts.body ASC",
+	entities.PostOrderingBodyDESC:      "posts.body DESC",
+	entities.PostOrderingIdDESC:        "posts.id DESC",
+	entities.PostOrderingCreatedAtASC:  "posts.created_at ASC",
 }
 
 func encodeOrderBy(orderBy []entities.PostOrdering) []string {
@@ -47,10 +49,11 @@ func encodeOrderBy(orderBy []entities.PostOrdering) []string {
 }
 
 type PostDTO struct {
-	ID        uuid.UUID `db:"id,omitempty"`
-	UpdatedAt time.Time `db:"updated_at,omitempty"`
-	CreatedAt time.Time `db:"created_at,omitempty"`
-	Body      string    `db:"body"`
+	ID        uuid.UUID  `db:"id,omitempty"`
+	UpdatedAt time.Time  `db:"updated_at,omitempty"`
+	CreatedAt time.Time  `db:"created_at,omitempty"`
+	DeletedAt *time.Time `db:"deleted_at"`
+	Body      string     `db:"body"`
 }
 type PostListDTO []PostDTO
 
@@ -66,6 +69,7 @@ func NewPostDTOFromEntity(entity entities.Post) PostDTO {
 		ID:        entity.ID,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
+		DeletedAt: entity.DeletedAt,
 		Body:      entity.Body,
 	}
 	return dto
@@ -75,6 +79,7 @@ func (dto PostDTO) toEntity() entities.Post {
 		ID:        dto.ID,
 		CreatedAt: dto.CreatedAt,
 		UpdatedAt: dto.UpdatedAt,
+		DeletedAt: dto.DeletedAt,
 		Body:      dto.Body,
 	}
 	return entity
@@ -84,8 +89,8 @@ func (r *PostRepository) Create(ctx context.Context, tx dtx.TX, entity entities.
 	defer cancel()
 	dto := NewPostDTOFromEntity(entity)
 	q := sq.Insert("public.posts").
-		Columns("id", "created_at", "updated_at", "body").
-		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.Body)
+		Columns("id", "created_at", "updated_at", "deleted_at", "body").
+		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.DeletedAt, dto.Body)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
@@ -97,7 +102,7 @@ func (r *PostRepository) Get(ctx context.Context, id uuid.UUID) (entities.Post, 
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := &PostDTO{}
-	q := sq.Select("posts.id", "posts.created_at", "posts.updated_at", "posts.body").
+	q := sq.Select("posts.id", "posts.created_at", "posts.updated_at", "posts.deleted_at", "posts.body").
 		From("public.posts").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -120,9 +125,16 @@ func (r *PostRepository) List(
 	if filter.PageSize == nil {
 		filter.PageSize = pointer.Of(pageSize)
 	}
-	q := sq.Select("posts.id", "posts.created_at", "posts.updated_at", "posts.body").
+	q := sq.Select("posts.id", "posts.created_at", "posts.updated_at", "posts.deleted_at", "posts.body").
 		From("public.posts").
 		Limit(pageSize)
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"posts.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"posts.deleted_at": nil})
+		}
+	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -141,6 +153,13 @@ func (r *PostRepository) Count(ctx context.Context, filter entities.PostFilter) 
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.posts")
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"posts.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"posts.deleted_at": nil})
+		}
+	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
 	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
@@ -157,6 +176,7 @@ func (r *PostRepository) Update(ctx context.Context, tx dtx.TX, entity entities.
 	{
 		q = q.Set("created_at", dto.CreatedAt)
 		q = q.Set("updated_at", dto.UpdatedAt)
+		q = q.Set("deleted_at", dto.DeletedAt)
 		q = q.Set("body", dto.Body)
 	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()

@@ -20,9 +20,7 @@ type tagRepository interface {
 	Delete(context.Context, dtx.TX, uuid.UUID) error
 }
 type tagEventProducer interface {
-	Created(context.Context, entities.Tag) error
-	Updated(context.Context, entities.Tag) error
-	Deleted(context.Context, uuid.UUID) error
+	Send(context.Context, entities.Tag) error
 }
 
 // clock - clock interface

@@ -45,7 +45,7 @@ func (u *PostUseCase) Create(
 	if err != nil {
 		return entities.Post{}, err
 	}
-	if err := u.postEventService.Created(ctx, tx, post); err != nil {
+	if err := u.postEventService.Send(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -87,7 +87,7 @@ func (u *PostUseCase) Update(
 	if err != nil {
 		return entities.Post{}, err
 	}
-	if err := u.postEventService.Updated(ctx, tx, post); err != nil {
+	if err := u.postEventService.Send(ctx, tx, post); err != nil {
 		return entities.Post{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -95,7 +95,7 @@ func (u *PostUseCase) Update(
 	}
 	return post, nil
 }
-func (u *PostUseCase) Delete(ctx context.Context, id uuid.UUID) error {
+func (u *PostUseCase) Delete(ctx context.Context, id uuid.UUID) (entities.Post, error) {
 	logger := u.logger.WithContext(ctx)
 	tx := u.dtxManager.NewTx()
 	defer func(tx dtx.TX) {
@@ -103,14 +103,15 @@ func (u *PostUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 			logger.Error("cant rollback transaction", log.Error(err))
 		}
 	}(tx)
-	if err := u.postService.Delete(ctx, tx, id); err != nil {
-		return err
+	post, err := u.postService.Delete(ctx, tx, id)
+	if err != nil {
+		return entities.Post{}, err
 	}
-	if err := u.postEventService.Deleted(ctx, tx, id); err != nil {
-		return err
+	if err := u.postEventService.Send(ctx, tx, post); err != nil {
+		return entities.Post{}, err
 	}
 	if err := tx.Commit(); err != nil {
-		return err
+		return entities.Post{}, err
 	}
-	return nil
+	return post, nil
 }

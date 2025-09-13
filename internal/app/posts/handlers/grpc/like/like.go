@@ -3,14 +3,9 @@ package handlers
 import (
 	"context"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
-	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type LikeServiceServer struct {
@@ -70,79 +65,14 @@ func (s *LikeServiceServer) Update(
 func (s *LikeServiceServer) Delete(
 	ctx context.Context,
 	input *examplepb.LikeDelete,
-) (*emptypb.Empty, error) {
-	if err := s.likeUseCase.Delete(ctx, uuid.MustParse(input.GetId())); err != nil {
+) (*examplepb.Like, error) {
+	like, err := s.likeUseCase.Delete(ctx, uuid.MustParse(input.GetId()))
+	if err != nil {
 		return nil, err
 	}
-	return &emptypb.Empty{}, nil
+	return decodeLike(like), nil
 }
 func (s *LikeServiceServer) RegisterGRPC(grpcServer *grpc.Server) error {
 	grpcServer.AddHandler(&examplepb.LikeService_ServiceDesc, s)
 	return nil
-}
-func encodeLikeCreate(input *examplepb.LikeCreate) entities.LikeCreate {
-	create := entities.LikeCreate{
-		PostId: uuid.MustParse(input.GetPostId()),
-		Value:  input.GetValue(),
-		UserId: uuid.MustParse(input.GetUserId()),
-	}
-	return create
-}
-func encodeLikeFilter(input *examplepb.LikeFilter) entities.LikeFilter {
-	filter := entities.LikeFilter{
-		PageSize:   nil,
-		PageNumber: nil,
-		OrderBy:    []entities.LikeOrdering{},
-		Search:     nil,
-	}
-	if input.GetPageSize() != nil {
-		filter.PageSize = pointer.Of(input.GetPageSize().GetValue())
-	}
-	if input.GetPageNumber() != nil {
-		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
-	}
-	for _, orderBy := range input.GetOrderBy() {
-		filter.OrderBy = append(filter.OrderBy, entities.LikeOrdering(orderBy))
-	}
-	return filter
-}
-func encodeLikeUpdate(input *examplepb.LikeUpdate) entities.LikeUpdate {
-	update := entities.LikeUpdate{ID: uuid.MustParse(input.GetId())}
-	if input.GetPostId() != nil {
-		update.PostId = pointer.Of(uuid.MustParse(input.GetPostId().GetValue()))
-	}
-	if input.GetValue() != nil {
-		update.Value = pointer.Of(string(input.GetValue().GetValue()))
-	}
-	if input.GetUserId() != nil {
-		update.UserId = pointer.Of(uuid.MustParse(input.GetUserId().GetValue()))
-	}
-	return update
-}
-func decodeLike(item entities.Like) *examplepb.Like {
-	response := &examplepb.Like{
-		Id:        item.ID.String(),
-		CreatedAt: timestamppb.New(item.CreatedAt),
-		UpdatedAt: timestamppb.New(item.UpdatedAt),
-		PostId:    item.PostId.String(),
-		Value:     item.Value,
-		UserId:    item.UserId.String(),
-	}
-	return response
-}
-func decodeListLike(items []entities.Like, count uint64) *examplepb.ListLike {
-	response := &examplepb.ListLike{Items: make([]*examplepb.Like, 0, len(items)), Count: count}
-	for _, item := range items {
-		response.Items = append(response.Items, decodeLike(item))
-	}
-	return response
-}
-func decodeLikeUpdate(update entities.LikeUpdate) *examplepb.LikeUpdate {
-	result := &examplepb.LikeUpdate{
-		Id:     string(update.ID.String()),
-		PostId: wrapperspb.String(update.PostId.String()),
-		Value:  wrapperspb.String(*update.Value),
-		UserId: wrapperspb.String(update.UserId.String()),
-	}
-	return result
 }

@@ -14,7 +14,7 @@ type likeUseCase interface {
 	Get(context.Context, uuid.UUID) (entities.Like, error)
 	List(context.Context, entities.LikeFilter) ([]entities.Like, uint64, error)
 	Update(context.Context, entities.LikeUpdate) (entities.Like, error)
-	Delete(context.Context, uuid.UUID) error
+	Delete(context.Context, uuid.UUID) (entities.Like, error)
 }
 type logger interface {
 	log.Logger

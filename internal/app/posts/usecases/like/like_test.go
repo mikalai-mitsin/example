@@ -183,7 +183,7 @@ func TestLikeUseCase_Create(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().Create(ctx, mockTx, create).Return(like, nil)
-				mockLikeEventService.EXPECT().Created(ctx, mockTx, like).Return(nil)
+				mockLikeEventService.EXPECT().Send(ctx, mockTx, like).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -273,7 +273,7 @@ func TestLikeUseCase_Update(t *testing.T) {
 			setup: func() {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().Update(ctx, mockTx, update).Return(like, nil)
-				mockLikeEventService.EXPECT().Updated(ctx, mockTx, like).Return(nil)
+				mockLikeEventService.EXPECT().Send(ctx, mockTx, like).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -354,6 +354,7 @@ func TestLikeUseCase_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
+		want    entities.Like
 		wantErr error
 	}{
 		{
@@ -362,8 +363,8 @@ func TestLikeUseCase_Delete(t *testing.T) {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().
 					Delete(ctx, mockTx, like.ID).
-					Return(nil)
-				mockLikeEventService.EXPECT().Deleted(ctx, mockTx, like.ID).Return(nil)
+					Return(like, nil)
+				mockLikeEventService.EXPECT().Send(ctx, mockTx, like).Return(nil)
 				mockTx.EXPECT().Rollback().After(mockTx.EXPECT().Commit().Return(nil)).Return(nil)
 			},
 			fields: fields{
@@ -376,6 +377,7 @@ func TestLikeUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  like.ID,
 			},
+			want:    like,
 			wantErr: nil,
 		},
 		{
@@ -384,7 +386,7 @@ func TestLikeUseCase_Delete(t *testing.T) {
 				mockDtxManager.EXPECT().NewTx().Return(mockTx)
 				mockLikeService.EXPECT().
 					Delete(ctx, mockTx, like.ID).
-					Return(errs.NewUnexpectedBehaviorError("d 2"))
+					Return(entities.Like{}, errs.NewUnexpectedBehaviorError("d 2"))
 				mockTx.EXPECT().Rollback().Return(nil)
 			},
 			fields: fields{
@@ -397,6 +399,7 @@ func TestLikeUseCase_Delete(t *testing.T) {
 				ctx: ctx,
 				id:  like.ID,
 			},
+			want:    entities.Like{},
 			wantErr: errs.NewUnexpectedBehaviorError("d 2"),
 		},
 	}
@@ -409,8 +412,9 @@ func TestLikeUseCase_Delete(t *testing.T) {
 				dtxManager:       tt.fields.dtxManager,
 				logger:           tt.fields.logger,
 			}
-			err := i.Delete(tt.args.ctx, tt.args.id)
+			got, err := i.Delete(tt.args.ctx, tt.args.id)
 			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -425,9 +429,9 @@ func TestLikeUseCase_List(t *testing.T) {
 	ctx := context.Background()
 	filter := entities.NewMockLikeFilter(t)
 	count := faker.New().UInt64Between(2, 20)
-	listLikes := make([]entities.Like, 0, count)
+	likes := make([]entities.Like, 0, count)
 	for i := uint64(0); i < count; i++ {
-		listLikes = append(listLikes, entities.NewMockLike(t))
+		likes = append(likes, entities.NewMockLike(t))
 	}
 	type fields struct {
 		likeService      likeService
@@ -453,7 +457,7 @@ func TestLikeUseCase_List(t *testing.T) {
 			setup: func() {
 				mockLikeService.EXPECT().
 					List(ctx, filter).
-					Return(listLikes, count, nil)
+					Return(likes, count, nil)
 			},
 			fields: fields{
 				likeService:      mockLikeService,
@@ -465,7 +469,7 @@ func TestLikeUseCase_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listLikes,
+			want:    likes,
 			want1:   count,
 			wantErr: nil,
 		},

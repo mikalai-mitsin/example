@@ -3,14 +3,9 @@ package handlers
 import (
 	"context"
 
-	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
-	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type ArticleServiceServer struct {
@@ -70,91 +65,14 @@ func (s *ArticleServiceServer) Update(
 func (s *ArticleServiceServer) Delete(
 	ctx context.Context,
 	input *examplepb.ArticleDelete,
-) (*emptypb.Empty, error) {
-	if err := s.articleUseCase.Delete(ctx, uuid.MustParse(input.GetId())); err != nil {
+) (*examplepb.Article, error) {
+	article, err := s.articleUseCase.Delete(ctx, uuid.MustParse(input.GetId()))
+	if err != nil {
 		return nil, err
 	}
-	return &emptypb.Empty{}, nil
+	return decodeArticle(article), nil
 }
 func (s *ArticleServiceServer) RegisterGRPC(grpcServer *grpc.Server) error {
 	grpcServer.AddHandler(&examplepb.ArticleService_ServiceDesc, s)
 	return nil
-}
-func encodeArticleCreate(input *examplepb.ArticleCreate) entities.ArticleCreate {
-	create := entities.ArticleCreate{
-		Title:       input.GetTitle(),
-		Subtitle:    input.GetSubtitle(),
-		Body:        input.GetBody(),
-		IsPublished: input.GetIsPublished(),
-	}
-	return create
-}
-func encodeArticleFilter(input *examplepb.ArticleFilter) entities.ArticleFilter {
-	filter := entities.ArticleFilter{
-		PageSize:   nil,
-		PageNumber: nil,
-		OrderBy:    []entities.ArticleOrdering{},
-		Search:     nil,
-	}
-	if input.GetPageSize() != nil {
-		filter.PageSize = pointer.Of(input.GetPageSize().GetValue())
-	}
-	if input.GetPageNumber() != nil {
-		filter.PageNumber = pointer.Of(input.GetPageNumber().GetValue())
-	}
-	if input.GetSearch() != nil {
-		filter.Search = pointer.Of(input.GetSearch().GetValue())
-	}
-	for _, orderBy := range input.GetOrderBy() {
-		filter.OrderBy = append(filter.OrderBy, entities.ArticleOrdering(orderBy))
-	}
-	return filter
-}
-func encodeArticleUpdate(input *examplepb.ArticleUpdate) entities.ArticleUpdate {
-	update := entities.ArticleUpdate{ID: uuid.MustParse(input.GetId())}
-	if input.GetTitle() != nil {
-		update.Title = pointer.Of(string(input.GetTitle().GetValue()))
-	}
-	if input.GetSubtitle() != nil {
-		update.Subtitle = pointer.Of(string(input.GetSubtitle().GetValue()))
-	}
-	if input.GetBody() != nil {
-		update.Body = pointer.Of(string(input.GetBody().GetValue()))
-	}
-	if input.GetIsPublished() != nil {
-		update.IsPublished = pointer.Of(bool(input.GetIsPublished().GetValue()))
-	}
-	return update
-}
-func decodeArticle(item entities.Article) *examplepb.Article {
-	response := &examplepb.Article{
-		Id:          item.ID.String(),
-		CreatedAt:   timestamppb.New(item.CreatedAt),
-		UpdatedAt:   timestamppb.New(item.UpdatedAt),
-		Title:       item.Title,
-		Subtitle:    item.Subtitle,
-		Body:        item.Body,
-		IsPublished: item.IsPublished,
-	}
-	return response
-}
-func decodeListArticle(items []entities.Article, count uint64) *examplepb.ListArticle {
-	response := &examplepb.ListArticle{
-		Items: make([]*examplepb.Article, 0, len(items)),
-		Count: count,
-	}
-	for _, item := range items {
-		response.Items = append(response.Items, decodeArticle(item))
-	}
-	return response
-}
-func decodeArticleUpdate(update entities.ArticleUpdate) *examplepb.ArticleUpdate {
-	result := &examplepb.ArticleUpdate{
-		Id:          string(update.ID.String()),
-		Title:       wrapperspb.String(*update.Title),
-		Subtitle:    wrapperspb.String(*update.Subtitle),
-		Body:        wrapperspb.String(*update.Body),
-		IsPublished: wrapperspb.Bool(*update.IsPublished),
-	}
-	return result
 }

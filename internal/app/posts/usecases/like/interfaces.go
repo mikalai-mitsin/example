@@ -1,6 +1,5 @@
 package usecases
 
-//go:generate mockgen -source=interfaces.go -package=usecases -destination=interfaces_mock.go
 import (
 	"context"
 
@@ -15,12 +14,10 @@ type likeService interface {
 	Get(context.Context, uuid.UUID) (entities.Like, error)
 	List(context.Context, entities.LikeFilter) ([]entities.Like, uint64, error)
 	Update(context.Context, dtx.TX, entities.LikeUpdate) (entities.Like, error)
-	Delete(context.Context, dtx.TX, uuid.UUID) error
+	Delete(context.Context, dtx.TX, uuid.UUID) (entities.Like, error)
 }
 type likeEventService interface {
-	Created(context.Context, dtx.TX, entities.Like) error
-	Updated(context.Context, dtx.TX, entities.Like) error
-	Deleted(context.Context, dtx.TX, uuid.UUID) error
+	Send(context.Context, dtx.TX, entities.Like) error
 }
 type logger interface {
 	log.Logger

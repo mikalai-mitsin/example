@@ -9,11 +9,12 @@ import (
 )
 
 type Tag struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	PostId    uuid.UUID `json:"post_id"`
-	Value     string    `json:"value"`
+	ID        uuid.UUID  `json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	PostId    uuid.UUID  `json:"post_id"`
+	Value     string     `json:"value"`
 }
 
 func (m *Tag) Validate() error {
@@ -22,6 +23,7 @@ func (m *Tag) Validate() error {
 		validation.Field(&m.ID, validation.Required),
 		validation.Field(&m.CreatedAt, validation.Required),
 		validation.Field(&m.UpdatedAt, validation.Required),
+		validation.Field(&m.DeletedAt),
 		validation.Field(&m.PostId, validation.Required),
 		validation.Field(&m.Value, validation.Required),
 	)
@@ -34,7 +36,7 @@ func (m *Tag) Validate() error {
 type TagOrdering string
 
 func (o TagOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(TagOrderingIdASC.String(), TagOrderingIdDESC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingPostIdASC.String(), TagOrderingValueASC.String(), TagOrderingCreatedAtASC.String(), TagOrderingPostIdDESC.String(), TagOrderingValueDESC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(TagOrderingCreatedAtASC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingDeletedAtASC.String(), TagOrderingPostIdASC.String(), TagOrderingPostIdDESC.String(), TagOrderingValueASC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingDeletedAtDESC.String(), TagOrderingValueDESC.String(), TagOrderingIdASC.String(), TagOrderingIdDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -43,22 +45,25 @@ func (o TagOrdering) String() string {
 	return string(o)
 }
 
-const TagOrderingValueDESC TagOrdering = "-value"
-const TagOrderingIdASC TagOrdering = "id"
+const TagOrderingCreatedAtASC TagOrdering = "created_at"
 const TagOrderingCreatedAtDESC TagOrdering = "-created_at"
+const TagOrderingUpdatedAtASC TagOrdering = "updated_at"
 const TagOrderingUpdatedAtDESC TagOrdering = "-updated_at"
+const TagOrderingDeletedAtDESC TagOrdering = "-deleted_at"
 const TagOrderingPostIdDESC TagOrdering = "-post_id"
 const TagOrderingValueASC TagOrdering = "value"
+const TagOrderingIdASC TagOrdering = "id"
 const TagOrderingIdDESC TagOrdering = "-id"
-const TagOrderingCreatedAtASC TagOrdering = "created_at"
-const TagOrderingUpdatedAtASC TagOrdering = "updated_at"
+const TagOrderingDeletedAtASC TagOrdering = "deleted_at"
 const TagOrderingPostIdASC TagOrdering = "post_id"
+const TagOrderingValueDESC TagOrdering = "-value"
 
 type TagFilter struct {
 	PageSize   *uint64       `json:"page_size"`
 	PageNumber *uint64       `json:"page_number"`
 	Search     *string       `json:"search"`
 	OrderBy    []TagOrdering `json:"order_by"`
+	IsDeleted  *bool         `json:"is_deleted"`
 }
 
 func (m *TagFilter) Validate() error {
@@ -68,6 +73,7 @@ func (m *TagFilter) Validate() error {
 		validation.Field(&m.PageNumber),
 		validation.Field(&m.Search),
 		validation.Field(&m.OrderBy),
+		validation.Field(&m.IsDeleted),
 	)
 	if err != nil {
 		return errs.NewFromValidationError(err)

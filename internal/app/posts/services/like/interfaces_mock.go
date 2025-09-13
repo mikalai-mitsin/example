@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	like "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
+	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	dtx "github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	log "github.com/mikalai-mitsin/example/internal/pkg/log"
 	uuid "github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -48,7 +48,7 @@ func (m *MocklikeRepository) EXPECT() *MocklikeRepositoryMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MocklikeRepository) Count(arg0 context.Context, arg1 like.LikeFilter) (uint64, error) {
+func (m *MocklikeRepository) Count(arg0 context.Context, arg1 entities.LikeFilter) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -63,7 +63,7 @@ func (mr *MocklikeRepositoryMockRecorder) Count(arg0, arg1 any) *gomock.Call {
 }
 
 // Create mocks base method.
-func (m *MocklikeRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 like.Like) error {
+func (m *MocklikeRepository) Create(arg0 context.Context, arg1 dtx.TX, arg2 entities.Like) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -91,10 +91,10 @@ func (mr *MocklikeRepositoryMockRecorder) Delete(arg0, arg1, arg2 any) *gomock.C
 }
 
 // Get mocks base method.
-func (m *MocklikeRepository) Get(arg0 context.Context, arg1 uuid.UUID) (like.Like, error) {
+func (m *MocklikeRepository) Get(arg0 context.Context, arg1 uuid.UUID) (entities.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(like.Like)
+	ret0, _ := ret[0].(entities.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -106,10 +106,10 @@ func (mr *MocklikeRepositoryMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MocklikeRepository) List(arg0 context.Context, arg1 like.LikeFilter) ([]like.Like, error) {
+func (m *MocklikeRepository) List(arg0 context.Context, arg1 entities.LikeFilter) ([]entities.Like, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]like.Like)
+	ret0, _ := ret[0].([]entities.Like)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -121,7 +121,7 @@ func (mr *MocklikeRepositoryMockRecorder) List(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MocklikeRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 like.Like) error {
+func (m *MocklikeRepository) Update(arg0 context.Context, arg1 dtx.TX, arg2 entities.Like) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -158,46 +158,18 @@ func (m *MocklikeEventProducer) EXPECT() *MocklikeEventProducerMockRecorder {
 	return m.recorder
 }
 
-// Created mocks base method.
-func (m *MocklikeEventProducer) Created(arg0 context.Context, arg1 like.Like) error {
+// Send mocks base method.
+func (m *MocklikeEventProducer) Send(arg0 context.Context, arg1 entities.Like) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Created", arg0, arg1)
+	ret := m.ctrl.Call(m, "Send", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Created indicates an expected call of Created.
-func (mr *MocklikeEventProducerMockRecorder) Created(arg0, arg1 any) *gomock.Call {
+// Send indicates an expected call of Send.
+func (mr *MocklikeEventProducerMockRecorder) Send(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Created", reflect.TypeOf((*MocklikeEventProducer)(nil).Created), arg0, arg1)
-}
-
-// Deleted mocks base method.
-func (m *MocklikeEventProducer) Deleted(arg0 context.Context, arg1 uuid.UUID) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Deleted", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Deleted indicates an expected call of Deleted.
-func (mr *MocklikeEventProducerMockRecorder) Deleted(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deleted", reflect.TypeOf((*MocklikeEventProducer)(nil).Deleted), arg0, arg1)
-}
-
-// Updated mocks base method.
-func (m *MocklikeEventProducer) Updated(arg0 context.Context, arg1 like.Like) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Updated", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Updated indicates an expected call of Updated.
-func (mr *MocklikeEventProducerMockRecorder) Updated(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Updated", reflect.TypeOf((*MocklikeEventProducer)(nil).Updated), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MocklikeEventProducer)(nil).Send), arg0, arg1)
 }
 
 // Mockclock is a mock of clock interface.

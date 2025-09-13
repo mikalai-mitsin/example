@@ -12,7 +12,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -35,7 +34,7 @@ type TagServiceClient interface {
 	Create(ctx context.Context, in *TagCreate, opts ...grpc.CallOption) (*Tag, error)
 	Get(ctx context.Context, in *TagGet, opts ...grpc.CallOption) (*Tag, error)
 	Update(ctx context.Context, in *TagUpdate, opts ...grpc.CallOption) (*Tag, error)
-	Delete(ctx context.Context, in *TagDelete, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *TagDelete, opts ...grpc.CallOption) (*Tag, error)
 	List(ctx context.Context, in *TagFilter, opts ...grpc.CallOption) (*ListTag, error)
 }
 
@@ -77,9 +76,9 @@ func (c *tagServiceClient) Update(ctx context.Context, in *TagUpdate, opts ...gr
 	return out, nil
 }
 
-func (c *tagServiceClient) Delete(ctx context.Context, in *TagDelete, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *tagServiceClient) Delete(ctx context.Context, in *TagDelete, opts ...grpc.CallOption) (*Tag, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(Tag)
 	err := c.cc.Invoke(ctx, TagService_Delete_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -104,7 +103,7 @@ type TagServiceServer interface {
 	Create(context.Context, *TagCreate) (*Tag, error)
 	Get(context.Context, *TagGet) (*Tag, error)
 	Update(context.Context, *TagUpdate) (*Tag, error)
-	Delete(context.Context, *TagDelete) (*emptypb.Empty, error)
+	Delete(context.Context, *TagDelete) (*Tag, error)
 	List(context.Context, *TagFilter) (*ListTag, error)
 }
 
@@ -124,7 +123,7 @@ func (UnimplementedTagServiceServer) Get(context.Context, *TagGet) (*Tag, error)
 func (UnimplementedTagServiceServer) Update(context.Context, *TagUpdate) (*Tag, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedTagServiceServer) Delete(context.Context, *TagDelete) (*emptypb.Empty, error) {
+func (UnimplementedTagServiceServer) Delete(context.Context, *TagDelete) (*Tag, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedTagServiceServer) List(context.Context, *TagFilter) (*ListTag, error) {

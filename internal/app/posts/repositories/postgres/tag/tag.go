@@ -24,16 +24,18 @@ func NewTagRepository(readDB database, writeDB database, logger logger) *TagRepo
 }
 
 var orderByMap = map[entities.TagOrdering]string{
+	entities.TagOrderingIdASC:         "tags.id ASC",
+	entities.TagOrderingUpdatedAtDESC: "tags.updated_at DESC",
+	entities.TagOrderingDeletedAtASC:  "tags.deleted_at ASC",
+	entities.TagOrderingDeletedAtDESC: "tags.deleted_at DESC",
+	entities.TagOrderingPostIdDESC:    "tags.post_id DESC",
+	entities.TagOrderingValueDESC:     "tags.value DESC",
+	entities.TagOrderingIdDESC:        "tags.id DESC",
+	entities.TagOrderingCreatedAtASC:  "tags.created_at ASC",
 	entities.TagOrderingCreatedAtDESC: "tags.created_at DESC",
 	entities.TagOrderingUpdatedAtASC:  "tags.updated_at ASC",
 	entities.TagOrderingPostIdASC:     "tags.post_id ASC",
-	entities.TagOrderingIdASC:         "tags.id ASC",
-	entities.TagOrderingIdDESC:        "tags.id DESC",
-	entities.TagOrderingUpdatedAtDESC: "tags.updated_at DESC",
-	entities.TagOrderingPostIdDESC:    "tags.post_id DESC",
 	entities.TagOrderingValueASC:      "tags.value ASC",
-	entities.TagOrderingValueDESC:     "tags.value DESC",
-	entities.TagOrderingCreatedAtASC:  "tags.created_at ASC",
 }
 
 func encodeOrderBy(orderBy []entities.TagOrdering) []string {
@@ -49,11 +51,12 @@ func encodeOrderBy(orderBy []entities.TagOrdering) []string {
 }
 
 type TagDTO struct {
-	ID        uuid.UUID `db:"id,omitempty"`
-	UpdatedAt time.Time `db:"updated_at,omitempty"`
-	CreatedAt time.Time `db:"created_at,omitempty"`
-	PostId    uuid.UUID `db:"post_id"`
-	Value     string    `db:"value"`
+	ID        uuid.UUID  `db:"id,omitempty"`
+	UpdatedAt time.Time  `db:"updated_at,omitempty"`
+	CreatedAt time.Time  `db:"created_at,omitempty"`
+	DeletedAt *time.Time `db:"deleted_at"`
+	PostId    uuid.UUID  `db:"post_id"`
+	Value     string     `db:"value"`
 }
 type TagListDTO []TagDTO
 
@@ -69,6 +72,7 @@ func NewTagDTOFromEntity(entity entities.Tag) TagDTO {
 		ID:        entity.ID,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
+		DeletedAt: entity.DeletedAt,
 		PostId:    entity.PostId,
 		Value:     entity.Value,
 	}
@@ -79,6 +83,7 @@ func (dto TagDTO) toEntity() entities.Tag {
 		ID:        dto.ID,
 		CreatedAt: dto.CreatedAt,
 		UpdatedAt: dto.UpdatedAt,
+		DeletedAt: dto.DeletedAt,
 		PostId:    dto.PostId,
 		Value:     dto.Value,
 	}
@@ -89,8 +94,8 @@ func (r *TagRepository) Create(ctx context.Context, tx dtx.TX, entity entities.T
 	defer cancel()
 	dto := NewTagDTOFromEntity(entity)
 	q := sq.Insert("public.tags").
-		Columns("id", "created_at", "updated_at", "post_id", "value").
-		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.PostId, dto.Value)
+		Columns("id", "created_at", "updated_at", "deleted_at", "post_id", "value").
+		Values(dto.ID, dto.CreatedAt, dto.UpdatedAt, dto.DeletedAt, dto.PostId, dto.Value)
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	if _, err := tx.GetSQLTx().ExecContext(ctx, query, args...); err != nil {
 		e := errs.FromPostgresError(err)
@@ -102,7 +107,7 @@ func (r *TagRepository) Get(ctx context.Context, id uuid.UUID) (entities.Tag, er
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	dto := &TagDTO{}
-	q := sq.Select("tags.id", "tags.created_at", "tags.updated_at", "tags.post_id", "tags.value").
+	q := sq.Select("tags.id", "tags.created_at", "tags.updated_at", "tags.deleted_at", "tags.post_id", "tags.value").
 		From("public.tags").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -125,9 +130,16 @@ func (r *TagRepository) List(
 	if filter.PageSize == nil {
 		filter.PageSize = pointer.Of(pageSize)
 	}
-	q := sq.Select("tags.id", "tags.created_at", "tags.updated_at", "tags.post_id", "tags.value").
+	q := sq.Select("tags.id", "tags.created_at", "tags.updated_at", "tags.deleted_at", "tags.post_id", "tags.value").
 		From("public.tags").
 		Limit(pageSize)
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"tags.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"tags.deleted_at": nil})
+		}
+	}
 	if filter.PageNumber != nil && *filter.PageNumber > 1 {
 		q = q.Offset((*filter.PageNumber - 1) * *filter.PageSize)
 	}
@@ -146,6 +158,13 @@ func (r *TagRepository) Count(ctx context.Context, filter entities.TagFilter) (u
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	q := sq.Select("count(id)").From("public.tags")
+	if filter.IsDeleted != nil {
+		if *filter.IsDeleted {
+			q = q.Where(sq.NotEq{"tags.deleted_at": nil})
+		} else {
+			q = q.Where(sq.Eq{"tags.deleted_at": nil})
+		}
+	}
 	query, args := q.PlaceholderFormat(sq.Dollar).MustSql()
 	var count uint64
 	if err := r.readDB.GetContext(ctx, &count, query, args...); err != nil {
@@ -162,6 +181,7 @@ func (r *TagRepository) Update(ctx context.Context, tx dtx.TX, entity entities.T
 	{
 		q = q.Set("created_at", dto.CreatedAt)
 		q = q.Set("updated_at", dto.UpdatedAt)
+		q = q.Set("deleted_at", dto.DeletedAt)
 		q = q.Set("post_id", dto.PostId)
 		q = q.Set("value", dto.Value)
 	}

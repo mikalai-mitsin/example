@@ -175,7 +175,7 @@ func (h *ArticleHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "UUID"
-// @Success 204 "No content"
+// @Success 200 {object} ArticleDTO "Updated article"
 // @Failure 400 {object} errs.Error "Invalid request body or validation error"
 // @Failure 401 {object} errs.Error "Unauthorized"
 // @Failure 404 {object} errs.Error "Not found"
@@ -183,12 +183,18 @@ func (h *ArticleHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/articles/articles/{id} [DELETE]
 func (h *ArticleHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := uuid.MustParse(chi.URLParam(r, "id"))
-	if err := h.articleUseCase.Delete(r.Context(), id); err != nil {
+	article, err := h.articleUseCase.Delete(r.Context(), id)
+	if err != nil {
 		errs.RenderToHTTPResponse(err, w, r)
 		return
 	}
-	render.Status(r, http.StatusNoContent)
-	render.NoContent(w, r)
+	response, err := NewArticleDTO(article)
+	if err != nil {
+		errs.RenderToHTTPResponse(err, w, r)
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, response)
 }
 func (h *ArticleHandler) router() chi.Router {
 	router := chi.NewRouter()

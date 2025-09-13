@@ -2,18 +2,15 @@ package repositories
 
 import (
 	"context"
-	"encoding/json"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/tag"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
-	topicEventCreated = "example.posts.tag.created"
-	topicEventUpdated = "example.posts.tag.updated"
-	topicEventDeleted = "example.posts.tag.deleted"
+	topicName = "example.posts.tag.v1"
 )
 
 type TagEventProducer struct {
@@ -28,43 +25,15 @@ func NewTagEventProducer(
 	return &TagEventProducer{producer: producer, logger: logger}
 }
 
-func (p *TagEventProducer) Created(ctx context.Context, tag entities.Tag) error {
-	data, err := json.Marshal(tag)
+func (p *TagEventProducer) Send(ctx context.Context, tag entities.Tag) error {
+	data, err := proto.Marshal(decodeTag(tag))
 	if err != nil {
 		return err
 	}
 	message := &kafka.Message{
-		Topic: topicEventCreated,
+		Topic: topicName,
 		Value: data,
 		Key:   tag.ID.String(),
-	}
-	if err := p.producer.Send(ctx, message); err != nil {
-		return errs.FromKafkaError(err)
-	}
-	return nil
-}
-
-func (p *TagEventProducer) Updated(ctx context.Context, tag entities.Tag) error {
-	data, err := json.Marshal(tag)
-	if err != nil {
-		return err
-	}
-	message := &kafka.Message{
-		Topic: topicEventUpdated,
-		Value: data,
-		Key:   tag.ID.String(),
-	}
-	if err := p.producer.Send(ctx, message); err != nil {
-		return errs.FromKafkaError(err)
-	}
-	return nil
-}
-
-func (p *TagEventProducer) Deleted(ctx context.Context, id uuid.UUID) error {
-	message := &kafka.Message{
-		Topic: topicEventDeleted,
-		Value: []byte(id.String()),
-		Key:   id.String(),
 	}
 	if err := p.producer.Send(ctx, message); err != nil {
 		return errs.FromKafkaError(err)

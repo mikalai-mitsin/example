@@ -41,7 +41,7 @@ func (u *TagUseCase) Create(ctx context.Context, create entities.TagCreate) (ent
 	if err != nil {
 		return entities.Tag{}, err
 	}
-	if err := u.tagEventService.Created(ctx, tx, tag); err != nil {
+	if err := u.tagEventService.Send(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -79,7 +79,7 @@ func (u *TagUseCase) Update(ctx context.Context, update entities.TagUpdate) (ent
 	if err != nil {
 		return entities.Tag{}, err
 	}
-	if err := u.tagEventService.Updated(ctx, tx, tag); err != nil {
+	if err := u.tagEventService.Send(ctx, tx, tag); err != nil {
 		return entities.Tag{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -87,7 +87,7 @@ func (u *TagUseCase) Update(ctx context.Context, update entities.TagUpdate) (ent
 	}
 	return tag, nil
 }
-func (u *TagUseCase) Delete(ctx context.Context, id uuid.UUID) error {
+func (u *TagUseCase) Delete(ctx context.Context, id uuid.UUID) (entities.Tag, error) {
 	logger := u.logger.WithContext(ctx)
 	tx := u.dtxManager.NewTx()
 	defer func(tx dtx.TX) {
@@ -95,14 +95,15 @@ func (u *TagUseCase) Delete(ctx context.Context, id uuid.UUID) error {
 			logger.Error("cant rollback transaction", log.Error(err))
 		}
 	}(tx)
-	if err := u.tagService.Delete(ctx, tx, id); err != nil {
-		return err
+	tag, err := u.tagService.Delete(ctx, tx, id)
+	if err != nil {
+		return entities.Tag{}, err
 	}
-	if err := u.tagEventService.Deleted(ctx, tx, id); err != nil {
-		return err
+	if err := u.tagEventService.Send(ctx, tx, tag); err != nil {
+		return entities.Tag{}, err
 	}
 	if err := tx.Commit(); err != nil {
-		return err
+		return entities.Tag{}, err
 	}
-	return nil
+	return tag, nil
 }

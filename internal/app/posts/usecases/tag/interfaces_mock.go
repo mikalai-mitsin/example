@@ -62,11 +62,12 @@ func (mr *MocktagServiceMockRecorder) Create(arg0, arg1, arg2 any) *gomock.Call 
 }
 
 // Delete mocks base method.
-func (m *MocktagService) Delete(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) error {
+func (m *MocktagService) Delete(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) (tag.Tag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(tag.Tag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Delete indicates an expected call of Delete.
@@ -145,46 +146,18 @@ func (m *MocktagEventService) EXPECT() *MocktagEventServiceMockRecorder {
 	return m.recorder
 }
 
-// Created mocks base method.
-func (m *MocktagEventService) Created(arg0 context.Context, arg1 dtx.TX, arg2 tag.Tag) error {
+// Send mocks base method.
+func (m *MocktagEventService) Send(arg0 context.Context, arg1 dtx.TX, arg2 tag.Tag) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Created", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Send", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Created indicates an expected call of Created.
-func (mr *MocktagEventServiceMockRecorder) Created(arg0, arg1, arg2 any) *gomock.Call {
+// Send indicates an expected call of Send.
+func (mr *MocktagEventServiceMockRecorder) Send(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Created", reflect.TypeOf((*MocktagEventService)(nil).Created), arg0, arg1, arg2)
-}
-
-// Deleted mocks base method.
-func (m *MocktagEventService) Deleted(arg0 context.Context, arg1 dtx.TX, arg2 uuid.UUID) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Deleted", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Deleted indicates an expected call of Deleted.
-func (mr *MocktagEventServiceMockRecorder) Deleted(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deleted", reflect.TypeOf((*MocktagEventService)(nil).Deleted), arg0, arg1, arg2)
-}
-
-// Updated mocks base method.
-func (m *MocktagEventService) Updated(arg0 context.Context, arg1 dtx.TX, arg2 tag.Tag) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Updated", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Updated indicates an expected call of Updated.
-func (mr *MocktagEventServiceMockRecorder) Updated(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Updated", reflect.TypeOf((*MocktagEventService)(nil).Updated), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MocktagEventService)(nil).Send), arg0, arg1, arg2)
 }
 
 // Mocklogger is a mock of logger interface.

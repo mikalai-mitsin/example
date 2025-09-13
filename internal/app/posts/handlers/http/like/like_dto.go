@@ -15,12 +15,13 @@ import (
 )
 
 type LikeDTO struct {
-	ID        uuid.UUID `json:"id"`
-	UpdatedAt time.Time `json:"updated_at"`
-	CreatedAt time.Time `json:"created_at"`
-	PostId    uuid.UUID `json:"post_id"`
-	Value     string    `json:"value"`
-	UserId    uuid.UUID `json:"user_id"`
+	ID        uuid.UUID  `json:"id"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	PostId    uuid.UUID  `json:"post_id"`
+	Value     string     `json:"value"`
+	UserId    uuid.UUID  `json:"user_id"`
 }
 
 func NewLikeDTO(entity entities.Like) (LikeDTO, error) {
@@ -28,6 +29,7 @@ func NewLikeDTO(entity entities.Like) (LikeDTO, error) {
 		ID:        entity.ID,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
+		DeletedAt: entity.DeletedAt,
 		PostId:    entity.PostId,
 		Value:     entity.Value,
 		UserId:    entity.UserId,
@@ -56,10 +58,11 @@ type LikeFilterDTO struct {
 	PageSize   *uint64  `json:"page_size"`
 	PageNumber *uint64  `json:"page_number"`
 	OrderBy    []string `json:"order_by"`
+	IsDeleted  *bool    `json:"is_deleted"`
 }
 
 func NewLikeFilterDTO(r *http.Request) (LikeFilterDTO, error) {
-	filter := LikeFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil}
+	filter := LikeFilterDTO{PageSize: nil, PageNumber: nil, OrderBy: nil, IsDeleted: nil}
 	if r.URL.Query().Has("page_size") {
 		pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
 		if err != nil {
@@ -78,6 +81,15 @@ func NewLikeFilterDTO(r *http.Request) (LikeFilterDTO, error) {
 		}
 		filter.PageNumber = pointer.Of(uint64(pageNumber))
 	}
+	if r.URL.Query().Has("is_deleted") {
+		isDeleted, err := strconv.ParseBool(r.URL.Query().Get("is_deleted"))
+		if err != nil {
+			return LikeFilterDTO{}, errs.NewInvalidFormError().
+				WithParam("is_deleted", "Invalid page_number.").
+				WithCause(err)
+		}
+		filter.IsDeleted = pointer.Of(isDeleted)
+	}
 	if r.URL.Query().Has("order_by") {
 		filter.OrderBy = strings.Split(r.URL.Query().Get("order_by"), ",")
 	}
@@ -87,6 +99,7 @@ func (dto LikeFilterDTO) toEntity() (entities.LikeFilter, error) {
 	filter := entities.LikeFilter{
 		PageSize:   dto.PageSize,
 		PageNumber: dto.PageNumber,
+		IsDeleted:  dto.IsDeleted,
 		OrderBy:    []entities.LikeOrdering{},
 	}
 	for _, orderBy := range dto.OrderBy {

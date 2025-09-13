@@ -20,9 +20,7 @@ type likeRepository interface {
 	Delete(context.Context, dtx.TX, uuid.UUID) error
 }
 type likeEventProducer interface {
-	Created(context.Context, entities.Like) error
-	Updated(context.Context, entities.Like) error
-	Deleted(context.Context, uuid.UUID) error
+	Send(context.Context, entities.Like) error
 }
 
 // clock - clock interface

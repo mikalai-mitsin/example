@@ -10,11 +10,9 @@ import (
 	"github.com/jaswdr/faker"
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/post"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -141,7 +139,7 @@ func TestPostServiceServer_Delete(t *testing.T) {
 	mockPostUseCase := NewMockpostUseCase(ctrl)
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	id := uuid.NewUUID()
+	post := entities.NewMockPost(t)
 	type fields struct {
 		UnimplementedPostServiceServer examplepb.UnimplementedPostServiceServer
 		postUseCase                    postUseCase
@@ -156,13 +154,13 @@ func TestPostServiceServer_Delete(t *testing.T) {
 		setup   func()
 		fields  fields
 		args    args
-		want    *emptypb.Empty
+		want    *examplepb.Post
 		wantErr error
 	}{
 		{
 			name: "ok",
 			setup: func() {
-				mockPostUseCase.EXPECT().Delete(ctx, id).Return(nil).Times(1)
+				mockPostUseCase.EXPECT().Delete(ctx, post.ID).Return(post, nil)
 			},
 			fields: fields{
 				UnimplementedPostServiceServer: examplepb.UnimplementedPostServiceServer{},
@@ -172,17 +170,17 @@ func TestPostServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.PostDelete{
-					Id: id.String(),
+					Id: post.ID.String(),
 				},
 			},
-			want:    &emptypb.Empty{},
+			want:    decodePost(post),
 			wantErr: nil,
 		},
 		{
 			name: "usecase error",
 			setup: func() {
-				mockPostUseCase.EXPECT().Delete(ctx, id).
-					Return(errs.NewUnexpectedBehaviorError("i error")).
+				mockPostUseCase.EXPECT().Delete(ctx, post.ID).
+					Return(entities.Post{}, errs.NewUnexpectedBehaviorError("i error")).
 					Times(1)
 			},
 			fields: fields{
@@ -193,7 +191,7 @@ func TestPostServiceServer_Delete(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				input: &examplepb.PostDelete{
-					Id: id.String(),
+					Id: post.ID.String(),
 				},
 			},
 			want: nil,
@@ -311,7 +309,7 @@ func TestPostServiceServer_List(t *testing.T) {
 		Items: make([]*examplepb.Post, 0, int(count)),
 		Count: count,
 	}
-	listPosts := make([]entities.Post, 0, int(count))
+	posts := make([]entities.Post, 0, int(count))
 	type fields struct {
 		UnimplementedPostServiceServer examplepb.UnimplementedPostServiceServer
 		postUseCase                    postUseCase
@@ -332,10 +330,7 @@ func TestPostServiceServer_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				mockPostUseCase.EXPECT().
-					List(ctx, gomock.Any()).
-					Return(listPosts, count, nil).
-					Times(1)
+				mockPostUseCase.EXPECT().List(ctx, gomock.Any()).Return(posts, count, nil).Times(1)
 			},
 			fields: fields{
 				UnimplementedPostServiceServer: examplepb.UnimplementedPostServiceServer{},
@@ -476,6 +471,7 @@ func Test_decodePost(t *testing.T) {
 		Id:        post.ID.String(),
 		UpdatedAt: timestamppb.New(post.UpdatedAt),
 		CreatedAt: timestamppb.New(post.CreatedAt),
+		DeletedAt: timestamppb.New(*post.DeletedAt),
 		Body:      string(post.Body),
 	}
 	type args struct {

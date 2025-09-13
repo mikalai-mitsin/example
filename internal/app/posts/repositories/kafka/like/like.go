@@ -2,18 +2,15 @@ package repositories
 
 import (
 	"context"
-	"encoding/json"
 
 	entities "github.com/mikalai-mitsin/example/internal/app/posts/entities/like"
 	"github.com/mikalai-mitsin/example/internal/pkg/errs"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
-	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
-	topicEventCreated = "example.posts.like.created"
-	topicEventUpdated = "example.posts.like.updated"
-	topicEventDeleted = "example.posts.like.deleted"
+	topicName = "example.posts.like.v1"
 )
 
 type LikeEventProducer struct {
@@ -28,43 +25,15 @@ func NewLikeEventProducer(
 	return &LikeEventProducer{producer: producer, logger: logger}
 }
 
-func (p *LikeEventProducer) Created(ctx context.Context, like entities.Like) error {
-	data, err := json.Marshal(like)
+func (p *LikeEventProducer) Send(ctx context.Context, like entities.Like) error {
+	data, err := proto.Marshal(decodeLike(like))
 	if err != nil {
 		return err
 	}
 	message := &kafka.Message{
-		Topic: topicEventCreated,
+		Topic: topicName,
 		Value: data,
 		Key:   like.ID.String(),
-	}
-	if err := p.producer.Send(ctx, message); err != nil {
-		return errs.FromKafkaError(err)
-	}
-	return nil
-}
-
-func (p *LikeEventProducer) Updated(ctx context.Context, like entities.Like) error {
-	data, err := json.Marshal(like)
-	if err != nil {
-		return err
-	}
-	message := &kafka.Message{
-		Topic: topicEventUpdated,
-		Value: data,
-		Key:   like.ID.String(),
-	}
-	if err := p.producer.Send(ctx, message); err != nil {
-		return errs.FromKafkaError(err)
-	}
-	return nil
-}
-
-func (p *LikeEventProducer) Deleted(ctx context.Context, id uuid.UUID) error {
-	message := &kafka.Message{
-		Topic: topicEventDeleted,
-		Value: []byte(id.String()),
-		Key:   id.String(),
 	}
 	if err := p.producer.Send(ctx, message); err != nil {
 		return errs.FromKafkaError(err)

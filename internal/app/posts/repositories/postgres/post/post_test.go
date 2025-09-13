@@ -72,7 +72,7 @@ func TestPostRepository_Create(t *testing.T) {
 	mockTxManager := dtx.NewManager(mockDB)
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
-	query := "INSERT INTO public.posts (id,created_at,updated_at,body) VALUES ($1,$2,$3,$4)"
+	query := "INSERT INTO public.posts (id,created_at,updated_at,deleted_at,body) VALUES ($1,$2,$3,$4,$5)"
 	post := entities.NewMockPost(t)
 	ctx := context.Background()
 	type fields struct {
@@ -100,6 +100,7 @@ func TestPostRepository_Create(t *testing.T) {
 						post.ID,
 						post.UpdatedAt,
 						post.CreatedAt,
+						post.DeletedAt,
 						post.Body,
 					).
 					WillReturnResult(sqlmock.NewResult(0, 1))
@@ -124,6 +125,7 @@ func TestPostRepository_Create(t *testing.T) {
 						post.ID,
 						post.UpdatedAt,
 						post.CreatedAt,
+						post.DeletedAt,
 						post.Body,
 					).
 					WillReturnError(errors.New("test error"))
@@ -165,7 +167,7 @@ func TestPostRepository_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
-	query := "SELECT posts.id, posts.created_at, posts.updated_at, posts.body FROM public.posts WHERE id = $1 LIMIT 1"
+	query := "SELECT posts.id, posts.created_at, posts.updated_at, posts.deleted_at, posts.body FROM public.posts WHERE id = $1 LIMIT 1"
 	post := entities.NewMockPost(t)
 	ctx := context.Background()
 	type fields struct {
@@ -265,9 +267,9 @@ func TestPostRepository_List(t *testing.T) {
 	defer ctrl.Finish()
 	mockLogger := NewMocklogger(ctrl)
 	ctx := context.Background()
-	var listPosts []entities.Post
+	var posts []entities.Post
 	for i := 0; i < faker.New().IntBetween(2, 20); i++ {
-		listPosts = append(listPosts, entities.NewMockPost(t))
+		posts = append(posts, entities.NewMockPost(t))
 	}
 	filter := entities.PostFilter{
 		PageSize:   pointer.Of(uint64(10)),
@@ -275,7 +277,7 @@ func TestPostRepository_List(t *testing.T) {
 		Search:     nil,
 		OrderBy:    []entities.PostOrdering{"id"},
 	}
-	query := "SELECT posts.id, posts.created_at, posts.updated_at, posts.body FROM public.posts ORDER BY posts.id ASC LIMIT 10 OFFSET 10"
+	query := "SELECT posts.id, posts.created_at, posts.updated_at, posts.deleted_at, posts.body FROM public.posts ORDER BY posts.id ASC LIMIT 10 OFFSET 10"
 	type fields struct {
 		writeDB database
 		readDB  database
@@ -297,7 +299,7 @@ func TestPostRepository_List(t *testing.T) {
 			name: "ok",
 			setup: func() {
 				mock.ExpectQuery(query).
-					WillReturnRows(newPostRows(t, listPosts))
+					WillReturnRows(newPostRows(t, posts))
 			},
 			fields: fields{
 				writeDB: mockDB,
@@ -308,7 +310,7 @@ func TestPostRepository_List(t *testing.T) {
 				ctx:    ctx,
 				filter: filter,
 			},
-			want:    listPosts,
+			want:    posts,
 			wantErr: nil,
 		},
 		{
@@ -380,7 +382,7 @@ func TestPostRepository_Update(t *testing.T) {
 	mock.ExpectBegin()
 	mockTX := mockTxManager.NewTx()
 	post := entities.NewMockPost(t)
-	query := `UPDATE public.posts SET created_at = $1, updated_at = $2, body = $3 WHERE id = $4`
+	query := `UPDATE public.posts SET created_at = $1, updated_at = $2, deleted_at = $3, body = $4 WHERE id = $5`
 	ctx := context.Background()
 	type fields struct {
 		writeDB database
@@ -406,6 +408,7 @@ func TestPostRepository_Update(t *testing.T) {
 					WithArgs(
 						post.CreatedAt,
 						post.UpdatedAt,
+						post.DeletedAt,
 						post.Body,
 						post.ID,
 					).
@@ -430,6 +433,7 @@ func TestPostRepository_Update(t *testing.T) {
 					WithArgs(
 						post.CreatedAt,
 						post.UpdatedAt,
+						post.DeletedAt,
 						post.Body,
 						post.ID,
 					).
@@ -454,6 +458,7 @@ func TestPostRepository_Update(t *testing.T) {
 					WithArgs(
 						post.CreatedAt,
 						post.UpdatedAt,
+						post.DeletedAt,
 						post.Body,
 						post.ID,
 					).
@@ -479,6 +484,7 @@ func TestPostRepository_Update(t *testing.T) {
 					WithArgs(
 						post.CreatedAt,
 						post.UpdatedAt,
+						post.DeletedAt,
 						post.Body,
 						post.ID,
 					).
@@ -504,6 +510,7 @@ func TestPostRepository_Update(t *testing.T) {
 					WithArgs(
 						post.CreatedAt,
 						post.UpdatedAt,
+						post.DeletedAt,
 						post.Body,
 						post.ID,
 					).
@@ -766,20 +773,22 @@ func TestPostRepository_Count(t *testing.T) {
 	}
 }
 
-func newPostRows(t *testing.T, listPosts []entities.Post) *sqlmock.Rows {
+func newPostRows(t *testing.T, posts []entities.Post) *sqlmock.Rows {
 	t.Helper()
 	rows := sqlmock.NewRows([]string{
 		"id",
 		"body",
 		"updated_at",
 		"created_at",
+		"deleted_at",
 	})
-	for _, post := range listPosts {
+	for _, post := range posts {
 		rows.AddRow(
 			post.ID,
 			post.Body,
 			post.UpdatedAt,
 			post.CreatedAt,
+			post.DeletedAt,
 		)
 	}
 	return rows

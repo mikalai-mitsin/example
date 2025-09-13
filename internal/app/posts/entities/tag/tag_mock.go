@@ -15,6 +15,7 @@ func NewMockTag(t *testing.T) Tag {
 		ID:        uuid.NewUUID(),
 		CreatedAt: faker.New().Time().Time(time.Now()),
 		UpdatedAt: faker.New().Time().Time(time.Now()),
+		DeletedAt: pointer.Of(faker.New().Time().Time(time.Now())),
 		PostId:    uuid.NewUUID(),
 		Value:     faker.New().Lorem().Sentence(15),
 	}
@@ -26,17 +27,20 @@ func NewMockTagFilter(t *testing.T) TagFilter {
 		PageNumber: pointer.Of(faker.New().UInt64()),
 		Search:     pointer.Of(faker.New().Lorem().Sentence(15)),
 		OrderBy: []TagOrdering{
+			TagOrderingPostIdDESC,
+			TagOrderingIdASC,
 			TagOrderingCreatedAtASC,
-			TagOrderingCreatedAtDESC,
-			TagOrderingPostIdASC,
+			TagOrderingUpdatedAtASC,
+			TagOrderingDeletedAtDESC,
 			TagOrderingValueASC,
 			TagOrderingValueDESC,
-			TagOrderingIdASC,
 			TagOrderingIdDESC,
-			TagOrderingUpdatedAtASC,
+			TagOrderingCreatedAtDESC,
 			TagOrderingUpdatedAtDESC,
-			TagOrderingPostIdDESC,
+			TagOrderingDeletedAtASC,
+			TagOrderingPostIdASC,
 		},
+		IsDeleted: pointer.Of(faker.New().Bool()),
 	}
 }
 func NewMockTagCreate(t *testing.T) TagCreate {

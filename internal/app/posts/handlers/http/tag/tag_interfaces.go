@@ -14,7 +14,7 @@ type tagUseCase interface {
 	Get(context.Context, uuid.UUID) (entities.Tag, error)
 	List(context.Context, entities.TagFilter) ([]entities.Tag, uint64, error)
 	Update(context.Context, entities.TagUpdate) (entities.Tag, error)
-	Delete(context.Context, uuid.UUID) error
+	Delete(context.Context, uuid.UUID) (entities.Tag, error)
 }
 type logger interface {
 	log.Logger
