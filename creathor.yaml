@@ -6,6 +6,7 @@ gRPC: true
 http: true
 kafka: true
 uptrace: true
+i18n: true
 apps:
   - name: posts
     entities:

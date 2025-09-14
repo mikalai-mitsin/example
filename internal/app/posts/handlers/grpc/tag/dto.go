@@ -60,6 +60,12 @@ func decodeTag(tag entities.Tag) *examplepb.Tag {
 	if tag.DeletedAt != nil {
 		response.DeletedAt = timestamppb.New(*tag.DeletedAt)
 	}
+	if tag.DeletedAt != nil {
+		response.DeletedAt = timestamppb.New(*tag.DeletedAt)
+	}
+	if tag.DeletedAt != nil {
+		response.DeletedAt = timestamppb.New(*tag.DeletedAt)
+	}
 	return response
 }
 func decodeListTag(items []entities.Tag, count uint64) *examplepb.ListTag {

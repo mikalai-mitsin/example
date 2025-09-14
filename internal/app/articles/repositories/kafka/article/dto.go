@@ -23,5 +23,11 @@ func decodeArticle(article entities.Article) *examplepb.Article {
 	if article.DeletedAt != nil {
 		response.DeletedAt = timestamppb.New(*article.DeletedAt)
 	}
+	if article.DeletedAt != nil {
+		response.DeletedAt = timestamppb.New(*article.DeletedAt)
+	}
+	if article.DeletedAt != nil {
+		response.DeletedAt = timestamppb.New(*article.DeletedAt)
+	}
 	return response
 }
