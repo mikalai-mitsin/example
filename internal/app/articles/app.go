@@ -13,6 +13,7 @@ import (
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/http"
+	"github.com/mikalai-mitsin/example/internal/pkg/i18n"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
@@ -41,6 +42,7 @@ func NewApp(
 	clock *clock.Clock,
 	uuidGenerator *uuid.UUIDv7Generator,
 	kafkaProducer *kafka.Producer,
+	tr *i18n.Translator,
 ) *App {
 	articleRepository := articlePostgresRepositories.NewArticleRepository(readDB, writeDB, logger)
 	articleService := articleServices.NewArticleService(
@@ -59,7 +61,7 @@ func NewApp(
 	)
 	httpArticleHandler := articleHttpHandlers.NewArticleHandler(articleUseCase, logger)
 	kafkaArticleHandler := articleKafkaHandlers.NewArticleHandler(articleUseCase, logger)
-	grpcArticleHandler := articleGrpcHandlers.NewArticleServiceServer(articleUseCase, logger)
+	grpcArticleHandler := articleGrpcHandlers.NewArticleServiceServer(articleUseCase, logger, tr)
 	return &App{
 		readDB:               readDB,
 		writeDB:              writeDB,
