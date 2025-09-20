@@ -19,14 +19,5 @@ func decodeLike(like entities.Like) *examplepb.Like {
 	if like.DeletedAt != nil {
 		response.DeletedAt = timestamppb.New(*like.DeletedAt)
 	}
-	if like.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*like.DeletedAt)
-	}
-	if like.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*like.DeletedAt)
-	}
-	if like.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*like.DeletedAt)
-	}
 	return response
 }

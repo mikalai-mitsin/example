@@ -36,7 +36,7 @@ func (m *Tag) Validate() error {
 type TagOrdering string
 
 func (o TagOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(TagOrderingIdASC.String(), TagOrderingIdDESC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingDeletedAtASC.String(), TagOrderingPostIdDESC.String(), TagOrderingValueASC.String(), TagOrderingCreatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingDeletedAtDESC.String(), TagOrderingPostIdASC.String(), TagOrderingValueDESC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(TagOrderingIdASC.String(), TagOrderingIdDESC.String(), TagOrderingCreatedAtASC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingValueASC.String(), TagOrderingValueDESC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingDeletedAtASC.String(), TagOrderingDeletedAtDESC.String(), TagOrderingPostIdASC.String(), TagOrderingPostIdDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -45,18 +45,18 @@ func (o TagOrdering) String() string {
 	return string(o)
 }
 
+const TagOrderingValueASC TagOrdering = "value"
+const TagOrderingValueDESC TagOrdering = "-value"
+const TagOrderingIdDESC TagOrdering = "-id"
+const TagOrderingUpdatedAtDESC TagOrdering = "-updated_at"
+const TagOrderingDeletedAtDESC TagOrdering = "-deleted_at"
+const TagOrderingPostIdDESC TagOrdering = "-post_id"
+const TagOrderingIdASC TagOrdering = "id"
 const TagOrderingCreatedAtASC TagOrdering = "created_at"
 const TagOrderingCreatedAtDESC TagOrdering = "-created_at"
 const TagOrderingUpdatedAtASC TagOrdering = "updated_at"
-const TagOrderingUpdatedAtDESC TagOrdering = "-updated_at"
 const TagOrderingDeletedAtASC TagOrdering = "deleted_at"
-const TagOrderingDeletedAtDESC TagOrdering = "-deleted_at"
 const TagOrderingPostIdASC TagOrdering = "post_id"
-const TagOrderingPostIdDESC TagOrdering = "-post_id"
-const TagOrderingValueASC TagOrdering = "value"
-const TagOrderingValueDESC TagOrdering = "-value"
-const TagOrderingIdASC TagOrdering = "id"
-const TagOrderingIdDESC TagOrdering = "-id"
 
 type TagFilter struct {
 	PageSize   *uint64       `json:"page_size"`

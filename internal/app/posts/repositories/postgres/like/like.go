@@ -24,20 +24,20 @@ func NewLikeRepository(readDB database, writeDB database, logger logger) *LikeRe
 }
 
 var orderByMap = map[entities.LikeOrdering]string{
-	entities.LikeOrderingValueASC:      "likes.value ASC",
-	entities.LikeOrderingValueDESC:     "likes.value DESC",
-	entities.LikeOrderingUserIdDESC:    "likes.user_id DESC",
-	entities.LikeOrderingIdDESC:        "likes.id DESC",
-	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
-	entities.LikeOrderingUpdatedAtDESC: "likes.updated_at DESC",
 	entities.LikeOrderingDeletedAtASC:  "likes.deleted_at ASC",
 	entities.LikeOrderingPostIdDESC:    "likes.post_id DESC",
-	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
+	entities.LikeOrderingValueASC:      "likes.value ASC",
+	entities.LikeOrderingUserIdDESC:    "likes.user_id DESC",
 	entities.LikeOrderingIdASC:         "likes.id ASC",
-	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
+	entities.LikeOrderingIdDESC:        "likes.id DESC",
 	entities.LikeOrderingUpdatedAtASC:  "likes.updated_at ASC",
 	entities.LikeOrderingDeletedAtDESC: "likes.deleted_at DESC",
 	entities.LikeOrderingPostIdASC:     "likes.post_id ASC",
+	entities.LikeOrderingValueDESC:     "likes.value DESC",
+	entities.LikeOrderingUserIdASC:     "likes.user_id ASC",
+	entities.LikeOrderingCreatedAtASC:  "likes.created_at ASC",
+	entities.LikeOrderingCreatedAtDESC: "likes.created_at DESC",
+	entities.LikeOrderingUpdatedAtDESC: "likes.updated_at DESC",
 }
 
 func encodeOrderBy(orderBy []entities.LikeOrdering) []string {

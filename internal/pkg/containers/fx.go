@@ -10,7 +10,6 @@ import (
 	"github.com/mikalai-mitsin/example/internal/pkg/dtx"
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
 	"github.com/mikalai-mitsin/example/internal/pkg/http"
-	"github.com/mikalai-mitsin/example/internal/pkg/i18n"
 	"github.com/mikalai-mitsin/example/internal/pkg/kafka"
 	"github.com/mikalai-mitsin/example/internal/pkg/log"
 	"github.com/mikalai-mitsin/example/internal/pkg/postgres"
@@ -20,35 +19,15 @@ import (
 	"go.uber.org/fx/fxevent"
 )
 
-var FXModule = fx.Options(
-	fx.WithLogger(func(logger log.Logger) fxevent.Logger {
-		return logger
-	}),
-	fx.Provide(
-		func(config *configs.Config) (log.Logger, error) {
-			return log.NewLog(config.LogLevel)
-		},
-		context.Background,
-		configs.ParseConfig,
-		clock.NewClock,
-		uuid.NewUUIDv7Generator,
-		func(config *configs.Config) *postgres.Config {
-			return config.Database
-		},
-		postgres.NewDatabase,
-		postgres.NewMigrateManager,
-		dtx.NewManager,
-		i18n.NewTranslator,
-		kafka.NewConsumer,
-		kafka.NewProducer,
-		func(config *configs.Config) *kafka.Config {
-			return config.Kafka
-		},
-		uptrace.NewProvider,
-		posts.NewApp,
-		articles.NewApp,
-	),
-)
+var FXModule = fx.Options(fx.WithLogger(func(logger log.Logger) fxevent.Logger {
+	return logger
+}), fx.Provide(func(config *configs.Config) (log.Logger, error) {
+	return log.NewLog(config.LogLevel)
+}, context.Background, configs.ParseConfig, clock.NewClock, uuid.NewUUIDv7Generator, func(config *configs.Config) *postgres.Config {
+	return config.Database
+}, postgres.NewDatabase, postgres.NewMigrateManager, dtx.NewManager, kafka.NewConsumer, kafka.NewProducer, func(config *configs.Config) *kafka.Config {
+	return config.Kafka
+}, uptrace.NewProvider, posts.NewApp, articles.NewApp))
 
 func NewMigrateContainer(config string) *fx.App {
 	app := fx.New(fx.Provide(func() string {

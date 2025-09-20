@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/mikalai-mitsin/example/internal/pkg/grpc"
-	"github.com/mikalai-mitsin/example/internal/pkg/i18n"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
 )
@@ -13,15 +12,10 @@ type ArticleServiceServer struct {
 	examplepb.UnimplementedArticleServiceServer
 	articleUseCase articleUseCase
 	logger         logger
-	tr             *i18n.Translator
 }
 
-func NewArticleServiceServer(
-	articleUseCase articleUseCase,
-	logger logger,
-	tr *i18n.Translator,
-) *ArticleServiceServer {
-	return &ArticleServiceServer{articleUseCase: articleUseCase, logger: logger, tr: tr}
+func NewArticleServiceServer(articleUseCase articleUseCase, logger logger) *ArticleServiceServer {
+	return &ArticleServiceServer{articleUseCase: articleUseCase, logger: logger}
 }
 
 func (s *ArticleServiceServer) Create(
@@ -32,7 +26,7 @@ func (s *ArticleServiceServer) Create(
 	if err != nil {
 		return nil, err
 	}
-	return decodeArticle(item, s.tr), nil
+	return decodeArticle(item), nil
 }
 
 func (s *ArticleServiceServer) Get(
@@ -43,7 +37,7 @@ func (s *ArticleServiceServer) Get(
 	if err != nil {
 		return nil, err
 	}
-	return decodeArticle(item, s.tr), nil
+	return decodeArticle(item), nil
 }
 
 func (s *ArticleServiceServer) List(
@@ -54,7 +48,7 @@ func (s *ArticleServiceServer) List(
 	if err != nil {
 		return nil, err
 	}
-	return decodeListArticle(items, count, s.tr), nil
+	return decodeListArticle(items, count), nil
 }
 
 func (s *ArticleServiceServer) Update(
@@ -65,7 +59,7 @@ func (s *ArticleServiceServer) Update(
 	if err != nil {
 		return nil, err
 	}
-	return decodeArticle(item, s.tr), nil
+	return decodeArticle(item), nil
 }
 
 func (s *ArticleServiceServer) Delete(
@@ -76,7 +70,7 @@ func (s *ArticleServiceServer) Delete(
 	if err != nil {
 		return nil, err
 	}
-	return decodeArticle(article, s.tr), nil
+	return decodeArticle(article), nil
 }
 func (s *ArticleServiceServer) RegisterGRPC(grpcServer *grpc.Server) error {
 	grpcServer.AddHandler(&examplepb.ArticleService_ServiceDesc, s)

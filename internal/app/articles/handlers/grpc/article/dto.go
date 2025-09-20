@@ -2,7 +2,6 @@ package handlers
 
 import (
 	entities "github.com/mikalai-mitsin/example/internal/app/articles/entities/article"
-	"github.com/mikalai-mitsin/example/internal/pkg/i18n"
 	"github.com/mikalai-mitsin/example/internal/pkg/pointer"
 	"github.com/mikalai-mitsin/example/internal/pkg/uuid"
 	examplepb "github.com/mikalai-mitsin/example/pkg/examplepb/v1"
@@ -60,13 +59,13 @@ func encodeArticleUpdate(input *examplepb.ArticleUpdate) entities.ArticleUpdate 
 	}
 	return update
 }
-func decodeArticle(article entities.Article, tr *i18n.Translator) *examplepb.Article {
+func decodeArticle(article entities.Article) *examplepb.Article {
 	response := &examplepb.Article{
 		Id:          article.ID.String(),
 		CreatedAt:   timestamppb.New(article.CreatedAt),
 		UpdatedAt:   timestamppb.New(article.UpdatedAt),
 		DeletedAt:   nil,
-		Title:       tr.Translate("en", article.Title),
+		Title:       article.Title,
 		Subtitle:    article.Subtitle,
 		Body:        article.Body,
 		IsPublished: article.IsPublished,
@@ -74,29 +73,15 @@ func decodeArticle(article entities.Article, tr *i18n.Translator) *examplepb.Art
 	if article.DeletedAt != nil {
 		response.DeletedAt = timestamppb.New(*article.DeletedAt)
 	}
-	if article.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*article.DeletedAt)
-	}
-	if article.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*article.DeletedAt)
-	}
-	if article.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*article.DeletedAt)
-	}
 	return response
 }
-
-func decodeListArticle(
-	items []entities.Article,
-	count uint64,
-	tr *i18n.Translator,
-) *examplepb.ListArticle {
+func decodeListArticle(items []entities.Article, count uint64) *examplepb.ListArticle {
 	response := &examplepb.ListArticle{
 		Items: make([]*examplepb.Article, 0, len(items)),
 		Count: count,
 	}
 	for _, article := range items {
-		response.Items = append(response.Items, decodeArticle(article, tr))
+		response.Items = append(response.Items, decodeArticle(article))
 	}
 	return response
 }

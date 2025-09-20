@@ -24,16 +24,16 @@ func NewPostRepository(readDB database, writeDB database, logger logger) *PostRe
 }
 
 var orderByMap = map[entities.PostOrdering]string{
-	entities.PostOrderingIdASC:         "posts.id ASC",
-	entities.PostOrderingIdDESC:        "posts.id DESC",
-	entities.PostOrderingCreatedAtASC:  "posts.created_at ASC",
-	entities.PostOrderingCreatedAtDESC: "posts.created_at DESC",
-	entities.PostOrderingUpdatedAtDESC: "posts.updated_at DESC",
 	entities.PostOrderingDeletedAtASC:  "posts.deleted_at ASC",
-	entities.PostOrderingBodyASC:       "posts.body ASC",
-	entities.PostOrderingUpdatedAtASC:  "posts.updated_at ASC",
-	entities.PostOrderingDeletedAtDESC: "posts.deleted_at DESC",
 	entities.PostOrderingBodyDESC:      "posts.body DESC",
+	entities.PostOrderingIdDESC:        "posts.id DESC",
+	entities.PostOrderingCreatedAtDESC: "posts.created_at DESC",
+	entities.PostOrderingDeletedAtDESC: "posts.deleted_at DESC",
+	entities.PostOrderingBodyASC:       "posts.body ASC",
+	entities.PostOrderingIdASC:         "posts.id ASC",
+	entities.PostOrderingCreatedAtASC:  "posts.created_at ASC",
+	entities.PostOrderingUpdatedAtASC:  "posts.updated_at ASC",
+	entities.PostOrderingUpdatedAtDESC: "posts.updated_at DESC",
 }
 
 func encodeOrderBy(orderBy []entities.PostOrdering) []string {

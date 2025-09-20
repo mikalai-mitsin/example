@@ -53,15 +53,6 @@ func decodePost(post entities.Post) *examplepb.Post {
 	if post.DeletedAt != nil {
 		response.DeletedAt = timestamppb.New(*post.DeletedAt)
 	}
-	if post.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*post.DeletedAt)
-	}
-	if post.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*post.DeletedAt)
-	}
-	if post.DeletedAt != nil {
-		response.DeletedAt = timestamppb.New(*post.DeletedAt)
-	}
 	return response
 }
 func decodeListPost(items []entities.Post, count uint64) *examplepb.ListPost {
