@@ -24,18 +24,18 @@ func NewTagRepository(readDB database, writeDB database, logger logger) *TagRepo
 }
 
 var orderByMap = map[entities.TagOrdering]string{
+	entities.TagOrderingCreatedAtDESC: "tags.created_at DESC",
 	entities.TagOrderingUpdatedAtDESC: "tags.updated_at DESC",
+	entities.TagOrderingDeletedAtASC:  "tags.deleted_at ASC",
+	entities.TagOrderingValueDESC:     "tags.value DESC",
+	entities.TagOrderingIdASC:         "tags.id ASC",
+	entities.TagOrderingIdDESC:        "tags.id DESC",
+	entities.TagOrderingCreatedAtASC:  "tags.created_at ASC",
+	entities.TagOrderingUpdatedAtASC:  "tags.updated_at ASC",
 	entities.TagOrderingDeletedAtDESC: "tags.deleted_at DESC",
 	entities.TagOrderingPostIdASC:     "tags.post_id ASC",
 	entities.TagOrderingPostIdDESC:    "tags.post_id DESC",
 	entities.TagOrderingValueASC:      "tags.value ASC",
-	entities.TagOrderingValueDESC:     "tags.value DESC",
-	entities.TagOrderingIdASC:         "tags.id ASC",
-	entities.TagOrderingIdDESC:        "tags.id DESC",
-	entities.TagOrderingUpdatedAtASC:  "tags.updated_at ASC",
-	entities.TagOrderingDeletedAtASC:  "tags.deleted_at ASC",
-	entities.TagOrderingCreatedAtASC:  "tags.created_at ASC",
-	entities.TagOrderingCreatedAtDESC: "tags.created_at DESC",
 }
 
 func encodeOrderBy(orderBy []entities.TagOrdering) []string {

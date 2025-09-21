@@ -34,7 +34,7 @@ func (m *Post) Validate() error {
 type PostOrdering string
 
 func (o PostOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(PostOrderingUpdatedAtASC.String(), PostOrderingDeletedAtDESC.String(), PostOrderingBodyASC.String(), PostOrderingCreatedAtASC.String(), PostOrderingUpdatedAtDESC.String(), PostOrderingDeletedAtASC.String(), PostOrderingBodyDESC.String(), PostOrderingIdASC.String(), PostOrderingIdDESC.String(), PostOrderingCreatedAtDESC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(PostOrderingIdASC.String(), PostOrderingIdDESC.String(), PostOrderingCreatedAtASC.String(), PostOrderingCreatedAtDESC.String(), PostOrderingUpdatedAtDESC.String(), PostOrderingDeletedAtDESC.String(), PostOrderingBodyASC.String(), PostOrderingBodyDESC.String(), PostOrderingUpdatedAtASC.String(), PostOrderingDeletedAtASC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -43,16 +43,16 @@ func (o PostOrdering) String() string {
 	return string(o)
 }
 
+const PostOrderingUpdatedAtASC PostOrdering = "updated_at"
+const PostOrderingDeletedAtASC PostOrdering = "deleted_at"
+const PostOrderingDeletedAtDESC PostOrdering = "-deleted_at"
+const PostOrderingBodyASC PostOrdering = "body"
+const PostOrderingBodyDESC PostOrdering = "-body"
+const PostOrderingIdASC PostOrdering = "id"
 const PostOrderingIdDESC PostOrdering = "-id"
 const PostOrderingCreatedAtASC PostOrdering = "created_at"
 const PostOrderingCreatedAtDESC PostOrdering = "-created_at"
-const PostOrderingUpdatedAtASC PostOrdering = "updated_at"
 const PostOrderingUpdatedAtDESC PostOrdering = "-updated_at"
-const PostOrderingDeletedAtDESC PostOrdering = "-deleted_at"
-const PostOrderingBodyASC PostOrdering = "body"
-const PostOrderingIdASC PostOrdering = "id"
-const PostOrderingDeletedAtASC PostOrdering = "deleted_at"
-const PostOrderingBodyDESC PostOrdering = "-body"
 
 type PostFilter struct {
 	PageSize   *uint64        `json:"page_size"`

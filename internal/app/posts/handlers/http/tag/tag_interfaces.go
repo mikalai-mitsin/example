@@ -1,6 +1,6 @@
 package handlers
 
-//go:generate mockgen -source=tag_interfaces.go -package=handlers -destination=tag_interfaces_mock.go
+//go:generate mockgen -package=$GOPACKAGE -source=$GOFILE -destination=mock.go
 import (
 	"context"
 

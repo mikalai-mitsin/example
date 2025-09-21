@@ -28,14 +28,14 @@ func NewMockPostFilter(t *testing.T) PostFilter {
 		OrderBy: []PostOrdering{
 			PostOrderingIdASC,
 			PostOrderingIdDESC,
-			PostOrderingUpdatedAtASC,
-			PostOrderingDeletedAtDESC,
-			PostOrderingBodyDESC,
 			PostOrderingCreatedAtASC,
 			PostOrderingCreatedAtDESC,
 			PostOrderingUpdatedAtDESC,
 			PostOrderingDeletedAtASC,
+			PostOrderingUpdatedAtASC,
+			PostOrderingDeletedAtDESC,
 			PostOrderingBodyASC,
+			PostOrderingBodyDESC,
 		},
 		IsDeleted: pointer.Of(faker.New().Bool()),
 	}

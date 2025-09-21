@@ -1,6 +1,6 @@
 package handlers
 
-//go:generate mockgen -source=article_interfaces.go -package=handlers -destination=article_interfaces_mock.go
+//go:generate mockgen -package=$GOPACKAGE -source=$GOFILE -destination=mock.go
 import (
 	"context"
 

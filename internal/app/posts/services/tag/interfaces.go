@@ -1,6 +1,6 @@
 package services
 
-//go:generate mockgen -source=interfaces.go -package=services -destination=interfaces_mock.go
+//go:generate mockgen -package=$GOPACKAGE -source=$GOFILE -destination=mock.go
 import (
 	"context"
 	"time"

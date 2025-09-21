@@ -1,6 +1,6 @@
 package repositories
 
-//go:generate mockgen -source=tag_interfaces.go -package=repositories -destination=tag_interfaces_mock.go
+//go:generate mockgen -package=$GOPACKAGE -source=$GOFILE -destination=mock.go
 import (
 	"context"
 	"database/sql"
