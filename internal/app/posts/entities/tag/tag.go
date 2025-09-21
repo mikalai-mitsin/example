@@ -36,7 +36,7 @@ func (m *Tag) Validate() error {
 type TagOrdering string
 
 func (o TagOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(TagOrderingPostIdASC.String(), TagOrderingValueASC.String(), TagOrderingValueDESC.String(), TagOrderingIdASC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingPostIdDESC.String(), TagOrderingIdDESC.String(), TagOrderingCreatedAtASC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingDeletedAtASC.String(), TagOrderingDeletedAtDESC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(TagOrderingPostIdDESC.String(), TagOrderingValueASC.String(), TagOrderingValueDESC.String(), TagOrderingIdASC.String(), TagOrderingIdDESC.String(), TagOrderingCreatedAtDESC.String(), TagOrderingUpdatedAtASC.String(), TagOrderingUpdatedAtDESC.String(), TagOrderingDeletedAtASC.String(), TagOrderingDeletedAtDESC.String(), TagOrderingPostIdASC.String(), TagOrderingCreatedAtASC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -45,17 +45,17 @@ func (o TagOrdering) String() string {
 	return string(o)
 }
 
-const TagOrderingIdASC TagOrdering = "id"
+const TagOrderingPostIdDESC TagOrdering = "-post_id"
+const TagOrderingValueASC TagOrdering = "value"
 const TagOrderingCreatedAtASC TagOrdering = "created_at"
 const TagOrderingUpdatedAtASC TagOrdering = "updated_at"
 const TagOrderingUpdatedAtDESC TagOrdering = "-updated_at"
+const TagOrderingDeletedAtASC TagOrdering = "deleted_at"
 const TagOrderingPostIdASC TagOrdering = "post_id"
-const TagOrderingPostIdDESC TagOrdering = "-post_id"
-const TagOrderingValueASC TagOrdering = "value"
 const TagOrderingValueDESC TagOrdering = "-value"
+const TagOrderingIdASC TagOrdering = "id"
 const TagOrderingIdDESC TagOrdering = "-id"
 const TagOrderingCreatedAtDESC TagOrdering = "-created_at"
-const TagOrderingDeletedAtASC TagOrdering = "deleted_at"
 const TagOrderingDeletedAtDESC TagOrdering = "-deleted_at"
 
 type TagFilter struct {

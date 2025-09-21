@@ -40,7 +40,7 @@ func (m *Article) Validate() error {
 type ArticleOrdering string
 
 func (o ArticleOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(ArticleOrderingDeletedAtDESC.String(), ArticleOrderingSubtitleASC.String(), ArticleOrderingBodyASC.String(), ArticleOrderingBodyDESC.String(), ArticleOrderingUpdatedAtDESC.String(), ArticleOrderingSubtitleDESC.String(), ArticleOrderingIdASC.String(), ArticleOrderingCreatedAtDESC.String(), ArticleOrderingTitleDESC.String(), ArticleOrderingIsPublishedASC.String(), ArticleOrderingUpdatedAtASC.String(), ArticleOrderingDeletedAtASC.String(), ArticleOrderingTitleASC.String(), ArticleOrderingIsPublishedDESC.String(), ArticleOrderingIdDESC.String(), ArticleOrderingCreatedAtASC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(ArticleOrderingIdDESC.String(), ArticleOrderingSubtitleASC.String(), ArticleOrderingIsPublishedDESC.String(), ArticleOrderingCreatedAtASC.String(), ArticleOrderingTitleASC.String(), ArticleOrderingTitleDESC.String(), ArticleOrderingBodyASC.String(), ArticleOrderingIsPublishedASC.String(), ArticleOrderingCreatedAtDESC.String(), ArticleOrderingUpdatedAtDESC.String(), ArticleOrderingDeletedAtASC.String(), ArticleOrderingDeletedAtDESC.String(), ArticleOrderingIdASC.String(), ArticleOrderingUpdatedAtASC.String(), ArticleOrderingSubtitleDESC.String(), ArticleOrderingBodyDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -49,22 +49,22 @@ func (o ArticleOrdering) String() string {
 	return string(o)
 }
 
-const ArticleOrderingIdDESC ArticleOrdering = "-id"
-const ArticleOrderingBodyDESC ArticleOrdering = "-body"
-const ArticleOrderingIsPublishedASC ArticleOrdering = "is_published"
 const ArticleOrderingDeletedAtDESC ArticleOrdering = "-deleted_at"
+const ArticleOrderingBodyASC ArticleOrdering = "body"
+const ArticleOrderingDeletedAtASC ArticleOrdering = "deleted_at"
 const ArticleOrderingTitleASC ArticleOrdering = "title"
 const ArticleOrderingSubtitleDESC ArticleOrdering = "-subtitle"
+const ArticleOrderingBodyDESC ArticleOrdering = "-body"
 const ArticleOrderingIdASC ArticleOrdering = "id"
-const ArticleOrderingCreatedAtASC ArticleOrdering = "created_at"
-const ArticleOrderingCreatedAtDESC ArticleOrdering = "-created_at"
+const ArticleOrderingIdDESC ArticleOrdering = "-id"
 const ArticleOrderingUpdatedAtASC ArticleOrdering = "updated_at"
 const ArticleOrderingTitleDESC ArticleOrdering = "-title"
-const ArticleOrderingSubtitleASC ArticleOrdering = "subtitle"
-const ArticleOrderingIsPublishedDESC ArticleOrdering = "-is_published"
+const ArticleOrderingCreatedAtASC ArticleOrdering = "created_at"
+const ArticleOrderingCreatedAtDESC ArticleOrdering = "-created_at"
 const ArticleOrderingUpdatedAtDESC ArticleOrdering = "-updated_at"
-const ArticleOrderingDeletedAtASC ArticleOrdering = "deleted_at"
-const ArticleOrderingBodyASC ArticleOrdering = "body"
+const ArticleOrderingSubtitleASC ArticleOrdering = "subtitle"
+const ArticleOrderingIsPublishedASC ArticleOrdering = "is_published"
+const ArticleOrderingIsPublishedDESC ArticleOrdering = "-is_published"
 
 type ArticleFilter struct {
 	PageSize   *uint64           `json:"page_size"`

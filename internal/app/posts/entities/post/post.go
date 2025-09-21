@@ -34,7 +34,7 @@ func (m *Post) Validate() error {
 type PostOrdering string
 
 func (o PostOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(PostOrderingIdDESC.String(), PostOrderingUpdatedAtASC.String(), PostOrderingUpdatedAtDESC.String(), PostOrderingBodyASC.String(), PostOrderingIdASC.String(), PostOrderingCreatedAtASC.String(), PostOrderingCreatedAtDESC.String(), PostOrderingDeletedAtASC.String(), PostOrderingDeletedAtDESC.String(), PostOrderingBodyDESC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(PostOrderingUpdatedAtASC.String(), PostOrderingDeletedAtDESC.String(), PostOrderingBodyASC.String(), PostOrderingCreatedAtASC.String(), PostOrderingUpdatedAtDESC.String(), PostOrderingDeletedAtASC.String(), PostOrderingBodyDESC.String(), PostOrderingIdASC.String(), PostOrderingIdDESC.String(), PostOrderingCreatedAtDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -43,15 +43,15 @@ func (o PostOrdering) String() string {
 	return string(o)
 }
 
-const PostOrderingCreatedAtDESC PostOrdering = "-created_at"
-const PostOrderingUpdatedAtDESC PostOrdering = "-updated_at"
-const PostOrderingDeletedAtDESC PostOrdering = "-deleted_at"
-const PostOrderingIdASC PostOrdering = "id"
 const PostOrderingIdDESC PostOrdering = "-id"
 const PostOrderingCreatedAtASC PostOrdering = "created_at"
+const PostOrderingCreatedAtDESC PostOrdering = "-created_at"
 const PostOrderingUpdatedAtASC PostOrdering = "updated_at"
-const PostOrderingDeletedAtASC PostOrdering = "deleted_at"
+const PostOrderingUpdatedAtDESC PostOrdering = "-updated_at"
+const PostOrderingDeletedAtDESC PostOrdering = "-deleted_at"
 const PostOrderingBodyASC PostOrdering = "body"
+const PostOrderingIdASC PostOrdering = "id"
+const PostOrderingDeletedAtASC PostOrdering = "deleted_at"
 const PostOrderingBodyDESC PostOrdering = "-body"
 
 type PostFilter struct {
