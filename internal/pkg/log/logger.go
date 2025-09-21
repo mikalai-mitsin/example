@@ -1,0 +1,318 @@
+package log
+
+import (
+	"context"
+	"errors"
+	"strings"
+	"time"
+
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+
+	"github.com/mikalai-mitsin/example/internal/pkg/errs"
+	"go.uber.org/fx/fxevent"
+)
+
+type Logger interface {
+	Debug(msg string, fields ...Field)
+	Info(msg string, fields ...Field)
+	Print(msg string, fields ...Field)
+	Warn(msg string, fields ...Field)
+	Warning(msg string, fields ...Field)
+	Error(msg string, fields ...Field)
+	Fatal(msg string, fields ...Field)
+	Panic(msg string, fields ...Field)
+	Logger() *zap.Logger
+	Named(name string) Logger
+	SetLevel(lvl string) error
+	With(fields ...Field) Logger
+	WithContext(ctx context.Context) Logger
+	LogEvent(event fxevent.Event)
+}
+
+type Field zapcore.Field
+
+func String(key, value string) Field {
+	return Field(zap.String(key, value))
+}
+
+func Strings(key string, values []string) Field {
+	return Field(zap.Strings(key, values))
+}
+
+func Any(key string, value interface{}) Field {
+	return Field(zap.Any(key, value))
+}
+
+func Int64(key string, value int64) Field {
+	return Field(zap.Int64(key, value))
+}
+
+func Duration(key string, value time.Duration) Field {
+	return Field(zap.Duration(key, value))
+}
+func Time(key string, value time.Time) Field {
+	return Field(zap.Time(key, value))
+}
+
+func Int(key string, value int) Field {
+	return Field(zap.Int(key, value))
+}
+
+func Int32(key string, value int32) Field {
+	return Field(zap.Int32(key, value))
+}
+
+func Ints(key string, value []int) Field {
+	return Field(zap.Ints(key, value))
+}
+
+func Bool(key string, value bool) Field {
+	return Field(zap.Bool(key, value))
+}
+
+func Uint64(key string, value uint64) Field {
+	return Field(zap.Uint64(key, value))
+}
+
+func Uint32(key string, value uint32) Field {
+	return Field(zap.Uint32(key, value))
+}
+
+func Error(err error) Field {
+	var domainError *errs.Error
+	if errors.As(err, &domainError) {
+		return Field(zap.Object("error", domainError))
+	}
+	return Field(zap.Error(err))
+}
+
+type Log struct {
+	logger *zap.Logger
+	level  zap.AtomicLevel
+}
+
+func NewLog(level string) (*Log, error) {
+	config := zap.NewProductionConfig()
+	lvl, err := zap.ParseAtomicLevel(level)
+	if err != nil {
+		return nil, err
+	}
+	config.Level = lvl
+	config.Development = config.Level.Level() == zapcore.DebugLevel
+	config.DisableStacktrace = config.Level.Level() != zapcore.DebugLevel
+	config.DisableCaller = config.Level.Level() != zapcore.DebugLevel
+	config.EncoderConfig.MessageKey = "message"
+	logger, err := config.Build()
+	if err != nil {
+		return nil, err
+	}
+	defer func(logger *zap.Logger) {
+		_ = logger.Sync()
+	}(logger)
+	return &Log{logger: logger, level: lvl}, nil
+}
+
+func (l *Log) Logger() *zap.Logger {
+	return l.logger
+}
+
+func (l *Log) Named(name string) Logger {
+	return &Log{
+		logger: l.logger.Named(name),
+		level:  l.level,
+	}
+}
+
+func (l *Log) With(fields ...Field) Logger {
+	if len(fields) == 0 {
+		return l
+	}
+	zapFields := make([]zap.Field, len(fields))
+	for i, field := range fields {
+		zapFields[i] = zap.Field(field)
+	}
+	return &Log{
+		logger: l.logger.With(zapFields...),
+		level:  l.level,
+	}
+}
+
+func (l *Log) WithContext(ctx context.Context) Logger {
+	span := trace.SpanFromContext(ctx)
+	if span.SpanContext().IsValid() {
+		return l.With(
+			String("trace_id", span.SpanContext().TraceID().String()),
+			String("span_id", span.SpanContext().SpanID().String()),
+		)
+	}
+	return l
+}
+
+func (l *Log) SetLevel(lvl string) error {
+	if err := l.level.UnmarshalText([]byte(lvl)); err != nil {
+		return err
+	}
+	_, err := zap.RedirectStdLogAt(l.logger, l.level.Level())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *Log) Debug(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Debug(msg, zf...)
+}
+
+func (l *Log) Info(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Info(msg, zf...)
+}
+
+func (l *Log) Print(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Info(msg, zf...)
+}
+
+func (l *Log) Warn(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Warn(msg, zf...)
+}
+
+func (l *Log) Warning(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Warn(msg, zf...)
+}
+
+func (l *Log) Error(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Error(msg, zf...)
+}
+
+func (l *Log) Fatal(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Fatal(msg, zf...)
+}
+
+func (l *Log) Panic(msg string, fields ...Field) {
+	var zf []zap.Field
+	for _, f := range fields {
+		zf = append(zf, zap.Field(f))
+	}
+	l.logger.Panic(msg, zf...)
+}
+
+func (l *Log) LogEvent(event fxevent.Event) {
+	switch e := event.(type) {
+	case *fxevent.OnStartExecuting:
+		l.logger.Info("OnStart hook executing",
+			zap.String("callee", e.FunctionName),
+			zap.String("caller", e.CallerName),
+		)
+	case *fxevent.OnStartExecuted:
+		if e.Err != nil {
+			l.logger.Info("OnStart hook failed",
+				zap.String("callee", e.FunctionName),
+				zap.String("caller", e.CallerName),
+				zap.Error(e.Err),
+			)
+		} else {
+			l.logger.Info("OnStart hook executed",
+				zap.String("callee", e.FunctionName),
+				zap.String("caller", e.CallerName),
+				zap.String("runtime", e.Runtime.String()),
+			)
+		}
+	case *fxevent.OnStopExecuting:
+		l.logger.Info("OnStop hook executing",
+			zap.String("callee", e.FunctionName),
+			zap.String("caller", e.CallerName),
+		)
+	case *fxevent.OnStopExecuted:
+		if e.Err != nil {
+			l.logger.Info("OnStop hook failed",
+				zap.String("callee", e.FunctionName),
+				zap.String("caller", e.CallerName),
+				zap.Error(e.Err),
+			)
+		} else {
+			l.logger.Info("OnStop hook executed",
+				zap.String("callee", e.FunctionName),
+				zap.String("caller", e.CallerName),
+				zap.String("runtime", e.Runtime.String()),
+			)
+		}
+	case *fxevent.Supplied:
+		l.logger.Info("supplied", zap.String("type", e.TypeName), zap.Error(e.Err))
+	case *fxevent.Provided:
+		for _, rtype := range e.OutputTypeNames {
+			l.logger.Info("provided",
+				zap.String("constructor", e.ConstructorName),
+				zap.String("type", rtype),
+			)
+		}
+		if e.Err != nil {
+			l.logger.Error("error encountered while applying options",
+				zap.Error(e.Err))
+		}
+	case *fxevent.Invoking:
+		// Do not log stack as it will make logs hard to read.
+		l.logger.Info("invoking",
+			zap.String("function", e.FunctionName))
+	case *fxevent.Invoked:
+		if e.Err != nil {
+			l.logger.Error("invoke failed",
+				zap.Error(e.Err),
+				zap.String("stack", e.Trace),
+				zap.String("function", e.FunctionName))
+		}
+	case *fxevent.Stopping:
+		l.logger.Info("received signal",
+			zap.String("signal", strings.ToUpper(e.Signal.String())))
+	case *fxevent.Stopped:
+		if e.Err != nil {
+			l.logger.Error("stop failed", zap.Error(e.Err))
+		}
+	case *fxevent.RollingBack:
+		l.logger.Error("start failed, rolling back", zap.Error(e.StartErr))
+	case *fxevent.RolledBack:
+		if e.Err != nil {
+			l.logger.Error("rollback failed", zap.Error(e.Err))
+		}
+	case *fxevent.Started:
+		if e.Err != nil {
+			l.logger.Error("start failed", zap.Error(e.Err))
+		} else {
+			l.logger.Info("started")
+		}
+	case *fxevent.LoggerInitialized:
+		if e.Err != nil {
+			l.logger.Error("custom logger initialization failed", zap.Error(e.Err))
+		} else {
+			l.logger.Info("initialized custom fxevent.Logger", zap.String("function", e.ConstructorName))
+		}
+	}
+}

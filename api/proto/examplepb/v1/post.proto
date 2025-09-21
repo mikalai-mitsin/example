@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package examplepb.v1;
+
+option go_package = "github.com/mikalai-mitsin/example/pkg/examplepb/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/api/annotations.proto";
+
+message PostCreate {
+  string body = 1;
+}
+
+message PostGet {
+  string id = 1;
+}
+
+message PostUpdate {
+  string id = 1;
+  google.protobuf.StringValue body = 2;
+}
+
+message Post {
+  string id = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp deleted_at = 4;
+  string body = 5;
+}
+
+message ListPost {
+  repeated Post items = 1;
+  uint64 count = 2;
+}
+
+message PostDelete {
+  string id = 1;
+}
+
+message PostFilter {
+  google.protobuf.UInt64Value page_number = 1;
+  google.protobuf.UInt64Value page_size = 2;
+  repeated string order_by = 3;
+  google.protobuf.BoolValue is_deleted = 4;
+}
+
+service PostService {
+  rpc Create(examplepb.v1.PostCreate) returns (examplepb.v1.Post) {
+    option (google.api.http) = {
+      post: "/api/v1/posts"
+      body: "*"
+    };
+  }
+  rpc Get(examplepb.v1.PostGet) returns (examplepb.v1.Post) {
+    option (google.api.http) = {get: "/api/v1/posts/{id}"};
+  }
+  rpc Update(examplepb.v1.PostUpdate) returns (examplepb.v1.Post) {
+    option (google.api.http) = {
+      patch: "/api/v1/posts/{id}"
+      body: "*"
+    };
+  }
+  rpc Delete(examplepb.v1.PostDelete) returns (examplepb.v1.Post) {
+    option (google.api.http) = {delete: "/api/v1/posts/{id}"};
+  }
+  rpc List(examplepb.v1.PostFilter) returns (examplepb.v1.ListPost) {
+    option (google.api.http) = {get: "/api/v1/posts"};
+  }
+}
