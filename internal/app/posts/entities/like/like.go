@@ -38,7 +38,7 @@ func (m *Like) Validate() error {
 type LikeOrdering string
 
 func (o LikeOrdering) Validate() error {
-	if err := validation.Validate(o.String(), validation.In(LikeOrderingValueASC.String(), LikeOrderingUserIdDESC.String(), LikeOrderingIdDESC.String(), LikeOrderingUpdatedAtASC.String(), LikeOrderingUpdatedAtDESC.String(), LikeOrderingDeletedAtDESC.String(), LikeOrderingPostIdASC.String(), LikeOrderingPostIdDESC.String(), LikeOrderingValueDESC.String(), LikeOrderingUserIdASC.String(), LikeOrderingIdASC.String(), LikeOrderingCreatedAtASC.String(), LikeOrderingCreatedAtDESC.String(), LikeOrderingDeletedAtASC.String())); err != nil {
+	if err := validation.Validate(o.String(), validation.In(LikeOrderingCreatedAtDESC.String(), LikeOrderingUpdatedAtASC.String(), LikeOrderingUpdatedAtDESC.String(), LikeOrderingDeletedAtDESC.String(), LikeOrderingPostIdDESC.String(), LikeOrderingUserIdASC.String(), LikeOrderingIdASC.String(), LikeOrderingCreatedAtASC.String(), LikeOrderingDeletedAtASC.String(), LikeOrderingPostIdASC.String(), LikeOrderingValueASC.String(), LikeOrderingValueDESC.String(), LikeOrderingUserIdDESC.String(), LikeOrderingIdDESC.String())); err != nil {
 		return err
 	}
 	return nil
@@ -47,20 +47,20 @@ func (o LikeOrdering) String() string {
 	return string(o)
 }
 
-const LikeOrderingCreatedAtASC LikeOrdering = "created_at"
+const LikeOrderingDeletedAtDESC LikeOrdering = "-deleted_at"
 const LikeOrderingPostIdDESC LikeOrdering = "-post_id"
+const LikeOrderingIdDESC LikeOrdering = "-id"
+const LikeOrderingPostIdASC LikeOrdering = "post_id"
+const LikeOrderingValueASC LikeOrdering = "value"
 const LikeOrderingValueDESC LikeOrdering = "-value"
 const LikeOrderingUserIdASC LikeOrdering = "user_id"
 const LikeOrderingUserIdDESC LikeOrdering = "-user_id"
-const LikeOrderingIdDESC LikeOrdering = "-id"
+const LikeOrderingIdASC LikeOrdering = "id"
+const LikeOrderingCreatedAtASC LikeOrdering = "created_at"
 const LikeOrderingCreatedAtDESC LikeOrdering = "-created_at"
 const LikeOrderingUpdatedAtASC LikeOrdering = "updated_at"
 const LikeOrderingUpdatedAtDESC LikeOrdering = "-updated_at"
 const LikeOrderingDeletedAtASC LikeOrdering = "deleted_at"
-const LikeOrderingDeletedAtDESC LikeOrdering = "-deleted_at"
-const LikeOrderingPostIdASC LikeOrdering = "post_id"
-const LikeOrderingValueASC LikeOrdering = "value"
-const LikeOrderingIdASC LikeOrdering = "id"
 
 type LikeFilter struct {
 	PageSize   *uint64        `json:"page_size"`

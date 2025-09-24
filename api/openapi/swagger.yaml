@@ -233,6 +233,17 @@ paths:
     get:
       parameters:
       - in: query
+        name: order_by
+        schema:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+      - in: query
+        name: is_deleted
+        schema:
+          type: boolean
+      - in: query
         name: search
         schema:
           type: string
@@ -244,17 +255,6 @@ paths:
         name: page_number
         schema:
           type: integer
-      - in: query
-        name: order_by
-        schema:
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-      - in: query
-        name: is_deleted
-        schema:
-          type: boolean
       requestBody:
         content:
           application/json:
@@ -751,6 +751,10 @@ paths:
     get:
       parameters:
       - in: query
+        name: is_deleted
+        schema:
+          type: boolean
+      - in: query
         name: page_size
         schema:
           type: integer
@@ -765,10 +769,6 @@ paths:
             type: string
           type: array
           uniqueItems: false
-      - in: query
-        name: is_deleted
-        schema:
-          type: boolean
       requestBody:
         content:
           application/json:
